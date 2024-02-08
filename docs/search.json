@@ -7,24 +7,38 @@
     "text": "About me!"
   },
   {
-    "objectID": "posts/welcome/index.html",
-    "href": "posts/welcome/index.html",
-    "title": "Welcome To My Blog",
+    "objectID": "posts/differentiation/differentiation.html",
+    "href": "posts/differentiation/differentiation.html",
+    "title": "Differentiation formulae",
     "section": "",
-    "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
+    "text": "What we are solving\n\n\n\nWhy is \\(\\frac{d}{dx} \\left(x^{n} \\right) = nx^{n-1}\\) ?"
   },
   {
-    "objectID": "posts/post-with-code/index.html",
-    "href": "posts/post-with-code/index.html",
-    "title": "Post With Code",
-    "section": "",
-    "text": "This is a post with executable code."
+    "objectID": "posts/differentiation/differentiation.html#deriving-an-approach-to-the-problem",
+    "href": "posts/differentiation/differentiation.html#deriving-an-approach-to-the-problem",
+    "title": "Differentiation formulae",
+    "section": "Deriving an approach to the problem",
+    "text": "Deriving an approach to the problem\nThe gradient between two points, \\(x\\) and \\(a\\), is equal to the change in the y axis divided by the change in the x axis, i.e.\n\\[\n\\frac{\\Delta y}{\\Delta x} =\n\\frac{f(x)-f(a)}{x-a} =\n\\frac{x^n-a^n}{x-a}\n\\]\nThis isn’t the same as saying a line which passes through both of these points has the same gradient though. There is a gap between this linear approximation and the exact curve.\nHowever, the smaller the movement across the x-axis, the closer the approximation is to the actual curve. For example, in Figure 1 below, the line drawn between \\(f(1)\\) and \\(f(2)\\) is closer to the gradient at \\(f(1)\\) of the true curve, compared to the line drawn between \\(f(1)\\) and \\(f(3)\\).\n\n\nCode\nimport plotly.graph_objects as go\nimport numpy as np\n\ndef interpolate(n,x1,x2,num=50):\n  x = np.linspace(x1,x2,num)\n  m = (x2**n - x1**n)/(x2 - x1)\n  c = x1**n - m*x1\n  y = m*x+c\n  return({'x':x,'y':y})\n\nn=3\nactual = {'x': np.arange(0,4,0.1)}\nactual['y'] = actual['x']**n\nlb, ub = 1, [3.5,3,2]\nlin0 = interpolate(n,lb,ub[0])\nlin1 = interpolate(n,lb,ub[1])\nlin2 = interpolate(n,lb,ub[2])\n\nfig = go.Figure(data = go.Scatter(mode='lines'))\nfig.add_trace( go.Scatter( x=actual['x'], y=actual['y'], line=dict(dash='solid'), name=f\"f(x)=x^{n}\" ))\nfig.add_trace( go.Scatter( x=lin0['x'], y=lin0['y'], name=f\"f({lb}) -&gt; f({ub[0]})\", line=dict(dash='dot') ))\nfig.add_trace( go.Scatter( x=lin1['x'], y=lin1['y'], name=f\"f({lb}) -&gt; f({ub[1]})\", line=dict(dash='dot') ))\nfig.add_trace( go.Scatter( x=lin2['x'], y=lin2['y'], name=f\"f({lb}) -&gt; f({ub[2]})\", line=dict(dash='dot') ))\nfig.show()\n\n\n\n\n                                                \n\n\nFigure 1: The smaller the change in x, the closer the linear approximation is to the true gradient of f(x)\n\n\n\n\nConsequently, we want to determine the gradient at the limit i.e. where \\(a \\rightarrow x\\), to get the true gradient."
+  },
+  {
+    "objectID": "posts/differentiation/differentiation.html#factoring-out-x-a",
+    "href": "posts/differentiation/differentiation.html#factoring-out-x-a",
+    "title": "Differentiation formulae",
+    "section": "Factoring out \\((x-a)\\)",
+    "text": "Factoring out \\((x-a)\\)\nFirst though, let’s factor out the \\(x-a\\) term for simplicity. Let’s derive a generic formula for this:\n\nIf \\(n=2\\), then \\(x^2-a^2 = (x-a)(x+a)\\)\nIf \\(n=3\\), then \\(x^3-a^3 = (x-a)(x^2+xa+a^2)\\)\nIf \\(n=4\\), then \\(x^4-a^4 = (x-a)(x^3+x^2a+xa^2+a^3)\\)\nIf \\(n=5\\), then \\(x^5-a^5 = (x-a)(x^4+x^3a+x^2a^2+xa^3+a^4)\\)\nAnd so on. In fact for any \\(n\\), we can derive \\(x^n-a^n = \\sum_{i=1}^n \\left( x^{n-i}a^{i-1} \\right)\\)\n\nAnd we can now sub that into our formula, and the \\(x-a\\) cancels out:\n\\[\n\\frac{x^n-a^n}{x-a} =\n\\frac{x-a}{x-a} \\sum_{i=1}^n \\left( x^{n-i}a^{i-1} \\right) =\n\\sum_{i=1}^n \\left( x^{n-i}a^{i-1} \\right)\n\\]"
+  },
+  {
+    "objectID": "posts/differentiation/differentiation.html#getting-our-result",
+    "href": "posts/differentiation/differentiation.html#getting-our-result",
+    "title": "Differentiation formulae",
+    "section": "Getting our result",
+    "text": "Getting our result\nAnd now let’s calculate the result in the limit, where \\(x\\) approaches \\(a\\):\n\\[\n\\lim_{x \\rightarrow a} \\sum_{i=1}^n \\left( x^{n-i}a^{i-1} \\right) \\sim\n\\sum_{i=1}^n \\left( a^{n-i}a^{i-1} \\right) =\n\\sum_{i=1}^n \\left( a^{n-1} \\right) =\nna^{n-1}\n\\]\nHence \\(\\frac{d}{dx} \\left(x^{n} \\right) = nx^{n-1}\\).\nFin."
   },
   {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Sciencing Data",
     "section": "",
-    "text": "Post With Code\n\n\n\n\n\n\nnews\n\n\ncode\n\n\nanalysis\n\n\n\n\n\n\n\n\n\nFeb 8, 2024\n\n\nHarlow Malloc\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\nFeb 5, 2024\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
+    "text": "Differentiation formulae\n\n\n\n\n\n\ndifferentation\n\n\npython\n\n\n\n\n\n\n\n\n\nAug 2, 2024\n\n\nChris Kelly\n\n\n\n\n\n\nNo matching items"
   }
 ]
