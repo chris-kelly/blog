@@ -2,8 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/differentiation/differentiation.html",
-      "/posts/mse_mean_mae_median/mse_mean_mae_median.html"
+      "/posts/mse_mean_mae_median/mse_mean_mae_median.html",
+      "/posts/differentiation/differentiation.html"
     ]
   }
 ]
