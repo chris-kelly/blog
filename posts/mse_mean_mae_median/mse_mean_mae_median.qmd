@@ -9,6 +9,11 @@ format:
 jupyter: python3
 ---
 
+::: {.callout-tip}
+## What we are solving
+Why does minimizing the MAE tend towards the median of the sample?
+:::
+
 In the absence of informative features, an ML algorithm minimizing the sum of squared errors will tend towards predicting the mean of the sample. However, minimizing the sum of absolute errors will tend towards predicting the median of the sample.
 
 This post dives into why this is the case.
