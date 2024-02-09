@@ -1,5 +1,8 @@
 ---
 title: "Minimizing mse tends to mean, MAE tends to median"
+author: "Chris Kelly"
+date: '02-08-24'
+categories: [differentation, cost functions, MSE, MAE]
 format:
   html:
     code-fold: true
