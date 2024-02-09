@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Chris Kelly Blog - Sciencing Data</title>
+<title>Chris Kelly Blog - Minimizing mse tends to mean, MAE tends to median</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,24 +23,22 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,35 +66,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -128,17 +97,17 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Chris Kelly Blog</span>
     </a>
   </div>
@@ -149,7 +118,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -172,13 +141,13 @@ window.Quarto = {
 <!-- content -->
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Sciencing Data</h1>
+    <div class="quarto-title column-body">
+      <h1 class="title">Minimizing mse tends to mean, MAE tends to median</h1>
                       </div>
   </div>
     
   
-  <div class="quarto-title-meta column-page-left">
+  <div class="quarto-title-meta">
 
       
     
@@ -186,88 +155,93 @@ window.Quarto = {
     </div>
     
   
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(2)</span></div><div class="category" data-category="differentation">differentation <span class="quarto-category-count">(1)</span></div><div class="category" data-category="python">python <span class="quarto-category-count">(1)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
+<p>In the absence of informative features, an ML algorithm minimizing the sum of squared errors will tend towards predicting the mean of the sample. However, minimizing the sum of absolute errors will tend towards predicting the median of the sample.</p>
+<p>This post dives into why this is the case.</p>
+<section id="minimizing-residual-sum-of-squares" class="level1">
+<h1>Minimizing residual sum-of-squares</h1>
+<p>Let’s define the residual for sample <span class="math inline">\(i\)</span> as <span class="math inline">\(\epsilon_i\)</span>. We now want to find the prediction <span class="math inline">\(\hat{y}\)</span> that minimizes the sum of all squared residuals (i.e.&nbsp;where the gradient is zero):</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\min_\hat{y}{\left[\sum_{i=1}^N{\epsilon_i^2}\right]}
+\Rightarrow &amp;
+\frac{\partial}{\partial \hat{y}} \sum_{i=1}^N{\epsilon_i^2} \\ = &amp;
+\frac{\partial \left( \sum_{i=1}^N{\epsilon_i^2} \right) }{\partial\epsilon}
+\left( \frac{\partial\epsilon}{\partial \hat{y} } \right) \\ = &amp;
+\sum_{i=1}^N 2\epsilon_i \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) = 0
+\end{align}
+}
+\]</span></p>
+<p>We can now substitue in <span class="math inline">\(\epsilon_i = y - \hat{y}\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\sum_{i=1}^N 2\epsilon_i \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) &amp;
+= \sum_{i=1}^N2( y_i- \hat{y})\left(\frac{\partial( y_i-\hat{y})}{\partial \hat{y}}\right) \\  &amp;
+= \sum_{i=1}^N2( y_i- \hat{y} )(-1) \\ &amp;
+= \sum_{i=1}^N2( y_i) - 2ny = 0 \\ &amp;
+\therefore n \hat{y} = \sum_{i=1}^N( y_i) \\ &amp;
+\therefore \hat{y} = \frac{\sum_{i=1}^N{y_i}}{n} = \bar{y}
+\end{align}
+}
+\]</span></p>
+<p>Thus we can see that the prediction that minimizes the sum of squared residuals, is simply the mean.</p>
+</section>
+<section id="minimize-sum-of-absolute-residuals" class="level1">
+<h1>Minimize sum of absolute residuals</h1>
+<p>We now do the same think again, but this time look to minimize the sum of all absolute residuals instead.</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\min_\hat{y}{\left[\sum_{i=1}^N{\mid \epsilon_i \mid}\right]}
+\Rightarrow &amp;
+\frac{\partial}{\partial \hat{y}} \sum_{i=1}^N{\left(\epsilon_i^2\right)^{1/2}} \\ = &amp;
+\frac{\partial \sum_{i=1}^N{ \left(\epsilon_i^2\right)^{1/2} } }{\partial\epsilon_i^2}
+\times \frac{\partial\epsilon_i^2}{\partial \epsilon_i }
+\times \frac{\partial\epsilon_i}{\partial \hat{y} }  \\ = &amp;
+\frac{1}{2} \sum_{i=1}^N{ \left(\epsilon_i^2\right)^{-1/2} }
+\times 2 \epsilon_i
+\times \frac{\partial\epsilon_i}{\partial \hat{y} }  \\ = &amp;
+\sum_{i=1}^N{ \left(\epsilon_i^2\right)^{-1/2} } \times \epsilon_i
+\times \frac{\partial\epsilon_i}{\partial \hat{y} }  \\ = &amp;
+\sum_{i=1}^N \frac{\epsilon_i}{\mid \epsilon_i \mid} \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) = 0
+\end{align}
+}
+\]</span></p>
+<p>And similarly to before, we can now substitute in <span class="math inline">\(\epsilon_i = y - \hat{y}\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\sum_{i=1}^N \frac{\epsilon_i}{\mid \epsilon_i \mid} \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) &amp;
+= \sum_{i=1}^N \frac{ y_i- \hat{y} }{\mid y_i- \hat{y} \mid}\left(\frac{\partial( y_i-\hat{y})}{\partial \hat{y}}\right) \\  &amp;
+= \sum_{i=1}^N \frac{ y_i- \hat{y} }{\mid y_i- \hat{y} \mid}(-1) = 0
+\end{align}
+}
+\]</span></p>
+<p>Now <span class="math inline">\(f(x) = \frac{ x }{\mid x \mid}\)</span> is an cool transformation, keeping its sign but getting rid of the magnitude of the size of <span class="math inline">\(x\)</span>, i.e.:</p>
+<ul>
+<li><span class="math inline">\(f(x &lt; 0) = -1\)</span></li>
+<li><span class="math inline">\(f(x &gt; 0) = 1\)</span></li>
+</ul>
+<p>So to ensure that <span class="math inline">\(\sum f(\epsilon_i)=0\)</span>, we need to pick a value for <span class="math inline">\(\hat{y}\)</span> that means half of the errors are <span class="math inline">\(&lt;0\)</span> and half of the errors are <span class="math inline">\(&gt;0\)</span>.</p>
+<p>So that means half the errors must be negative, and half are positive. So <span class="math inline">\(\hat{y}\)</span> has to be the median value!</p>
+<p>Fin.</p>
 
 
+</section>
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1707474317006" data-listing-reading-time-sort="2" data-listing-word-count-sort="381">
-<div class="thumbnail">
-<p><a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external"></a></p><a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external">Minimizing mse tends to mean, MAE tends to median</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external">In the absence of informative features, an ML algorithm minimizing the sum of squared errors will tend towards predicting the mean of the sample. However, minimizing the sum…</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external"></a></p><a href="./posts/mse_mean_mae_mode/mse_mean_mae_mode.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="differentation,python" data-listing-date-sort="1722549600000" data-listing-file-modified-sort="1707406960703" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="265">
-<div class="thumbnail">
-<p><a href="./posts/differentiation/differentiation.html" class="no-external"></a></p><a href="./posts/differentiation/differentiation.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/differentiation/differentiation.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/differentiation/differentiation.html" class="no-external">Differentiation formulae</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/differentiation/differentiation.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('differentation'); return false;">
-differentation
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('python'); return false;">
-python
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/differentiation/differentiation.html" class="no-external">Why is <span class="math inline">\(\frac{d}{dx} \left(x^{n} \right) = nx^{n-1}\)</span> ?</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/differentiation/differentiation.html" class="no-external">
-<div class="listing-date">
-Aug 2, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/mse_mean_mae_mode/mse_mean_mae_mode.html",
       "/posts/differentiation/differentiation.html"
     ]
   }
