@@ -1,0 +1,265 @@
+---
+title: "Deriving OLS coefficients (matrix algebra)"
+author: "Chris Kelly"
+date: '02-20-24'
+categories: [OLS, least-squares, coefficients, partial differentiation, hessian matrix]
+format:
+  html:
+    code-fold: true
+    toc: true
+---
+
+::: {.callout-tip}
+## What we are exploring
+Deriving a unique, analytical solution to the set of coefficients that minimize the sum of squared residuals.
+:::
+
+## Summary
+
+The cost function for OLS is the sum of squared residuals, $\hat{\epsilon}^{\intercal}\hat{\epsilon}$. In order to fit a good linear model, we want to find optimum values for the estimated vector of coefficients, $\hat{\beta}^*$, that minimizes this cost function.
+
+First we do partial differentiation of the cost function with respect to the coefficients. Finding the coefficient values where the partial differential is equal to zero reveals the stationary points of the cost function. For OLS in particular, we can find a unique solution for the choice of coefficients that can be found analytically. The hessian matrix then further proves that this is a global minima.
+
+## Deriving the optimum coefficients
+
+### 0. Defining the notation
+
+For a sample $i$, we observe an outcome $y_i$. $y$ is a vector of all $n$ observed outcomes.
+
+$$
+\underset{n \times 1} {y} = 
+\begin{bmatrix} 
+    y_1 \\ y_2 \\ \vdots \\ y_{n-1} \\ y_n
+\end{bmatrix} 
+$$
+
+We also observe $k$ features for every sample $i$. $X$ is a matrix of these observed features. Note the first column is usually all ones, to include an intercept to optimize (or "bias" term).
+
+$$
+\underset{n \times k} {X} = 
+\begin{bmatrix}
+  1 & x_{11} & \cdots & x_{1,k-1} & x_{1,k} \\ 
+  1 & x_{21} & \cdots & x_{2,k-1} & x_{2,k} \\ 
+  1 & x_{31} & \cdots & x_{3,k-1} & x_{3,k} \\ 
+  \vdots & \vdots & \ddots & \vdots & \vdots \\
+  1 & x_{n-2,1} & \cdots & x_{n-2,k-1} & x_{n-2,k} \\ 
+  1 & x_{n-1,1} & \cdots & x_{n-1,k-1} & x_{n-1,k} \\ 
+  1 & x_{n,1} & \cdots & x_{n,k-1} & x_{n,k}
+\end{bmatrix}
+$$
+
+The contribution of each feature to the prediction is estimated by the coefficients $\hat{\beta}$.
+
+$$
+\underset{k \times 1} {\hat{\beta}} =
+\begin{bmatrix} 
+  \beta_0 \\
+  \beta_1 \\
+  \vdots \\
+  \beta_{k-1} \\
+  \beta_{k}
+\end{bmatrix}
+$$
+
+We make predictions, $\hat{y}$, by calculating the dot product of the features $X$ and the coefficients $\hat{\beta}$.
+
+$$
+\hat{y} = X \hat{\beta}
+$$
+
+which is shorthand for this:
+
+$$
+\displaylines{
+\begin{align}
+\begin{bmatrix} 
+  \hat{y}_1 \\ \hat{y}_2 \\ \hat{y}_3 \\ \vdots \\ \hat{y}_{n-2} \\ \hat{y}_{n-1} \\ \hat{y}_n
+\end{bmatrix} & =
+\begin{bmatrix}
+  1 & x_{11} & \cdots & x_{1,k-1} & x_{1,k} \\ 
+  1 & x_{21} & \cdots & x_{2,k-1} & x_{2,k} \\ 
+  1 & x_{31} & \cdots & x_{3,k-1} & x_{3,k} \\ 
+  \vdots & \vdots & \ddots & \vdots & \vdots \\
+  1 & x_{n-2,1} & \cdots & x_{n-2,k-1} & x_{n-2,k} \\ 
+  1 & x_{n-1,1} & \cdots & x_{n-1,k-1} & x_{n-1,k} \\ 
+  1 & x_{n,1} & \cdots & x_{n,k-1} & x_{n,k}
+\end{bmatrix}
+\begin{bmatrix} 
+  \hat{\beta}_0 \\
+  \hat{\beta}_1 \\
+  \vdots \\
+  \hat{\beta}_{k-1} \\
+  \hat{\beta}_{k}
+\end{bmatrix}
+\\ \\ & = 
+\begin{bmatrix} 
+  \hat{\beta}_0 + \hat{\beta}_{1}x_{1,1} + \cdots + \hat{\beta}_{k-1}x_{1,k-1} + \hat{\beta}_{k}x_{1,k} \\
+  \hat{\beta}_0 + \hat{\beta}_{1}x_{2,1} + \cdots + \hat{\beta}_{k-1}x_{2,k-1} + \hat{\beta}_{k}x_{2,k} \\
+  \hat{\beta}_0 + \hat{\beta}_{1}x_{3,1} + \cdots + \hat{\beta}_{k-1}x_{3,k-1} + \hat{\beta}_{k}x_{3,k} \\
+  \vdots \\
+  \hat{\beta}_0 + \hat{\beta}_{1}x_{n-2,1} + \cdots + \hat{\beta}_{k-1}x_{2,k-1} + \hat{\beta}_{k}x_{n-2,k} \\
+  \hat{\beta}_0 + \hat{\beta}_{1}x_{n-1,1} + \cdots + \hat{\beta}_{k-1}x_{2,k-1} + \hat{\beta}_{k}x_{n-1,k} \\
+  \hat{\beta}_0 + \hat{\beta}_{1}x_{n,1} + \cdots + \hat{\beta}_{k-1}x_{2,k-1} + \hat{\beta}_{k}x_{n,k} \\
+\end{bmatrix}
+\end{align}
+}
+$$
+
+The residual is the difference between the true outcome and the model prediction.
+
+$$
+\hat{\epsilon} = y_i -\hat{y}_i
+$$
+
+which is shorthand for this:
+
+$$
+\begin{bmatrix}
+  \hat{\epsilon_1} \\
+  \hat{\epsilon_2} \\
+  \hat{\epsilon_3} \\
+  \vdots \\
+  \hat{\epsilon_{n-2}} \\
+  \hat{\epsilon_{n-1}} \\
+  \hat{\epsilon_{n}}
+\end{bmatrix} =
+\begin{bmatrix} 
+    y_1 \\ y_2 \\ y_3 \\ \vdots \\ y_{n-2} \\ y_{n-1} \\ y_n
+\end{bmatrix} -
+\begin{bmatrix} 
+  \hat{y}_1 \\ \hat{y}_2 \\ \hat{y}_3 \\ \vdots \\ \hat{y}_{n-2} \\ \hat{y}_{n-1} \\ \hat{y}_n
+\end{bmatrix} 
+$$
+
+Our aim is to find the optimum vector of coefficients, $\hat{\beta}^*$, that minimizes the sum of squared residuals:
+
+$$
+\min_{\beta} \left( \epsilon^{\intercal}\epsilon \right)
+$$
+
+
+### 1. Expand the sum of squared residuals
+
+The first step involves expanding the sum of squared residuals, and substituting in $X \hat{\beta}$ for $\hat{y}$.
+$$
+\displaylines{
+\begin{align}
+\sum_{i=1}^n{\hat{\epsilon}_i^2} & = \hat{\epsilon}^{\intercal}\hat{\epsilon} 
+\\& =(y-X\hat{\beta})^{\intercal}(y-X\hat{\beta}) 
+\\& = y^{\intercal}y - y^{\intercal}X\hat{\beta}-
+\hat{\beta}^{\intercal} X^{\intercal}y+
+\hat{\beta}^{\intercal}X^{\intercal}X\hat{\beta} 
+\\& = y^{\intercal}y - 2y^{\intercal}X\hat{\beta}
++\hat{\beta}^{\intercal}X^{\intercal}X\hat{\beta}
+\end{align}
+}
+$$
+
+::: {.column-margin}
+Note we can simply add the two middle terms, since are both scalars:
+
+$$
+\displaylines{
+y^{\intercal}X\hat{\beta} =
+\hat{\beta}^{\intercal} X^{\intercal}y \\
+\because \underset{1 \times n}{y^{\intercal}} \times 
+\underset{n \times k}{X} \times 
+\hat{\underset{k \times 1}{\beta}}
+ = 
+\hat{\underset{1 \times k}{\beta}^{\intercal}} \times
+\underset{k \times n}{X^{\intercal}} \times
+\underset{n \times 1}{y} 
+}
+$$
+
+:::
+
+### 2. Partially differentiate RSS with respect to beta
+
+The second step involves partially differentiating the cost function with respect to its parameters, to understand how it changes as the coefficients vary.
+
+$$
+\displaylines{
+\begin{align}
+\frac{\partial}{\partial\hat{\beta}}\hat{\epsilon}^{\intercal}\hat{\epsilon} & \equiv
+\begin{bmatrix}
+    \frac{\partial}{\partial\hat{\beta}_1}\hat{\epsilon}^{\intercal}\hat{\epsilon} \\
+    \frac{\partial}{\partial\hat{\beta}_2}\hat{\epsilon}^{\intercal}\hat{\epsilon} \\
+    \vdots \\
+    \frac{\partial}{\partial\hat{\beta}_k}\hat{\epsilon}^{\intercal}\hat{\epsilon}
+\end{bmatrix} 
+\\ & = \frac{d}{d\hat{\beta}}(
+y^{\intercal}y - 2y^{\intercal}X\hat{\beta}
++\hat{\beta}^{\intercal}X^{\intercal}X\hat{\beta}) \\ & = 0 - 2X^{\intercal}y +((X^{\intercal}X)\hat{\beta} + (X^{\intercal}X)^{\intercal}\hat{\beta})
+\\ & = -2X^{\intercal}y +  2((X^{\intercal}X)\hat{\beta})
+\end{align}
+}
+$$
+
+::: {.column-margin}
+Two matrix differentiation rules used here for reference:
+
+$$
+\displaylines{
+\frac{\partial}{dx}(Ax) = A^{\intercal}x \\ 
+\frac{\partial}{dx}(xAx) = Ax + A^{\intercal}x
+}
+$$
+
+And note $X^{\intercal}X = (X^{\intercal}X)^{\intercal}$ by definition, so we can add the two last terms.
+:::
+
+### 3. Find the coefficient values at the stationary point
+
+Now we find the choices of $\beta$ where the partial differential is equal to zero. These stationary points for the cost function are either at its maximum or minimum.
+
+For OLS - we actually only find one unique solution!
+
+$$
+\displaylines{
+\begin{align}
+\cancel{2}X^{\intercal}y +  \cancel{2}((X^{\intercal}X)\hat{\beta}) & = 0 \\
+\therefore (X^{\intercal}X)\hat{\beta} & = X^{\intercal}y \\
+\therefore \hat{\beta} & = (X^{\intercal}X)^{-1}X^{\intercal}y
+\end{align}
+}
+$$
+
+::: {.column-margin}
+Note the need to invert $X^{\intercal}X$. This is only possible for a full rank matrix.
+:::
+
+The first term is the (inverse) variance matrix of $X$. This term normalizes the coefficient with respect to the magnitude of $X$.
+
+The second term is the covariance matrix between $X$ and $y$. This incorporates the linear relationship between the two in the coefficient.
+
+Hence, the coefficient can be interpreted as the estimated change in $y$ given a one unit change in $X$.
+
+### 4. Check the stationary point is a global minimum (hessian matrix)
+
+Finally, we derive the **hessian matrix**, by double-differentiating the cost function with respect to the coefficients:
+
+$$
+\displaylines{
+\frac{\partial^2}{\partial\hat{\beta}\partial\hat{\beta}^{\intercal}}
+\left(
+  \hat{\epsilon}^{\intercal}\hat{\epsilon} 
+\right)
+\\ = \frac{\partial}{\partial \hat{\beta}^{\intercal}} \left( -2X^{\intercal}y +  2((X^{\intercal}X)\hat{\beta}) \right)
+\\ = 2(X^{\intercal}X)^{\intercal}
+}
+$$
+
+Since $X^{\intercal}X$ is clearly positive definite, the cost function is convex. Thus, we know our unique solution for $\beta$ where the partial differential is at zero is indeed a **global minimum** for the cost function.
+
+## Final reflections
+
+Unlike logistic regression, or the multiple hidden-layer structure of neural networks, we can "jump" straight to the optimum coefficients for OLS. Why can we do this? Well chiefly its because OLS is a bit of a special case:
+
+* **The minima is a global minima:** The hessian matrix is positive definite, and hence the cost function is strictly convex. This means we know that when a choice of coefficients is found that ensure the partially differentiated cost function is equal zero, this minima is also a global one, not a local one.
+* **There is only one solution for the optimum coefficient:** We assume that the matrix is full rank (every feature provides additional predictive power) and that the number of predictors is smaller than the number of obervations. This also means that partially differentiating is okay to do!
+* **A closed-form solution can be found** The predictions are generated from $X$ using a simple, purely algebraic function, i.e. the sum-product of $X$ by $\beta$. This means we can find an analytical solution to the optimal choice $\beta^*$. Note this often isn't possible since non-linear activation functions (i.e. link functions) are often transcendental.
+
+We will dive into this in another post.
+
+Fin.

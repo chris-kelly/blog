@@ -1,0 +1,128 @@
+---
+title: "Minimizing RSS equivalent to MLE for OLS"
+author: "Chris Kelly"
+date: '02-08-24'
+categories: [differentation, cost functions, MSE, MAE]
+format:
+  html:
+    code-fold: true
+---
+
+::: {.callout-tip}
+## What we are exploring
+Showing that OLS produces the same coefficients as MLE when gaussian errors are used.
+:::
+
+# Quick recap of OLS: deriving optimal coefficients through least squares
+
+There are many options to choose for the intercept (alpha) and the slope (beta) to best a line that best fits the data, but we want to find the ones that best fit the data:
+
+```{r, message=F, warning=F, fig.width=9}
+require(plotly)
+set.seed(1)
+X = 0:5
+y = 5 + 2*X + runif(6,-0.5,1)
+plot_ly(type='scatter',mode='lines',line=list(dash='dot')) %>%
+  add_trace(x=X,y=1+1*X,name='alpha=1,beta=0.5') %>%
+  add_trace(x=X,y=5+1*X,name='alpha=5,beta=0.5') %>%
+  add_trace(x=X,y=9+1*X,name='alpha=9,beta=0.5') %>%
+  add_trace(x=X,y=1+2*X,name='alpha=1,beta=2') %>%
+  add_trace(x=X,y=5+2*X,name='alpha=5,beta=2') %>%
+  add_trace(x=X,y=9+2*X,name='alpha=9,beta=2') %>%
+  add_trace(x=X,y=1+4*X,name='alpha=1,beta=4') %>%
+  add_trace(x=X,y=5+4*X,name='alpha=5,beta=4') %>%
+  add_trace(x=X,y=9+4*X,name='alpha=9,beta=4') %>%
+  add_trace(x=X,y=y,mode='markers',name='Observed data',line=list(color='rgba(0,0,0,0)'),marker=list(size=10)) %>%
+  layout(xaxis=list(title='X'), yaxis=list(title='y'))
+```
+
+We can see that the choices of alpha and beta that minimize the sum of squared residuals are 5 and 2 respectively:
+
+```{r, message=F, warning=F, fig.width=9}
+alpha_options <- seq(3,7,1) # seq(4,6,1) # 
+beta_options <- 2^seq(0,2,0.5) # 2^seq(0.5,1.5,0.5) # 
+graph_options <- "plot_ly(type='scatter',mode='lines') %>% add_trace(x=X,y=y,mode='markers',name='Observed data') %>% "
+cost_matrix <- matrix(nrow=length(alpha_options),ncol=length(beta_options),dimnames = list(alpha_options, beta_options))
+for(alpha in 1:length(alpha_options)) {
+  for(beta in 1:length(beta_options)) {
+    graph_options <- paste0(graph_options, paste0(" add_trace(x=X,y=",alpha_options[alpha],"+",beta_options[beta],"*X",",name='alpha=",alpha_options[alpha],",beta=",round(beta_options[beta],1),"') %>%  \n"))
+    cost_matrix[alpha,beta] <- sum((y-alpha_options[alpha]-beta_options[beta]*X)^2)
+  }
+}
+graph_options <- paste0(graph_options, ' layout()')
+# eval(parse(text=graph_options))
+plot_ly(x=alpha_options,y=beta_options,z =~cost_matrix,showscale=FALSE,reversescale=TRUE) %>% 
+  layout(scene=list(xaxis=list(title='beta'),yaxis=list(title='alpha'),zaxis=list(title='RSS'))) %>% 
+  add_surface(contours = list(z = list(project=list(z=TRUE)))) %>%
+  layout(scene = list(camera = list(eye = list(x = -1.5,y = 1.5,z = 1.5))))
+```
+
+However, we don't need to do this through an exhaustive gridsearch through all the parameters to minimize the sum of squared residuals, but can yield this by differentiating our regression function with respect to our parameters to find its minimum point.
+
+This is simple to see if our features are orthogonal (i.e. in a univariate regression, the intercept is a one-dimensional vector of 1s, and the X a one-dimensional vector) as we can apply partial differentiation by $\beta_j$:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}\right]}
+\Rightarrow \frac{\partial}{\partial\beta_j} \sum_{i=1}^N{\epsilon_i^2}=\frac{\partial}{\partial\epsilon} \sum_{i=1}^N{\epsilon_i^2} \frac{\partial\epsilon}{\partial\beta_j} = \sum_{i=1}^N 2\epsilon_i\left(\frac{\partial\epsilon_i}{\partial\beta_j}\right)=0 \\
+\epsilon_i = y_i-\beta_0-\beta_1x_i \Rightarrow \\
+\sum_{i=1}^N2( y_i-\beta_0-\beta_1x_i)\left(\frac{\partial( y_i-\beta_0-\beta_1x_i)}{\partial\beta_j}\right)=0 \\
+\text{if j=0:} \\ 
+\Rightarrow \sum_{i=1}^N2( y_i-\beta_0-\beta_1x_i)(-1)=0 \\
+\Rightarrow n\beta_0 = \sum_{i=1}^N( y_i-\beta_1x_i)=\sum_{i=1}^N{y_i} - \beta_1\sum_{i=1}^N{x_i} \\
+\Rightarrow \beta_0 = \frac{\sum_{i=1}^N{y_i}}{n} - \beta_1\frac{\sum_{i=1}^N{x_i}}{n}=\bar{y}-\beta_1\bar{x} \\
+\text{if j=1:} \\ 
+\Rightarrow \sum_{i=1}^N2( y_i-\beta_0-\beta_1x_i)(-x_i)=0 \\
+\Rightarrow \sum_{i=1}^N2( y_i-(\bar{y}-\beta_1\bar{x})-\beta_1x_i)(-x_i)=0 \\
+\Rightarrow \sum_{i=1}^N( y_i-\bar{y}-\beta_1(x_i-\bar{x}))(-x_i)
+=\sum_{i=1}^N( y_ix_i-\bar{y}x_i-\beta_1x_i^2+\beta_1\bar{x}x_i)
+=\sum_{i=1}^N{y_ix_i}-\bar{y}\sum_{i=1}^N{x_i}-\beta_1\sum_{i=1}^N{x_i}^2+\beta_1\bar{x}\sum_{i=1}^N{x_i}) \\
+=\sum_{i=1}^N{y_ix_i}-\bar{y}(N\bar{x})-\beta_1\sum_{i=1}^N{x_i}^2+\beta_1\bar{x}(N\bar{x})=0 \\
+\Rightarrow \beta_1 = \frac{\sum_{i=1}^N{y_ix_i}-N\bar{x}\bar{y}}{\sum_{i=1}^N{x_i^2}-N\bar{x}^2}
+= \frac{\sum_{i=1}^N{y_ix_i}-N\bar{x}\bar{y}+(N\bar{x}\bar{y}-N\bar{x}\bar{y})}{\sum_{i=1}^N{x_i^2}-N\bar{x}^2+(N\bar{x}^2-N\bar{x}^2)} \\
+= \frac{\sum_{i=1}^N{y_ix_i}-\sum_{i=1}^N\bar{x}\bar{y}+(\bar{x}\sum_{i=1}^N{y_i}-\bar{y}\sum_{i=1}^N{x_i})}{\sum_{i=1}^N{x_i^2}-N\bar{x}^2+(\bar{x}\sum_{i=1}^N{x_i}-\bar{x}\sum_{i=1}^N{x_i})}
+= \frac{\sum_{i=1}^N{(y_i-\bar{y})(x_i-\bar{x})}}{\sum_{i=1}^N{(x_i-\bar{x})^2}} \\
+= \frac{cov(x,y)}{var(x)}
+$$
+
+(If the regression is multivariate, and the features are not perfectly orthogonal - i.e. is some multicollinearity - then this doesn't perfectly hold, and can yield different coefficients)
+
+We can see then that the best unbiased linear estimator (BLUE) for the intercept and slope is derived from minimizing the sum of squared residuals. These derivations also derive two interesting properties:
+
+* From line 5, that the mean error is zero: $\sum_{i=1}^N2( y_i-\beta_0-\beta_1x_i)(-1)=0 \Rightarrow \frac{1}{n}\sum_{i=1}^N(\epsilon_i)=0$
+* From line 9, that X is deterministic, and not correlated with the error term: $\sum_{i=1}^N2( y_i-\beta_0-\beta_1x_i)(-x_i)=0 \Rightarrow \sum_{i=1}^N(\epsilon_ix_i)=0$ (note that this is equal to the $cov(x_i,e_i)=\sum_{i=1}^N(\epsilon_ix_i)-\sum_{i=1}^N(\bar{\epsilon}\bar{x})$ since the mean error $\bar{\epsilon}$ is zero)
+
+
+# Maximising likelihood to solve linear regression:
+
+First let's solve the original linear regression problem by maximum likelihood. 
+
+Rather than simply minimizing the residual sum of squares (as usual with the OLS loss function), we want to find the beta that maximises the likelihood of observing the evidence we have, knowing $y \sim N(X'\beta,1)$.
+In other words, the probability of observing $y$ given our data and estimated model parameters is a function of the normal probability density of our squared residuals:
+
+$$
+p(y|\beta,X) = \prod_{i=1}^{n}{\frac{1}{\sqrt{2\pi}}}e^{-\frac{1}{2}\epsilon_i^2}
+$$
+We can take the negative log of the likelihood function to make it easier to differentiate:
+
+$$
+\max_\beta{p(y|\beta,X)} \Rightarrow \min_\beta\left[{-\log{\left(\prod_{i=1}^{n}{\frac{1}{\sqrt{2\pi}}}e^{-\frac{1}{2}\epsilon_i^2}\right)}}\right] = \\
+\min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sqrt{2\pi}}e^{-\frac{1}{2}\epsilon_i^2}\right)}} \right]} \\
+= \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sqrt{2\pi}}\right)}} + -\sum{\log{\left(e^{-\frac{1}{2}\epsilon_i^2}\right)}} \right]} \\
+= \min_\beta{\left[ -\sum{\log{((2\pi)^{-\frac{1}{2}})}} + -\sum{\left(-\frac{1}{2}\epsilon_i^2\right)} \right]} \\
+= \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi)}} + -\sum{\left(-\frac{1}{2}(y_i-X_i'\beta)^2\right)} \right]} \\
+= \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi)}} + \frac{1}{2}(Y-X\beta)^T(Y-X\beta) \right]} \\
+= \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi)}} + \frac{1}{2}\epsilon^T\epsilon \right]} \\
+\leftrightarrow \beta^*=\arg\min_\beta{\left[ \frac{1}{2}\epsilon^T\epsilon \right]}
+$$
+Now when we minimise the log-likelihood cost function by differentiating it with respect to $\beta$ and setting it to zero in order to derive the optimum coefficient, the constant $\log{(2\pi)}$ drops out, and we are left with differentiating $\frac{d}{d\beta}\epsilon^T\epsilon=0$ - the exact equivalent as with frequentist OLS.
+We can rewrite this in terms of the bayesian paradigm if we think of $\beta$ as a random variable (rather than a fixed quantity as per frequenist thinking):
+$$
+p(\beta|X,Y)=\frac{p(Y|\beta,X)p(\beta|X)}{p(Y|X)}=\frac{p(Y|\beta,X)p(\beta|X)}{\int p(Y|X,\beta)p(\beta|X)d\beta}
+$$
+Where:
+
+* $p(Y|\beta,X)$ is the likelihood function (where we maximise the log-likelihood as above)
+* $p(Y|X)$ is the evidence (the data we feed into the model)
+* $p(\beta|X)$ is the prior
+
+If we assume $\beta$ is fixed, then $p(\beta|X)=1$, and thus we get $= \min_\beta{\left[\epsilon^T\epsilon \right]} \Rightarrow \beta^*=(X^TX)^{-1}X^TY$ (as per OLS).

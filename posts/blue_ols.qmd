@@ -1,0 +1,324 @@
+---
+title: "BLUE coefficients: bias and efficiency"
+author: "Chris Kelly"
+date: '02-20-24'
+categories: [OLS, least-squares, Gauss-markov, coefficients, BLUE, bias, efficiency]
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+      - text: OLS coefficient derivation
+        href: ols_coef_derivation/ols_coef_derivation.html
+---
+
+::: {.callout-tip}
+### What are we exploring?
+Proving that the OLS coefficient is the best linear unbiased estimator.
+:::
+
+## Are the OLS coefficients "BLUE"?
+
+We find a unique solution to the set of coefficients that minimize the sum of squared residuals analytically (see its derivation here):
+
+$$
+\hat{\beta}^{OLS}=(X^{\intercal}X)^{-1}X^{\intercal}y
+$$
+
+However, how do we know if these coefficients are the *best* ones we can estimate? 
+
+For the estimated coefficients to be the *Best Linear Unbiased Estimator* (i.e. "BLUE"):
+
+* The best estimator has to be **unbiased**: $E[\hat{\beta}^*] = \beta$
+* And among all possible linear, unbiased estimators, it must have the smallest variance: $V[\hat{\beta}^{*}] < V[\hat{\beta}^{Z}]$
+
+We want to ensure our OLS estimate is the best, i.e. that $\hat{\beta}^{OLS} = \hat{\beta}^{*}$. To achieve this, first we need to confirm it is unbiased. Then given this is true, we can check that the coefficient is most efficient vs all other unbiased estimators.
+
+::: {.callout-tip}
+### Gauss Markov Assumptions
+Along the way, we will outline the Gauss-Markov assumptions utilised that ensure the OLS coefficient is BLUE.
+:::
+
+## Setting the scene
+
+##### The true coefficient and model
+$\beta$ is the true (unobserved) relationship between all the relevant explanatory features, $X$, and their associated observed outcomes, $y$. In other words, if we observed the entire population of data, it is the relationship we would find.
+
+Concretely, we assume the outcome is a linear function of all its relevant features. This "true model" perfectly predicts the outcome, except for random noise $\epsilon$ that influences the observed outcome: $y = X\beta + \epsilon$
+
+##### The estimated coefficient
+$\hat{\beta}$ is our estimated coefficient for the true relationship $\beta$. In reality, we estimate $\hat{\beta}$ from the small, finite sample of size $n$ that is collected, not the whole population. Given any random sample could be collected, we can term the coefficient resulting from the optimum estimation proceedure to be $\hat{\beta}^*$. We want to understand if $\hat{\beta}^{OLS} = \hat{\beta}^*$.
+
+##### The expected estimated coefficient
+$E[\hat{\beta}]$ is the "expected" estimated coefficient. Imagine we repeat the action of estimating the coefficient $\hat{\beta}$ many times, each time collecting a new sample (where each observation is sampled i.i.d), and recording the value for the estimated coefficient. $E[\hat{\beta}]$ would then be the average of all of those estimated coefficients. If the OLS coefficient is unbiased, then the expected coefficient estimate should be equal to the true one, $E[\hat{\beta}^{OLS}]=\beta$.
+
+##### The variance of the estimated coefficient
+$V[\hat{\beta}]$ is the variance of the estimated coefficient. It determines how much we might expect our estimate $\hat{\beta}$ to differ from the true $\beta$ for any sample drawn. Given the OLS coefficient has been shown to be unbiased, if it is BLUE we expect its variance to be lower than another other unbiased choice $\hat{\beta}^{Z}$. Concretely, we want to find $V[\hat{\beta}^{OLS}] < V[\hat{\beta}^{Z}]$.
+
+## Bias
+
+Often our small finite samples of size $n$ are not a perfect reflection of the population they are drawn from. This "sampling error" means we might estimate a different relationship between $X$ and $y$ than the true relationship of the population, i.e. $\hat{\beta} \neq \beta$.
+
+However, we should expect our estimated coefficient to be equal to the true value on average. This means we do not want to have a bias towards the estimate being systematically too small or too large, for example. In other words, if we repeated the whole proceedure thousands of times (each time taking new samples, and estimating a coefficient from the new sample) then the average of all the estimated coefficients values should be equal to the true value, i.e. $E[\hat{\beta}] = \beta$.
+
+Recall that we believe there is a true model that follows the form:
+
+$$
+y = X\beta + \epsilon
+$$
+
+::: {.callout-tip}
+## GM1: Linearity <a name="GM1"></a>
+The formula above relies on the first Gauss-Markov assumption - that the dependent variable $y$ is assumed to be a linear function of the variables $X$.
+Note that implies that the proper functional form has been selected (i.e. the relationship is linear) and there are no omitted variables - a huge assumption!
+:::
+
+If we substitute this into our estimated coefficient:
+
+$$
+\displaylines{
+\begin{align}
+\hat{\beta}^{OLS} & = (X^{\intercal}X)^{-1}X^{\intercal}y 
+\\ & = (X^{\intercal}X)^{-1}X^{\intercal}(X\beta+\epsilon) 
+\\ & = (X^{\intercal}X)^{-1}X^{\intercal}X\beta+(X^{\intercal}X)^{-1}X^{\intercal}\epsilon 
+\\ & = \beta+(X^{\intercal}X)^{-1}X^{\intercal}\epsilon
+\end{align}
+}
+$$
+
+we show that the estimated coefficient $\hat{\beta}^{OLS}$ will differ from the true value depending on the random error $\epsilon$ associated with the particular finite sample collected.
+
+Now let's now take the expectation, to determine when the coefficient is unbiased. In other words, what is the "average" coefficient if we took the sample many times:
+$$
+\displaylines{
+\begin{align}
+E[\hat{\beta}^{OLS}] 
+& = \beta +(X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon] 
+\\ & = \beta & \iff E[\epsilon] & = 0
+\end{align}
+\\ 
+}
+$$ 
+
+We find that the coefficient is unbiased as long as the expected error is also zero.
+
+::: {.callout-tip}
+## GM2: Strict Exogeneity <a name="GM2"></a>
+The second Gauss-Markov assumption is strict exogeneity, where the expected error is zero for all feature values: $E[\epsilon|X] = 0$. By definition, the weaker exogeneity statement of $E[\epsilon] = 0$ is implied by having the expected error conditional being equal to zero.
+:::
+
+## Efficiency
+
+To be the "best", the OLS estimator also needs to be  **efficient**. This means that it has the lowest variance of all unbiased estimators. This section looks to prove this.
+
+### Coefficient variance for OLS
+
+First, let's derive the variance from the coefficients estimated using OLS, termed $V[\hat{\beta}^{OLS}]$. As before, we substitute the true model $y = X\beta + \epsilon$ into the coefficient estimated through OLS:
+
+$$
+\displaylines{
+\begin{align}
+\hat{\beta}^{OLS}-\beta
+& = \beta +  ((X^{\intercal}X)^{-1}X^{\intercal}\epsilon) - \beta \\
+& = (X^{\intercal}X)^{-1}X^{\intercal}\epsilon
+\\ \\
+\therefore
+(\hat{\beta}^{OLS}-\beta)(\hat{\beta}^{OLS}-\beta)^{\intercal} 
+& = ((X^{\intercal}X)^{-1}X^{\intercal}\epsilon)((X^{\intercal}X)^{-1}X^{\intercal}\epsilon)^{\intercal} 
+\\ & =
+(X^{\intercal}X)^{-1}X^{\intercal}\epsilon\epsilon^{\intercal}X(X^{\intercal}X)^{-1} \\ \\
+\therefore
+V(\hat{\beta}^{OLS}) & = E[(\hat{\beta}^{OLS}-\beta)(\hat{\beta}^{OLS}-\beta)^{\intercal}] 
+\\ & =
+(X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon\epsilon^{\intercal}]X(X^{\intercal}X)^{-1}
+\end{align}
+}
+$$
+
+We can simplify this further by appling some assumptions to the estimated error variance $E[\epsilon\epsilon^{\intercal}]$:
+
+$$
+\displaylines{
+\begin{align}
+E[\epsilon \epsilon^{\intercal}] & =  
+\begin{bmatrix}
+E[\epsilon_1^2] & \cdots & E[\epsilon_1\epsilon_n] \\
+\vdots & \ddots & \vdots \\
+E[\epsilon_n\epsilon_1] & \cdots & E[\epsilon_n^2]
+\end{bmatrix} \\ \\
+& = \begin{bmatrix}
+\frac{1}{n}\sum_{i=1}^{n}{\epsilon_i^2} & \cdots & 0 \\
+\vdots & \ddots & \vdots \\
+0 & \cdots & \frac{1}{n}\sum_{i=1}^{n}{\epsilon_i^2}
+\end{bmatrix} \\ \\
+& = \begin{bmatrix}
+\hat{\sigma}^2 & \cdots & 0 \\
+\vdots & \ddots & \vdots \\
+0 & \cdots & \hat{\sigma}^2
+\end{bmatrix} \\ \\
+& = \hat{\sigma}^2I
+\end{align}
+}
+$$
+
+How can we jump to this result? Well we are making two assumptions:
+
+1. **No serial correlation**: $\rho_{\epsilon_{i},\epsilon_{i \neq j}} = 0$. No correlation between sample errors means that $E[\epsilon_i \epsilon_{j \neq i}] = 0$, and hence the off-diagonals of the error covariance matrix are zero.
+2. **Homoskedasticity**: the assumption of uniform error variance for all samples means that $V[\epsilon_i^2] = V[\epsilon_{j \neq i}^2] = \hat{\sigma}^2$. And our best approximation for $\hat{\sigma}^2$ is simply taking the average squared error: $\hat{\sigma}^2 = \frac{1}{n}\sum_{i=1}^{n}{\epsilon_i^2}$
+
+:::{.callout-tip}
+## GM3: Spherical errors <a name="GM3"></a>
+The third Gauss-Markov assumption is spherical errors, $E[\epsilon\epsilon^{\intercal}|X] = 0$. This means that the outer product of the expected errors is a scalar matrix, which implies no serial correlation and homoskedasticity.
+:::
+
+::: {.column-margin}
+It is especially important to make the right assumptions about $E[\epsilon\epsilon^{\intercal}|X]$ as it impacts where our estimate of the standard errors is correct! We will dive into what happens to SE if we violate these assumptions in another post.
+:::
+
+Since we now see that $\hat{\sigma}^2$ is a scalar matrix, we can thus simplfy the variance formula further:
+
+$$
+\displaylines{
+\begin{align}
+V(\hat{\beta}^{OLS}) & =
+(X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon\epsilon^{\intercal}]X(X^{\intercal}X)^{-1}
+\\ & =
+(X^{\intercal}X)^{-1}X^{\intercal} \hat{\sigma}^2I X(X^{\intercal}X)^{-1}
+\\ & =
+\hat{\sigma}^2
+\cancel{(X^{\intercal}X)^{-1}}
+\cancel{X^{\intercal} X}
+(X^{\intercal}X)^{-1}
+\\ & = \hat{\sigma}^2(X^{\intercal}X)^{-1}
+\end{align}
+}
+$$
+
+### Formulating an alternative unbiased coefficient
+
+Next step - lets formulate another estimator, $\hat{\beta}^{z}$, which differs from $\hat{\beta}^{OLS}$ by a non-zero matrix $A$. See how they both differ below:
+
+$$
+\displaylines{
+\begin{align}
+\hat{\beta}^{OLS} & =(X^{\intercal}X)^{-1}X^{\intercal}y \\
+\hat{\beta}^{Z} & =\left((X^{\intercal}X)^{-1}X^{\intercal}+A\right)y
+\end{align}
+}
+$$
+
+Now we need to ensure this new estimator is not biased. So by taking the expectation in the same was as for OLS...
+
+$$
+\displaylines{
+\begin{align}
+E[\hat{\beta}^{Z}] & = E\left[ \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right)y \right]
+\\ & = \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right)(X\beta+ \cancel{E\left[\epsilon \right]}) & \because E[\epsilon] = 0
+\\ & = (X^{\intercal}X)^{-1}X^{\intercal}X\beta+AX\beta
+\\ & = \beta+AX\beta
+\end{align}
+}
+$$
+
+So the estimator is only unbiased iff $AX=0$. This is important to note when comparing the variance between unbiased coefficients - see below!
+
+### Variance of the alternative unbiased coefficient
+
+Just like before, we calculate the variance:
+
+$$
+\displaylines{
+\begin{align}
+V[\hat{\beta}^{Z}] 
+& = V\left[ \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right)y \right]
+\\ & = \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right) V[y] \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right)^{\intercal}
+\\ & = \hat{\sigma}^2 \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right) \left((X^{\intercal}X)^{-1}X^{\intercal}+A\right)^{\intercal} 
+& \because E[\epsilon \epsilon^{\intercal}|X] = 0
+\\ & = \hat{\sigma}^2\left((X^{\intercal}X)^{-1}X^{\intercal}+A\right) \left(X(X^{\intercal}X)^{-1}+A^{\intercal}\right)
+\\ & = \hat{\sigma}^2 \left(
+(X^{\intercal}X)^{-1}X^{\intercal} X(X^{\intercal}X)^{-1} + AX(X^{\intercal}X)^{-1} + (X^{\intercal}X)^{-1}X^{\intercal}A^{\intercal} + AA^{\intercal}
+\right)
+\\ & = \hat{\sigma}^2
+(X^{\intercal}X)^{-1} + \hat{\sigma}^2AA^{\intercal}
+& \because AX = 0
+\\ & = V[\beta^{OLS}] + \hat{\sigma}^2AA^{\intercal}
+\end{align}
+}
+$$
+
+Now since AA is surely a positive semi-definite matrix, then we know that $V[\hat{\beta}^{Z}] > V[\hat{\beta}^{OLS}]$.
+
+We have shown that $\hat{\beta}^{OLS}$ has the smallest variance among all unbiased estimators!
+
+## Summarising the Gauss-markov assumptions
+
+Along the way, we showed where assumptions were needed to ensure the OLS coefficient estimation is BLUE. 
+
+We actually missed one out, but it is actually quite trivial to see from the OLS coefficient formula:
+
+$$
+\hat{\beta}^{OLS}=(X^{\intercal}X)^{-1}X^{\intercal}y
+$$
+
+::: {.callout-tip}
+## GM4: Full rank <a name="GM4"></a>
+The matrix $X$ must be of full rank $k$, so that it is possible to invert the matrix $X^{\intercal}X$. This is equivalent to having no perfect multi-collinearity.
+:::
+
+We have now collected our full set of Gauss-Markov assumptions required for the OLS coefficient to be BLUE:
+
+1. [Linearity](#GM1)
+2. [Strict Exogeneity](#GM2)
+3. [Spherical Errors](#GM3)
+4. [Full rank](#GM4)
+
+<!-- However, let's first derive the need for exogeneity from the math above, as this is required: -->
+
+
+
+<!-- ### Orthogonality of residuals and features
+
+From the outputs from [step 2 above](##partially-differentiate-rss-with-respect-to-beta), we can also derive the orthogonality between the features and the residuals. -->
+
+<!-- $$
+\displaylines{
+\cancel{2}X^{\intercal}y +  \cancel{2}((X^{\intercal}X)\hat{\beta})=0 \\
+\therefore -X^{\intercal}(y -X^{\intercal}\hat{\beta}) =
+X^{\intercal}\hat{\epsilon} = 0 \\
+}
+$$
+
+What does this mean? Well there is no linear relationship between the residuals and any feature in $X$:, so $E[\hat{\epsilon}|X] = 0$.
+
+In order for this to be true for the intercept (the first column in $X$, a vector of ones), we must find that the sum of residuals (and equivalently the mean residual) is zero: $E[\hat{\epsilon}] = 0$
+
+Note the key difference between residuals and true error.The residuals are guaranteed to be orthogonal, but not the errors. -->
+
+
+<!-- ::: {.column-margin}
+Recall the confidence interval of a coefficient using the normal approximation:
+
+$$
+\hat{\beta} \pm t_{n-k,1-\alpha/2} \times \sigma_{\hat{\beta}}
+$$
+
+In other words, if we repeated the whole proeedure thousands of times (taking new samples, estimating a coefficient from this sample, and estimated its 95% confidence interval) then we should find that the true value lies in 95% of these confidence interval estimates.
+::: -->
+
+
+<!-- :::{.column-margin}
+Conditional homoskedasticity means that even for different $x_i$, the variance of $\epsilon_i$ is constant $\sigma^2$.
+
+. Unconditional homoskedasticity is a weaker statement, in that you could have 𝐸(𝜖2𝑖)=𝜎2
+ but 𝐸(𝜖2𝑖|𝐱𝑖)≠𝜎2
+; Examples 2.6 (page 127) illustrates this. It also perhaps answers the question of the overlap between homo- and heteroskedasticity: it gives an example where there is unconditional homoskedasticity as well as conditional heteroskedasticity.
+::: -->
+
+<!-- conditional homoskedasticity implies unconditional homoskedasticity
+This means applying one of the gauss-markov assumptions: $E[\epsilon] -->
+
+<!-- In other words, the coefficient is unbiased iff:
+
+* There is no endogeneity: $E[X^{\intercal}\epsilon] = 0$
+* There is no systematic error in the coefficients: $E[\epsilon] = 0$ -->
+

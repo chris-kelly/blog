@@ -2,8 +2,12 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/mse_mean_mae_median/mse_mean_mae_median.html",
-      "/posts/differentiation/differentiation.html"
+      "/posts/ols_coef_derivation.html",
+      "/posts/blue_ols.html",
+      "/posts/sandwich_estimators.html",
+      "/posts/mse_mean_mae_median.html",
+      "/posts/mle_gaussian.html",
+      "/posts/differentiation.html"
     ]
   }
 ]

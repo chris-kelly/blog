@@ -1,0 +1,98 @@
+---
+title: "Minimizing mse tends to mean, MAE tends to median"
+author: "Chris Kelly"
+date: '02-08-24'
+categories: [differentation, cost functions, MSE, MAE]
+format:
+  html:
+    code-fold: true
+---
+
+::: {.callout-tip}
+## What we are solving
+Why minimizing the mean absolute error tends towards the median of the sample.
+:::
+
+In the absence of informative features, an ML algorithm minimizing the sum of squared errors will tend towards predicting the mean of the sample. However, minimizing the sum of absolute errors will tend towards predicting the median of the sample.
+
+This post dives into why this is the case.
+
+# Minimizing residual sum-of-squares
+
+Let's define the residual for sample $i$ as $\epsilon_i$. We now want to find the prediction $\hat{y}$ that minimizes the sum of all squared residuals (i.e. where the gradient is zero):
+
+$$
+\displaylines{
+\begin{align}
+\min_\hat{y}{\left[\sum_{i=1}^N{\epsilon_i^2}\right]}
+\Rightarrow &
+\frac{\partial}{\partial \hat{y}} \sum_{i=1}^N{\epsilon_i^2} \\ = &
+\frac{\partial \left( \sum_{i=1}^N{\epsilon_i^2} \right) }{\partial\epsilon} 
+\left( \frac{\partial\epsilon}{\partial \hat{y} } \right) \\ = &
+\sum_{i=1}^N 2\epsilon_i \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) = 0
+\end{align}
+}
+$$
+
+We can now substitue in $\epsilon_i = y - \hat{y}$:
+
+$$
+\displaylines{
+\begin{align}
+\sum_{i=1}^N 2\epsilon_i \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) & 
+= \sum_{i=1}^N2( y_i- \hat{y})\left(\frac{\partial( y_i-\hat{y})}{\partial \hat{y}}\right) \\  & 
+= \sum_{i=1}^N2( y_i- \hat{y} )(-1) \\ &
+= \sum_{i=1}^N2( y_i) - 2ny = 0 \\ & 
+\therefore n \hat{y} = \sum_{i=1}^N( y_i) \\ & 
+\therefore \hat{y} = \frac{\sum_{i=1}^N{y_i}}{n} = \bar{y}
+\end{align}
+}
+$$
+
+Thus we can see that the prediction that minimizes the sum of squared residuals, is simply the mean.
+
+# Minimize sum of absolute residuals
+
+We now do the same think again, but this time look to minimize the sum of all absolute residuals instead.
+
+$$
+\displaylines{
+\begin{align}
+\min_\hat{y}{\left[\sum_{i=1}^N{\mid \epsilon_i \mid}\right]}
+\Rightarrow &
+\frac{\partial}{\partial \hat{y}} \sum_{i=1}^N{\left(\epsilon_i^2\right)^{1/2}} \\ = &
+\frac{\partial \sum_{i=1}^N{ \left(\epsilon_i^2\right)^{1/2} } }{\partial\epsilon_i^2}
+\times \frac{\partial\epsilon_i^2}{\partial \epsilon_i }
+\times \frac{\partial\epsilon_i}{\partial \hat{y} }  \\ = &
+\frac{1}{2} \sum_{i=1}^N{ \left(\epsilon_i^2\right)^{-1/2} }
+\times 2 \epsilon_i
+\times \frac{\partial\epsilon_i}{\partial \hat{y} }  \\ = &
+\sum_{i=1}^N{ \left(\epsilon_i^2\right)^{-1/2} } \times \epsilon_i
+\times \frac{\partial\epsilon_i}{\partial \hat{y} }  \\ = &
+\sum_{i=1}^N \frac{\epsilon_i}{\mid \epsilon_i \mid} \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) = 0
+\end{align}
+}
+$$
+
+And similarly to before, we can now substitute in $\epsilon_i = y - \hat{y}$:
+
+$$
+\displaylines{
+\begin{align}
+\sum_{i=1}^N \frac{\epsilon_i}{\mid \epsilon_i \mid} \left( \frac{\partial\epsilon_i}{\partial \hat{y} }\right) & 
+= \sum_{i=1}^N \frac{ y_i- \hat{y} }{\mid y_i- \hat{y} \mid}\left(\frac{\partial( y_i-\hat{y})}{\partial \hat{y}}\right) \\  & 
+= \sum_{i=1}^N \frac{ y_i- \hat{y} }{\mid y_i- \hat{y} \mid}(-1) = 0
+\end{align}
+}
+$$
+
+Now $f(x) = \frac{ x }{\mid x \mid}$ is an cool transformation, keeping its sign but getting rid of the magnitude of the size of $x$, i.e.:
+
+* $f(x < 0) = -1$
+* $f(x > 0) = 1$
+
+So to ensure that $\sum f(\epsilon_i)=0$, we need to pick a value for $\hat{y}$ that means half of the errors are $<0$ and half of the errors are $>0$.
+
+So that means half the errors must be negative, and half are positive. So $\hat{y}$ has to be the median value!
+
+Fin.
