@@ -2,9 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/ols_coef_derivation.html",
-      "/posts/blue_ols.html",
       "/posts/sandwich_estimators.html",
+      "/posts/blue_ols.html",
+      "/posts/ols_coef_derivation.html",
       "/posts/mse_mean_mae_median.html",
       "/posts/differentiation.html"
     ]

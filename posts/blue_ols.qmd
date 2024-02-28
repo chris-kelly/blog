@@ -1,7 +1,7 @@
 ---
 title: "BLUE coefficients: bias and efficiency"
 author: "Chris Kelly"
-date: '02-20-24'
+date: '02-21-24'
 categories: [OLS, least-squares, Gauss-markov, coefficients, BLUE, bias, efficiency]
 format:
   html:

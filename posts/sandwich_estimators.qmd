@@ -1,7 +1,7 @@
 ---
 title: "Sandwiches: robust covariance error estimation"
 author: "Chris Kelly"
-date: '02-20-24'
+date: '02-22-24'
 categories: [OLS, confidence intervals, clustered errors, heteroskedastic errors]
 format:
   html:
