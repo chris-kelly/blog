@@ -1,0 +1,19 @@
+---
+title: "OLS: violating strict exogeneity"
+author: "Chris Kelly"
+date: '02-21-24'
+categories: []
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+      - text: OLS coefficient derivation
+        href: ols_coef_derivation.html
+draft: true
+---
+
+* Endogeneity
+* Simultaneity
+* IV estimation
+* Looking for patterns in the residuals

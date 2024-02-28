@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chris Kelly">
-<meta name="dcterms.date" content="2024-02-22">
+<meta name="dcterms.date" content="2024-02-21">
 
-<title>Chris Kelly Blog - Sandwiches: robust covariance error estimation</title>
+<title>Chris Kelly Blog - NLP: GloVe</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -69,35 +69,6 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -144,14 +115,8 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Sandwiches: robust covariance error estimation</h1>
-                                <div class="quarto-categories">
-                <div class="quarto-category">OLS</div>
-                <div class="quarto-category">confidence intervals</div>
-                <div class="quarto-category">clustered errors</div>
-                <div class="quarto-category">heteroskedastic errors</div>
-              </div>
-                  </div>
+      <h1 class="title">NLP: GloVe</h1>
+                      </div>
   </div>
     
   
@@ -167,7 +132,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 22, 2024</p>
+        <p class="date">February 21, 2024</p>
       </div>
     </div>
     
@@ -179,240 +144,20 @@ window.Quarto = {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#introducing-sandwiches" id="toc-introducing-sandwiches" class="nav-link active" data-scroll-target="#introducing-sandwiches">Introducing sandwiches</a></li>
-  <li><a href="#salmon-bagel-spherical-errors" id="toc-salmon-bagel-spherical-errors" class="nav-link" data-scroll-target="#salmon-bagel-spherical-errors">Salmon bagel: Spherical Errors 🐟</a></li>
-  <li><a href="#ham-sarnie-heteroskedastic-errors" id="toc-ham-sarnie-heteroskedastic-errors" class="nav-link" data-scroll-target="#ham-sarnie-heteroskedastic-errors">Ham sarnie: Heteroskedastic errors 🍖</a></li>
-  <li><a href="#cheese-roll-clustered-errors" id="toc-cheese-roll-clustered-errors" class="nav-link" data-scroll-target="#cheese-roll-clustered-errors">Cheese roll: Clustered Errors 🧀</a></li>
-  </ul>
-<div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="blue_ols.html#coefficient-variance-for-ols"><i class="bi bi-link-45deg"></i>deriving the variance of the OLS coefficient</a></li></ul></div></nav>
+        
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-What are we exploring?
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Estimating the correct coefficient variance under different error assumptions</p>
-</div>
-</div>
-<section id="introducing-sandwiches" class="level2">
-<h2 class="anchored" data-anchor-id="introducing-sandwiches">Introducing sandwiches</h2>
-<p>The <a href="blue_ols.html#coefficient-variance-for-ols">variance for the OLS coefficient estimator</a> is equal to the following:</p>
-<p><span class="math display">\[
-\displaylines{
-V(\hat{\beta}) =
-(X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon\epsilon^{\intercal}]X(X^{\intercal}X)^{-1}
-}
-\]</span></p>
-<p>This can be though to as a sandwich:</p>
 <ul>
-<li>The <strong>“bread”</strong> either side: <span class="math inline">\((X^{\intercal}X)^{-1}X^{\intercal}\)</span> on the left and its transpose <span class="math inline">\(X(X^{\intercal}X)^{-1}\)</span> on the right</li>
-<li>The <strong>“meat”</strong> in the middle: what we assume for <span class="math inline">\(E[\epsilon\epsilon^{\intercal}]\)</span>
-<ul>
-<li>Note that this is the same as the error variance, since <span class="math inline">\(V[\epsilon]=E[\epsilon\epsilon^{\intercal}]-E[\epsilon]E[\epsilon^{\intercal}]\)</span> and <span class="math inline">\(E[\epsilon] = 0\)</span></li>
-</ul></li>
-</ul>
-<p>Our coefficient will only be <strong>efficient</strong> if these assumptions about the expected error are correct! We will explore what happens when the errors are assumed to be homoskedastic, heteroskedastic or clustered.</p>
-</section>
-<section id="salmon-bagel-spherical-errors" class="level2 page-columns page-full">
-<h2 class="anchored" data-anchor-id="salmon-bagel-spherical-errors">Salmon bagel: Spherical Errors 🐟</h2>
-<p>Usual OLS is efficient <a href="blue_ols.html#coefficient-variance-assuming-spherical-errors">if the true model has “spherical errors”</a>. What does this mean in practice?</p>
-<ul>
-<li>Errors are <strong>homoskedastic</strong>: <span class="math inline">\(V(\epsilon_i)=\sigma^2\)</span> for all observations</li>
-<li>Errors are <strong>serially uncorrelated</strong>: <span class="math inline">\(cov(\epsilon_i,\epsilon_{j\neq i})=0\)</span></li>
-</ul>
-<p>What does this look like for <span class="math inline">\(E[\epsilon\epsilon^{\intercal}]\)</span>?</p>
-<ul>
-<li>The diagonal of the matrix is a constant value (scalar), <span class="math inline">\(\sigma^2\)</span></li>
-<li>The off-diagonals are all zero</li>
-</ul>
-<p><span class="math display">\[
-\hat{\sigma}^2\underset{n\times n}{I} =
-\begin{bmatrix}
-\hat{\sigma}^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; \hat{\sigma}^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; \hat{\sigma}^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; \hat{\sigma}^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; \hat{\sigma}^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \hat{\sigma}^2 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \hat{\sigma}^2 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \hat{\sigma}^2 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \hat{\sigma}^2
-\end{bmatrix}
-\]</span></p>
-<p>A good estimation of the constant error variance <span class="math inline">\(\sigma^2\)</span> is to apply the standard formula to the residuals (i.e.&nbsp;method of moments):</p>
-<p><span class="math display">\[
-\hat{\sigma^2}=\frac{1}{n-k}\sum{\hat{\epsilon_i}^2} \equiv \frac{\epsilon^{\intercal}\epsilon }{n-k}
-\]</span></p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Thus our “salmon sandwich” is:
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><span class="math display">\[
-\underset{k \times k}{(X^{\intercal}X)}^{-1}
-\underset{k \times n}
-{X^{\intercal}}
-\left(\frac{1}{n-k} \times \underset{1 \times 1}{(\epsilon^{\intercal}\epsilon)}
-\times\underset{n \times n}{I} \right)
-\underset{n \times k}{X}
-\underset{k \times k}{(X^{\intercal}X)}^{-1}
-\]</span></p>
-</div>
-</div>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Note that under spherical errors, the sandwich can be simplified: <span class="math display">\[
-\displaylines{
-\begin{align}
-V[\hat{\beta}]
-&amp; = (X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon\epsilon^{\intercal}]X(X^{\intercal}X)^{-1}
-\\ &amp; = (X^{\intercal}X)^{-1}X^{\intercal}\sigma^2IX(X^{\intercal}X)^{-1}
-\\ &amp; = \sigma^2(X^{\intercal}X)^{-1}\cancel{X^{\intercal}X}\cancel{(X^{\intercal}X)^{-1}}
-\\ &amp; = \sigma^2(X^{\intercal}X)^{-1}
-\end{align}
-}
-\]</span></p>
-</div></div><p>In this scenario, the only things that impact the standard error of the coefficient <span class="math inline">\(\beta_k\)</span> is:</p>
-<ul>
-<li>The variance of all the residuals, <span class="math inline">\(\sigma^2\)</span></li>
-<li>The variance of the feature <span class="math inline">\(V(X_k)\)</span></li>
-</ul>
-</section>
-<section id="ham-sarnie-heteroskedastic-errors" class="level2">
-<h2 class="anchored" data-anchor-id="ham-sarnie-heteroskedastic-errors">Ham sarnie: Heteroskedastic errors 🍖</h2>
-<p>Heteroskedastic correction is needed if:</p>
-<ul>
-<li><strong>Errors vary for every individual</strong>: <span class="math inline">\(V(\epsilon_i)=\sigma_i^2\)</span> for all observations</li>
-<li>But they are still independent aka <strong>serially uncorrelated</strong>: <span class="math inline">\(cov(\epsilon_i,\epsilon_{j\neq i})=0\)</span></li>
-</ul>
-<p>What does this look like for <span class="math inline">\(E[\epsilon\epsilon^{\intercal}]\)</span>?</p>
-<ul>
-<li><p>The diagonal of the matrix is the estimate of variance which is unique for each observation, <span class="math inline">\(\sigma_i^2\)</span></p></li>
-<li><p>The off-diagonals are all zero</p>
-<p><span class="math display">\[
-  \underset{n \times n}{\sigma^2} = \begin{bmatrix}
-  \sigma_1^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-  0 &amp; \sigma_2^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-  0 &amp; 0 &amp; \sigma_3^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-  0 &amp; 0 &amp; 0 &amp; \sigma_4^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-  0 &amp; 0 &amp; 0 &amp; 0 &amp; \sigma_5^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \sigma_6^2 &amp; 0 &amp; 0 &amp; 0\\
-  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \sigma_7^2 &amp; 0 &amp; 0\\
-  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \sigma_8^2 &amp; 0\\
-  0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \sigma_{..}^2\\
-  \end{bmatrix}
-  \]</span></p></li>
-<li><p>A good estimation of the vector of heteroskedastic error variances <span class="math inline">\(\sigma^2\)</span> is again to apply the standard formula to the residuals for each individual:</p></li>
-</ul>
-<p><span class="math display">\[
-\hat{\sigma_i^2}=\frac{1}{n-k}\sum{\hat{\epsilon_i}^2}
-\]</span></p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Thus our “ham sandwich” is:
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><span class="math display">\[
-\underset{k \times k}{(X^{\intercal}X)}^{-1}
-\underset{k \times n}{X^{\intercal}}
-\left(\frac{1}{n-k} \times \underset{1 \times n}{(\epsilon\odot \epsilon)} ^{\intercal}
-\times\underset{n \times n}{I} \right)
-\underset{n \times k}{X}
-\underset{k \times k}{(X^{\intercal}X)}^{-1}
-\]</span></p>
-</div>
-</div>
-<p>Similar to homoskedastic errors, the things that impacts the standard error of coefficient <span class="math inline">\(k\)</span> is:</p>
-<ul>
-<li>The variance of all the individual errors, <span class="math inline">\(\sigma_i^2\)</span></li>
-<li>The variance of the feature <span class="math inline">\(V(X_k)\)</span></li>
-</ul>
-</section>
-<section id="cheese-roll-clustered-errors" class="level2">
-<h2 class="anchored" data-anchor-id="cheese-roll-clustered-errors">Cheese roll: Clustered Errors 🧀</h2>
-<p>Cluster-robust errors are needed if:</p>
-<ul>
-<li><strong>Errors vary for every individual</strong>: <span class="math inline">\(V(\epsilon_i)=\sigma_i^2\)</span> for all observations i.e.&nbsp;still heteroskedastic</li>
-<li>AND errors within the same cluster <span class="math inline">\(C_l\)</span> are <strong>serially correlated</strong>: <span class="math inline">\(cov(\epsilon_i,\epsilon_{j}) \neq 0 \text{ if } \epsilon_i,\epsilon_j \in C_l\)</span>
-<ul>
-<li>Note - <strong>errors between clusters are assumed not to be serially correlated</strong> though i.e.&nbsp;<span class="math inline">\(cov(\epsilon_i,\epsilon_{j}) =0 \text{ if } \epsilon_i \in C_l,\epsilon_j \in C_{m \neq l}\)</span></li>
-</ul></li>
-</ul>
-<p>What does this look like for <span class="math inline">\(E[\epsilon\epsilon^{\intercal}]\)</span>?</p>
-<ul>
-<li>The diagonal of the matrix is the estimate of variance which is unique for each observation, <span class="math inline">\(\sigma_i^2\)</span></li>
-<li>The off-diagonals are also populated with the covariance - but only when they are both in the same cluster</li>
-</ul>
-<p>Here is an example where observations 1, 2 and 3 are in cluster A, observations 4 and 5 are in cluster B, observations 6, 7 and 8 are in cluster C etc.</p>
-<p><span class="math display">\[
-\underset{n \times n}{\epsilon\epsilon^{\intercal}} \sim \begin{bmatrix}
-\epsilon_1^2 &amp; \epsilon_1\epsilon_2 &amp; \epsilon_1\epsilon_3 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-\epsilon_2\epsilon_1 &amp; \epsilon_2^2 &amp; \epsilon_2\epsilon_3 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-\epsilon_3\epsilon_1 &amp; \epsilon_3\epsilon_2 &amp; \epsilon_3^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; \epsilon_4^2 &amp; \epsilon_4\epsilon_5 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; \epsilon_5\epsilon_4 &amp; \epsilon_5^2 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \epsilon_6^2 &amp; \epsilon_6\epsilon_7 &amp; \epsilon_6\epsilon_8 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \epsilon_7\epsilon_6 &amp; \epsilon_7^2 &amp; \epsilon_7\epsilon_8 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \epsilon_8\epsilon_6 &amp; \epsilon_8\epsilon_7 &amp; \epsilon_8^2 &amp; 0\\
-0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; \epsilon_{..}^2\\
-\end{bmatrix}
-\]</span></p>
-<p>Additionally, we have to do a finite-sample correction as well on the degrees of freedom, based on the number of clusters <span class="math inline">\(n_c\)</span></p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Thus our cheese sandwich is:
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><span class="math inline">\(\underset{k \times k}{(X^{\intercal}X)}^{-1}
-\underset{k \times n}{X^{\intercal}}
-\left(\frac{n-1}{n-k}\frac{n_c}{n_c-1} \times
-\underset{n \times n}{(\epsilon \epsilon^{\intercal})}
-\right)
-\underset{n \times k}{X}
-\underset{k \times k}{(X^{\intercal}X)}^{-1}\)</span></p>
-</div>
-</div>
-<p>In this scenario, there are a few additional things that impact the standard error of coefficient <span class="math inline">\(k\)</span>:</p>
-<ul>
-<li>If errors are correlated within clusters, this will increase the error.</li>
-<li>If features are correlated within clusters, this will also increase the error (due to the off-diagonals in the error variance matrix)</li>
-<li>And if both the errors and feature correlations are the same sign, this will also increase the standard error.</li>
-<li>As well as the variance of the individual errors, <span class="math inline">\(\sigma_i^2\)</span>, and the variance of each feature <span class="math inline">\(V(X_k)\)</span>, as before</li>
+<li>Coefficient derivation</li>
 </ul>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

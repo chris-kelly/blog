@@ -1,0 +1,14 @@
+---
+title: "Sandwiches: robust covariance error estimation"
+author: "Chris Kelly"
+date: '02-22-24'
+categories: [GLM, confidence intervals, clustered errors, heteroskedastic errors]
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+      - text: Sandwich estimators for OLS
+        href: ols_sandwich_estimators.html
+draft: true
+---

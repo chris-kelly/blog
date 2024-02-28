@@ -10,6 +10,8 @@ format:
     other-links:
       - text: OLS coefficient derivation
         href: ols_coef_derivation.html
+      - text: Dealing with non-spherical errors
+        href: ols_sandwich_estimators.html
 ---
 
 ::: {.callout-tip}

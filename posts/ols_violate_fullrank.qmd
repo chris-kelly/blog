@@ -1,0 +1,20 @@
+---
+title: "OLS: impact of multicollinearity "
+author: "Chris Kelly"
+date: '02-21-24'
+categories: []
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+      - text: OLS coefficient derivation
+        href: ols_coef_derivation.html
+draft: true
+---
+
+* Unable to invert martrix (perfect collinearity)
+* Impact on efficiency
+* Categorical variables, interactions
+* Dealing: De-meaning, PCA etc
+* VIF

@@ -1,0 +1,18 @@
+---
+title: "OLS: violating linearity"
+author: "Chris Kelly"
+date: '02-21-24'
+categories: []
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+      - text: OLS coefficient derivation
+        href: ols_coef_derivation.html
+draft: true
+---
+
+* Mis-specification
+* Omitted relevant variable bias
+* Looking for patterns in the residuals

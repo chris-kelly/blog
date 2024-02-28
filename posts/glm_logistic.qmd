@@ -1,0 +1,13 @@
+---
+title: "OLS: impact of multicollinearity "
+author: "Chris Kelly"
+date: '02-21-24'
+categories: []
+format:
+  html:
+    code-fold: true
+    toc: true
+draft: true
+---
+
+* Coefficient derivation

@@ -8,7 +8,7 @@ format:
     code-fold: true
     toc: true
     other-links:
-      - text: deriving the variance of the OLS coefficient
+      - text: Deriving the variance of the OLS coefficient
         href: blue_ols.html#coefficient-variance-for-ols
 ---
 

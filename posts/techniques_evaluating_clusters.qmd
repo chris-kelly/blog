@@ -1,0 +1,15 @@
+---
+title: "OLS: violating linearity"
+author: "Chris Kelly"
+date: '02-21-24'
+categories: []
+format:
+  html:
+    code-fold: true
+    toc: true
+draft: true
+---
+
+* Mis-specification
+* Omitted relevant variable bias
+* Looking for patterns in the residuals
