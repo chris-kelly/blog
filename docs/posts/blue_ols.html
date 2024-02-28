@@ -192,12 +192,13 @@ window.Quarto = {
   <li><a href="#efficiency" id="toc-efficiency" class="nav-link" data-scroll-target="#efficiency">Efficiency</a>
   <ul class="collapse">
   <li><a href="#coefficient-variance-for-ols" id="toc-coefficient-variance-for-ols" class="nav-link" data-scroll-target="#coefficient-variance-for-ols">Coefficient variance for OLS</a></li>
+  <li><a href="#coefficient-variance-assuming-spherical-errors" id="toc-coefficient-variance-assuming-spherical-errors" class="nav-link" data-scroll-target="#coefficient-variance-assuming-spherical-errors">Coefficient variance assuming “spherical errors”</a></li>
   <li><a href="#formulating-an-alternative-unbiased-coefficient" id="toc-formulating-an-alternative-unbiased-coefficient" class="nav-link" data-scroll-target="#formulating-an-alternative-unbiased-coefficient">Formulating an alternative unbiased coefficient</a></li>
   <li><a href="#variance-of-the-alternative-unbiased-coefficient" id="toc-variance-of-the-alternative-unbiased-coefficient" class="nav-link" data-scroll-target="#variance-of-the-alternative-unbiased-coefficient">Variance of the alternative unbiased coefficient</a></li>
   </ul></li>
   <li><a href="#summarising-the-gauss-markov-assumptions" id="toc-summarising-the-gauss-markov-assumptions" class="nav-link" data-scroll-target="#summarising-the-gauss-markov-assumptions">Summarising the Gauss-markov assumptions</a></li>
   </ul>
-<div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="ols_coef_derivation/ols_coef_derivation.html"><i class="bi bi-link-45deg"></i>OLS coefficient derivation</a></li></ul></div></nav>
+<div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="ols_coef_derivation.html"><i class="bi bi-link-45deg"></i>OLS coefficient derivation</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
@@ -327,7 +328,7 @@ GM2: Strict Exogeneity <a name="GM2"></a>
 <section id="efficiency" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="efficiency">Efficiency</h2>
 <p>To be the “best”, the OLS estimator also needs to be <strong>efficient</strong>. This means that it has the lowest variance of all unbiased estimators. This section looks to prove this.</p>
-<section id="coefficient-variance-for-ols" class="level3 page-columns page-full">
+<section id="coefficient-variance-for-ols" class="level3">
 <h3 class="anchored" data-anchor-id="coefficient-variance-for-ols">Coefficient variance for OLS</h3>
 <p>First, let’s derive the variance from the coefficients estimated using OLS, termed <span class="math inline">\(V[\hat{\beta}^{OLS}]\)</span>. As before, we substitute the true model <span class="math inline">\(y = X\beta + \epsilon\)</span> into the coefficient estimated through OLS:</p>
 <p><span class="math display">\[
@@ -349,6 +350,10 @@ V(\hat{\beta}^{OLS}) &amp; = E[(\hat{\beta}^{OLS}-\beta)(\hat{\beta}^{OLS}-\beta
 \end{align}
 }
 \]</span></p>
+<p>This is sometimes called the sandwich estimator - post soon to follow on this!</p>
+</section>
+<section id="coefficient-variance-assuming-spherical-errors" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="coefficient-variance-assuming-spherical-errors">Coefficient variance assuming “spherical errors”</h3>
 <p>We can simplify this further by appling some assumptions to the estimated error variance <span class="math inline">\(E[\epsilon\epsilon^{\intercal}]\)</span>:</p>
 <p><span class="math display">\[
 \displaylines{

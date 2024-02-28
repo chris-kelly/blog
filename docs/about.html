@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Chris Kelly Blog - Sciencing Data</title>
+<title>Chris Kelly Blog - About</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,12 +30,9 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
@@ -68,73 +65,15 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -149,7 +88,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link active" href="./about.html" aria-current="page"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -170,262 +109,39 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Sciencing Data</h1>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(5)</span></div><div class="category" data-category="BLUE">BLUE <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Gauss-markov">Gauss-markov <span class="quarto-category-count">(1)</span></div><div class="category" data-category="MAE">MAE <span class="quarto-category-count">(1)</span></div><div class="category" data-category="MSE">MSE <span class="quarto-category-count">(1)</span></div><div class="category" data-category="OLS">OLS <span class="quarto-category-count">(3)</span></div><div class="category" data-category="bias">bias <span class="quarto-category-count">(1)</span></div><div class="category" data-category="clustered errors">clustered errors <span class="quarto-category-count">(1)</span></div><div class="category" data-category="coefficients">coefficients <span class="quarto-category-count">(2)</span></div><div class="category" data-category="confidence intervals">confidence intervals <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cost functions">cost functions <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differentation">differentation <span class="quarto-category-count">(2)</span></div><div class="category" data-category="efficiency">efficiency <span class="quarto-category-count">(1)</span></div><div class="category" data-category="hessian matrix">hessian matrix <span class="quarto-category-count">(1)</span></div><div class="category" data-category="heteroskedastic errors">heteroskedastic errors <span class="quarto-category-count">(1)</span></div><div class="category" data-category="least-squares">least-squares <span class="quarto-category-count">(2)</span></div><div class="category" data-category="partial differentiation">partial differentiation <span class="quarto-category-count">(1)</span></div><div class="category" data-category="python">python <span class="quarto-category-count">(1)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<div class="quarto-about-jolla content">
+  <img src="profile.jpg" class="about-image
+  round " style="height: 15em; width: 15em;">
+ <header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">About</h1>
+</div>
+<div class="quarto-title-meta">
+  </div>
+</header><main class="content" id="quarto-document-content">
+<p>About me!</p>
+<p>Coming soon :)</p>
 
 
-
-
-
-
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="OLS,least-squares,coefficients,partial differentiation,hessian matrix" data-listing-date-sort="1708387200000" data-listing-file-modified-sort="1709066770487" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1208">
-<div class="thumbnail">
-<p><a href="./posts/ols_coef_derivation.html" class="no-external"></a></p><a href="./posts/ols_coef_derivation.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/ols_coef_derivation.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/ols_coef_derivation.html" class="no-external">Deriving OLS coefficients (matrix algebra)</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/ols_coef_derivation.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('least-squares'); return false;">
-least-squares
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('coefficients'); return false;">
-coefficients
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('partial differentiation'); return false;">
-partial differentiation
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('hessian matrix'); return false;">
-hessian matrix
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/ols_coef_derivation.html" class="no-external">Deriving a unique, analytical solution to the set of coefficients that minimize the sum of squared residuals.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/ols_coef_derivation.html" class="no-external">
-<div class="listing-date">
-Feb 20, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="OLS,least-squares,Gauss-markov,coefficients,BLUE,bias,efficiency" data-listing-date-sort="1708387200000" data-listing-file-modified-sort="1709124282022" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1720">
-<div class="thumbnail">
-<p><a href="./posts/blue_ols.html" class="no-external"></a></p><a href="./posts/blue_ols.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/blue_ols.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/blue_ols.html" class="no-external">BLUE coefficients: bias and efficiency</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/blue_ols.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('least-squares'); return false;">
-least-squares
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Gauss-markov'); return false;">
-Gauss-markov
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('coefficients'); return false;">
-coefficients
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('BLUE'); return false;">
-BLUE
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bias'); return false;">
-bias
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('efficiency'); return false;">
-efficiency
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/blue_ols.html" class="no-external">Proving that the OLS coefficient is the best linear unbiased estimator.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/blue_ols.html" class="no-external">
-<div class="listing-date">
-Feb 20, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="OLS,confidence intervals,clustered errors,heteroskedastic errors" data-listing-date-sort="1708387200000" data-listing-file-modified-sort="1709126481697" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1192">
-<div class="thumbnail">
-<p><a href="./posts/sandwich_estimators.html" class="no-external"></a></p><a href="./posts/sandwich_estimators.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/sandwich_estimators.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/sandwich_estimators.html" class="no-external">Sandwiches: robust covariance error estimation</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/sandwich_estimators.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('confidence intervals'); return false;">
-confidence intervals
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('clustered errors'); return false;">
-clustered errors
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('heteroskedastic errors'); return false;">
-heteroskedastic errors
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/sandwich_estimators.html" class="no-external">Estimating the correct coefficient variance under different error assumptions</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/sandwich_estimators.html" class="no-external">
-<div class="listing-date">
-Feb 20, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="differentation,cost functions,MSE,MAE" data-listing-date-sort="1707350400000" data-listing-file-modified-sort="1709123188016" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="397">
-<div class="thumbnail">
-<p><a href="./posts/mse_mean_mae_median.html" class="no-external"></a></p><a href="./posts/mse_mean_mae_median.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/mse_mean_mae_median.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/mse_mean_mae_median.html" class="no-external">Minimizing mse tends to mean, MAE tends to median</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/mse_mean_mae_median.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('differentation'); return false;">
-differentation
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('cost functions'); return false;">
-cost functions
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('MSE'); return false;">
-MSE
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('MAE'); return false;">
-MAE
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/mse_mean_mae_median.html" class="no-external">Why minimizing the mean absolute error tends towards the median of the sample.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/mse_mean_mae_median.html" class="no-external">
-<div class="listing-date">
-Feb 8, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-categories="differentation,python" data-listing-date-sort="1707350400000" data-listing-file-modified-sort="1709067778276" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="274">
-<div class="thumbnail">
-<p><a href="./posts/differentiation.html" class="no-external"></a></p><a href="./posts/differentiation.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/differentiation.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/differentiation.html" class="no-external">Differentiation formulae</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/differentiation.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('differentation'); return false;">
-differentation
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('python'); return false;">
-python
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/differentiation.html" class="no-external">Deriving why <span class="math inline">\(\frac{d}{dx} \left(x^{n} \right) = nx^{n-1}\)</span></a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/differentiation.html" class="no-external">
-<div class="listing-date">
-Feb 8, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> 
+  <hr class="about-sep">
+   <div class="about-links">
+  <a href="https://github.com/chris-kelly" class="about-link" rel="" target="">
+    <i class="bi bi-github"></i>
+     <span class="about-link-text"></span>
+  </a>
+  <a href="https://www.linkedin.com/in/ccrkelly/" class="about-link" rel="" target="">
+    <i class="bi bi-linkedin"></i>
+     <span class="about-link-text"></span>
+  </a>
+</div>
+</div>
+ <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -446,13 +162,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
-  const icon = "";
-  const anchorJS = new window.AnchorJS();
-  anchorJS.options = {
-    placement: 'right',
-    icon: icon
-  };
-  anchorJS.add('.anchored');
   const isCodeAnnotation = (el) => {
     for (const clz of el.classList) {
       if (clz.startsWith('code-annotation-')) {                     

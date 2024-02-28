@@ -1,5 +1,5 @@
 ---
-title: "Sandwich Estimators"
+title: "Sandwiches: robust covariance error estimation"
 author: "Chris Kelly"
 date: '02-20-24'
 categories: [OLS, confidence intervals, clustered errors, heteroskedastic errors]
@@ -7,6 +7,197 @@ format:
   html:
     code-fold: true
     toc: true
+    other-links:
+      - text: deriving the variance of the OLS coefficient
+        href: blue_ols.html#coefficient-variance-for-ols
 ---
 
-We have previously derived the variance of the coefficient 
+::: {.callout-tip}
+### What are we exploring?
+Estimating the correct coefficient variance under different error assumptions
+:::
+
+## Introducing sandwiches
+
+The [variance for the OLS coefficient estimator](blue_ols.html#coefficient-variance-for-ols) is equal to the following:
+
+$$
+\displaylines{
+V(\hat{\beta}) =
+(X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon\epsilon^{\intercal}]X(X^{\intercal}X)^{-1}
+}
+$$
+
+This can be though to as a sandwich:
+
+- The **“bread”** either side: $(X^{\intercal}X)^{-1}X^{\intercal}$ on the left and its transpose $X(X^{\intercal}X)^{-1}$ on the right
+- The **“meat”** in the middle: what we assume for $E[\epsilon\epsilon^{\intercal}]$
+    - Note that this is the same as the error variance, since $V[\epsilon]=E[\epsilon\epsilon^{\intercal}]-E[\epsilon]E[\epsilon^{\intercal}]$ and $E[\epsilon] = 0$
+
+Our coefficient will only be **efficient** if these assumptions about the expected error are correct! We will explore what happens when the errors are assumed to be homoskedastic, heteroskedastic or clustered.
+
+## Salmon bagel: Spherical Errors 🐟
+
+Usual OLS is efficient [if the true model has "spherical errors"](blue_ols.html#coefficient-variance-assuming-spherical-errors). What does this mean in practice?
+
+- Errors are **homoskedastic**: $V(\epsilon_i)=\sigma^2$ for all observations
+- Errors are **serially uncorrelated**: $cov(\epsilon_i,\epsilon_{j\neq i})=0$
+
+What does this look like for $E[\epsilon\epsilon^{\intercal}]$?
+
+- The diagonal of the matrix is a constant value (scalar), $\sigma^2$
+- The off-diagonals are all zero
+
+$$
+\hat{\sigma}^2\underset{n\times n}{I} = 
+\begin{bmatrix}
+\hat{\sigma}^2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+0 & \hat{\sigma}^2 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+0 & 0 & \hat{\sigma}^2 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 0 & \hat{\sigma}^2 & 0 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 0 & 0 & \hat{\sigma}^2 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 0 & 0 & 0 & \hat{\sigma}^2 & 0 & 0 & 0\\ 
+0 & 0 & 0 & 0 & 0 & 0 & \hat{\sigma}^2 & 0 & 0\\ 
+0 & 0 & 0 & 0 & 0 & 0 & 0 & \hat{\sigma}^2 & 0\\ 
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \hat{\sigma}^2
+\end{bmatrix}
+$$
+
+A good estimation of the constant error variance $\sigma^2$ is to apply the standard formula to the residuals (i.e. method of moments):
+
+$$
+\hat{\sigma^2}=\frac{1}{n-k}\sum{\hat{\epsilon_i}^2} \equiv \frac{\epsilon^{\intercal}\epsilon }{n-k} 
+$$
+
+::: {.callout-tip}
+## Thus our "salmon sandwich" is:
+$$
+\underset{k \times k}{(X^{\intercal}X)}^{-1}
+\underset{k \times n}
+{X^{\intercal}}
+\left(\frac{1}{n-k} \times \underset{1 \times 1}{(\epsilon^{\intercal}\epsilon)}
+\times\underset{n \times n}{I} \right)
+\underset{n \times k}{X}
+\underset{k \times k}{(X^{\intercal}X)}^{-1}
+$$
+:::
+
+::: {.column-margin}
+Note that under spherical errors, the sandwich can be simplified:
+$$
+\displaylines{
+\begin{align}
+V[\hat{\beta}] 
+& = (X^{\intercal}X)^{-1}X^{\intercal}E[\epsilon\epsilon^{\intercal}]X(X^{\intercal}X)^{-1} 
+\\ & = (X^{\intercal}X)^{-1}X^{\intercal}\sigma^2IX(X^{\intercal}X)^{-1} 
+\\ & = \sigma^2(X^{\intercal}X)^{-1}\cancel{X^{\intercal}X}\cancel{(X^{\intercal}X)^{-1}} 
+\\ & = \sigma^2(X^{\intercal}X)^{-1}
+\end{align}
+}
+$$
+:::
+
+In this scenario, the only things that impact the standard error of the coefficient $\beta_k$ is:
+
+- The variance of all the residuals, $\sigma^2$
+- The variance of the feature $V(X_k)$
+
+## Ham sarnie: Heteroskedastic errors 🍖
+
+Heteroskedastic correction is needed if:
+
+- **Errors vary for every individual**: $V(\epsilon_i)=\sigma_i^2$ for all observations
+- But they are still independent aka **serially uncorrelated**: $cov(\epsilon_i,\epsilon_{j\neq i})=0$
+
+What does this look like for $E[\epsilon\epsilon^{\intercal}]$?
+
+- The diagonal of the matrix is the estimate of variance which is unique for each observation,  $\sigma_i^2$
+- The off-diagonals are all zero
+    
+    $$
+    \underset{n \times n}{\sigma^2} = \begin{bmatrix}
+    \sigma_1^2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+    0 & \sigma_2^2 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+    0 & 0 & \sigma_3^2 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+    0 & 0 & 0 & \sigma_4^2 & 0 & 0 & 0 & 0 & 0\\ 
+    0 & 0 & 0 & 0 & \sigma_5^2 & 0 & 0 & 0 & 0\\ 
+    0 & 0 & 0 & 0 & 0 & \sigma_6^2 & 0 & 0 & 0\\ 
+    0 & 0 & 0 & 0 & 0 & 0 & \sigma_7^2 & 0 & 0\\ 
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & \sigma_8^2 & 0\\ 
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \sigma_{..}^2\\ 
+    \end{bmatrix}
+    $$
+    
+- A good estimation of the vector of heteroskedastic error variances $\sigma^2$ is again to apply the standard formula to the residuals for each individual:
+
+$$
+\hat{\sigma_i^2}=\frac{1}{n-k}\sum{\hat{\epsilon_i}^2} 
+$$
+
+::: {.callout-tip}
+## Thus our "ham sandwich" is:
+$$
+\underset{k \times k}{(X^{\intercal}X)}^{-1}
+\underset{k \times n}{X^{\intercal}}
+\left(\frac{1}{n-k} \times \underset{1 \times n}{(\epsilon\odot \epsilon)} ^{\intercal}
+\times\underset{n \times n}{I} \right)
+\underset{n \times k}{X}
+\underset{k \times k}{(X^{\intercal}X)}^{-1}
+$$
+:::
+
+Similar to homoskedastic errors, the things that impacts the standard error of coefficient $k$ is:
+
+- The variance of all the individual errors, $\sigma_i^2$
+- The variance of the feature $V(X_k)$
+
+## Cheese roll: Clustered Errors 🧀
+
+Cluster-robust errors are needed if:
+
+- **Errors vary for every individual**: $V(\epsilon_i)=\sigma_i^2$ for all observations i.e. still heteroskedastic
+- AND errors within the same cluster $C_l$ are **serially correlated**:
+$cov(\epsilon_i,\epsilon_{j}) \neq 0 \text{ if } \epsilon_i,\epsilon_j \in C_l$
+    - Note - **errors between clusters are assumed not to be serially correlated** though i.e. $cov(\epsilon_i,\epsilon_{j}) =0 \text{ if } \epsilon_i \in C_l,\epsilon_j \in C_{m \neq l}$
+
+
+What does this look like for $E[\epsilon\epsilon^{\intercal}]$?
+
+- The diagonal of the matrix is the estimate of variance which is unique for each observation,  $\sigma_i^2$
+- The off-diagonals are also populated with the covariance - but only when they are both in the same cluster
+
+Here is an example where observations 1, 2 and 3 are in cluster A, observations 4 and 5 are in cluster B, observations 6, 7 and 8 are in cluster C etc.
+
+$$
+\underset{n \times n}{\epsilon\epsilon^{\intercal}} \sim \begin{bmatrix}
+\epsilon_1^2 & \epsilon_1\epsilon_2 & \epsilon_1\epsilon_3 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+\epsilon_2\epsilon_1 & \epsilon_2^2 & \epsilon_2\epsilon_3 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+\epsilon_3\epsilon_1 & \epsilon_3\epsilon_2 & \epsilon_3^2 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 0 & \epsilon_4^2 & \epsilon_4\epsilon_5 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 0 & \epsilon_5\epsilon_4 & \epsilon_5^2 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 0 & 0 & 0 & \epsilon_6^2 & \epsilon_6\epsilon_7 & \epsilon_6\epsilon_8 & 0\\ 
+0 & 0 & 0 & 0 & 0 & \epsilon_7\epsilon_6 & \epsilon_7^2 & \epsilon_7\epsilon_8 & 0\\ 
+0 & 0 & 0 & 0 & 0 & \epsilon_8\epsilon_6 & \epsilon_8\epsilon_7 & \epsilon_8^2 & 0\\ 
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \epsilon_{..}^2\\ 
+\end{bmatrix}
+$$
+
+Additionally, we have to do a finite-sample correction as well on the degrees of freedom, based on the number of clusters $n_c$
+
+::: {.callout-tip}
+### Thus our cheese sandwich is:
+$\underset{k \times k}{(X^{\intercal}X)}^{-1}
+\underset{k \times n}{X^{\intercal}}
+\left(\frac{n-1}{n-k}\frac{n_c}{n_c-1} \times 
+\underset{n \times n}{(\epsilon \epsilon^{\intercal})}
+\right)
+\underset{n \times k}{X}
+\underset{k \times k}{(X^{\intercal}X)}^{-1}$
+:::
+
+In this scenario, there are a few additional things that impact the standard error of coefficient $k$:
+
+- If errors are correlated within clusters, this will increase the error.
+- If features are correlated within clusters, this will also increase the error (due to the off-diagonals in the error variance matrix)
+- And if both the errors and feature correlations are the same sign, this will also increase the standard error.
+- As well as the variance of the individual errors, $\sigma_i^2$, and the variance of each feature $V(X_k)$, as before

@@ -6,6 +6,7 @@ categories: [differentation, cost functions, MSE, MAE]
 format:
   html:
     code-fold: true
+draft: true
 ---
 
 ::: {.callout-tip}

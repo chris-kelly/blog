@@ -9,7 +9,7 @@ format:
     toc: true
     other-links:
       - text: OLS coefficient derivation
-        href: ols_coef_derivation/ols_coef_derivation.html
+        href: ols_coef_derivation.html
 ---
 
 ::: {.callout-tip}
@@ -134,6 +134,10 @@ V(\hat{\beta}^{OLS}) & = E[(\hat{\beta}^{OLS}-\beta)(\hat{\beta}^{OLS}-\beta)^{\
 \end{align}
 }
 $$
+
+This is sometimes called the sandwich estimator - post soon to follow on this!
+
+### Coefficient variance assuming "spherical errors"
 
 We can simplify this further by appling some assumptions to the estimated error variance $E[\epsilon\epsilon^{\intercal}]$:
 
