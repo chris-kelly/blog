@@ -2,10 +2,10 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/mle_ols_normal.html",
       "/posts/ols_sandwich_estimators.html",
-      "/posts/blue_ols.html",
+      "/posts/ols_blue.html",
       "/posts/ols_coefs_multivariate.html",
-      "/posts/ols_cox_regression.html",
       "/posts/mse_mean_mae_median.html",
       "/posts/differentiation.html"
     ]

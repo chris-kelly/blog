@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Chris Kelly">
+<meta name="dcterms.date" content="2024-02-21">
+
+<title>Chris Kelly Blog - NLP: Data Mining Intro</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Chris Kelly Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chris-kelly"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/ccrkelly/"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">NLP: Data Mining Intro</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">NLP</div>
+                <div class="quarto-category">TF-IDF</div>
+                <div class="quarto-category">cosine similarity</div>
+                <div class="quarto-category">LSA</div>
+                <div class="quarto-category">topic extraction</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Chris Kelly </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">February 21, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#quick-introduction" id="toc-quick-introduction" class="nav-link active" data-scroll-target="#quick-introduction">Quick introduction:</a>
+  <ul class="collapse">
+  <li><a href="#some-definitionsbackground" id="toc-some-definitionsbackground" class="nav-link" data-scroll-target="#some-definitionsbackground">Some definitions/background</a></li>
+  </ul></li>
+  <li><a href="#tf-idf-text-frequency-inverse-document-frequency" id="toc-tf-idf-text-frequency-inverse-document-frequency" class="nav-link" data-scroll-target="#tf-idf-text-frequency-inverse-document-frequency">TF-IDF: text-frequency inverse-document-frequency</a>
+  <ul class="collapse">
+  <li><a href="#what-is-it-used-for" id="toc-what-is-it-used-for" class="nav-link" data-scroll-target="#what-is-it-used-for">What is it used for?</a></li>
+  <li><a href="#what-is-the-intuition" id="toc-what-is-the-intuition" class="nav-link" data-scroll-target="#what-is-the-intuition">What is the intuition?</a></li>
+  </ul></li>
+  <li><a href="#cosine-similarlity" id="toc-cosine-similarlity" class="nav-link" data-scroll-target="#cosine-similarlity">Cosine similarlity</a>
+  <ul class="collapse">
+  <li><a href="#what-is-it-used-for-1" id="toc-what-is-it-used-for-1" class="nav-link" data-scroll-target="#what-is-it-used-for-1">What is it used for?</a></li>
+  <li><a href="#what-is-the-intuition-1" id="toc-what-is-the-intuition-1" class="nav-link" data-scroll-target="#what-is-the-intuition-1">What is the intuition?</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="quick-introduction" class="level1">
+<h1>Quick introduction:</h1>
+<p>Algorithms like dealing with numbers - they like structure, for input data to be <em>tidy</em>. So how can an algorithm start to process unstructured text? And even then - start to extract anything meaningful from it?</p>
+<p><img src="https://media.giphy.com/media/eMBKXi56D0EXC/giphy.gif"></p>
+<section id="some-definitionsbackground" class="level3">
+<h3 class="anchored" data-anchor-id="some-definitionsbackground">Some definitions/background</h3>
+<p>When text data is provided, it goes through the process of “tokenisation”. This involves splitting the text into smaller pieces, that the algorithm can encode into 0 and 1s (one-hot encoding). In our example, each unique word in a menu will be a “token”.</p>
+<p>A “document” is a collection of tokens associated with a particular sample. In our example, each document will be a restaurant menu. An “embedding” is the attempt to create numerical representation of that document.</p>
+<p>The “corpus” is a collection of all documents that the model can learn from. In our example, it the entire colletion of menus.</p>
+</section>
+</section>
+<section id="tf-idf-text-frequency-inverse-document-frequency" class="level1">
+<h1>TF-IDF: text-frequency inverse-document-frequency</h1>
+<section id="what-is-it-used-for" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-it-used-for">What is it used for?</h3>
+<p>Text-frequency Inverse-Document-Frequency (TF-IDF) is a technique to find the most important words in a document, or alternatively formulated to find the most important letters in a word.</p>
+<p>It is good at determining ‘global’ statistics. By this, we mean it compares the frequency of words and letters across the entire corpus. It does not capture more detailed semantic relationships, particularly since it doesn’t care about the ordering of words in a document.</p>
+</section>
+<section id="what-is-the-intuition" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-the-intuition">What is the intuition?</h3>
+<p>TF-IDF hypothesises that tokens that appear more frequently, especially those that tend to be rarer, are more important for that document.</p>
+<p>For example, let’s take two takeaway orders: * Chicken Kurma Masala, Chicken Tikka Masala, Chicken Curry, Saag Aloo, Pilau Rice, Plain Rice * Chicken Chow Mein Noodles, Crispy Beef, Chicken and Cashew nut curry, Prawn Crackers, Egg Fried Rice, Steamed rice, Vegetable Noodles</p>
+<p><img src="https://media.giphy.com/media/12xu9HYTRo4Eg0/giphy.gif"></p>
+<p>The word ‘Chicken’ appears the most in the first order, followed by ‘masasla’ and ‘Rice’. This is <em>text frequency</em>.</p>
+<p>But that’s only half the story - because chicken and rice are quite common words. So we need a way to measure whether a word is rarer. The word ‘masala’ only appears in the first order, whereas ‘chicken’ and ‘rice’ appears in both orders. Hence, the rareness of a word can be determined by how infrequently it appears in all the documents. This is <em>inverse document frequency</em>.</p>
+<p>Combining text-frequency and inverse-document frequency scores for each token give it a TF-IDF score. This way, we can derive that the word ‘masala’ is the most important word from the first order, since it has both high TF and IDF scores.</p>
+<p>TF-IDF can also be done for words, for example splitting the word ‘manner’ into character tokens:</p>
+<ul>
+<li>‘n’ appears twice in the word</li>
+<li>‘m’ is rarer</li>
+</ul>
+<p>So we are much more likely to guess that the word ‘m_nn_’ is manner, whereas seeing ’_a__er’ is far less informative.</p>
+<section id="text-frequency" class="level4">
+<h4 class="anchored" data-anchor-id="text-frequency">Text Frequency</h4>
+<p>Let’s say we wanted to build something to classify cuisines. We might take orders from two different menus, and first try to identify which words are the some of the more important.</p>
+<ul>
+<li>Chicken Kurma Masala, Chicken Tikka Masala, Chicken Curry, Saag Aloo, Pilau Rice, Plain Rice</li>
+<li>Chicken Chow Mein Noodles, Crispy Beef, Chicken and Cashew nut curry, Prawn Crackers, Egg Fried Rice, Steamed rice, Vegetable Noodles</li>
+</ul>
+<p>But how can we do this in an automated way?</p>
+<p><img src="https://media.giphy.com/media/B8Bp8MfpmKbWU/giphy.gif"></p>
+<p>We might think that <strong>words that are repeated many times in an order are important. This is called ‘text frequency’.</strong></p>
+<p>So let’s count them:</p>
+<div id="cell-2" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>takeaway_orders <span class="op">=</span> [<span class="st">'Chicken Kurma Masala, Chicken Tikka Masala, Chicken Curry, Pilau Rice, Plain Rice'</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                   , <span class="st">'Chicken Chow Mein Noodles, Crispy Beef, Chicken curry, Egg Fried Rice, Plain rice, Vegetable Noodles'</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># unique_tokens = set(' ,'.join(takeaway_orders).replace(',','').split(' '))</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.feature_extraction.text <span class="im">import</span> CountVectorizer</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>cnt_vec <span class="op">=</span> CountVectorizer()</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>count_mat <span class="op">=</span> cnt_vec.fit_transform(takeaway_orders)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(data <span class="op">=</span> count_mat.todense(), index <span class="op">=</span> [<span class="st">'Order_1'</span>, <span class="st">'Order_2'</span>], columns <span class="op">=</span> cnt_vec.get_feature_names_out())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">beef</th>
+<th data-quarto-table-cell-role="th">chicken</th>
+<th data-quarto-table-cell-role="th">chow</th>
+<th data-quarto-table-cell-role="th">crispy</th>
+<th data-quarto-table-cell-role="th">curry</th>
+<th data-quarto-table-cell-role="th">egg</th>
+<th data-quarto-table-cell-role="th">fried</th>
+<th data-quarto-table-cell-role="th">kurma</th>
+<th data-quarto-table-cell-role="th">masala</th>
+<th data-quarto-table-cell-role="th">mein</th>
+<th data-quarto-table-cell-role="th">noodles</th>
+<th data-quarto-table-cell-role="th">pilau</th>
+<th data-quarto-table-cell-role="th">plain</th>
+<th data-quarto-table-cell-role="th">rice</th>
+<th data-quarto-table-cell-role="th">tikka</th>
+<th data-quarto-table-cell-role="th">vegetable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">Order_1</td>
+<td>0</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">Order_2</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Cool, so the most populated word from the first order is chicken, followed by masala and rice. The second order has chicken, noodles and rice as the most populated words.</p>
+<p>Two things to note: * Rather than taking the absolute counts, we might log the counts instead. This is because we might want to capture the concept of diminishing returns - the additional marginal importance we expect between having the word ‘Masala’ appear once vs twice between documents is greater than appearing nine times vs 10 times. This is more important for longer documents, and the logging our counts captures this concept.<em> </em> In this instance, we count ‘uni-grams’, with one token per word. In general implementation, we can count ‘bi-grams’ such as ‘Chicken Kurma’ and ‘Kurma Masala’, ‘tri-grams’ etc. See more under cosine-similarity</p>
+</section>
+<section id="inverse-document-frequency" class="level4">
+<h4 class="anchored" data-anchor-id="inverse-document-frequency">Inverse Document Frequency</h4>
+<p>We are only getting half the information here then. For example in the first order, chicken in general is a common word, so it appearing frequently is less informative, whereas masala is a rare word, and more informative. We thus need to <strong>introduce an additional concept of word uniqueness</strong>, or equivalently the opposite of how frequently it appears across our entire ‘corpus’ of menu orders.</p>
+<p><img src="https://media.giphy.com/media/5vR6pNsjhoKwo/giphy.gif"></p>
+<p>Enter our heroine Karen Spärck Jones, with the concept of ‘inverse document frequency’. This is the idea that it is not just how often a word appears, <strong>but how unique the word is across all sentences (or ‘documents’), that determines how important it is. TF-IDF helps use this to turn words into vectors.</strong></p>
+<p>For example, a rare word like Masala appears in many ‘documents’ (orders), so will have a low document frequency, and thus will have a high inverse document frequency score.</p>
+<p>We usually calculte inverse document frequency using the following logic:</p>
+<p><span class="math display">\[
+\text{idf} = 1+\ln \left(\frac{\text{\# docs in corpus}}{\text{\# docs term appears in}} \right)
+\]</span></p>
+<p>In other words, the word chicken appears in both docs, so the idf score is <span class="math inline">\(1+\ln(\frac{2}{2})=1\)</span>. On the other hand, the word masala only appears in one doc, so it gets an IDF score of <span class="math inline">\(1+\ln(\frac{2}{1})\sim1.7\)</span></p>
+<div id="cell-4" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.feature_extraction.text <span class="im">import</span> TfidfTransformer</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>idf_vec <span class="op">=</span> TfidfTransformer(smooth_idf<span class="op">=</span><span class="va">False</span>,norm<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>idf_mat <span class="op">=</span> idf_vec.fit_transform(count_mat)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(data <span class="op">=</span> idf_mat<span class="op">/</span>count_mat, index <span class="op">=</span> [<span class="st">'Order_1'</span>, <span class="st">'Order_2'</span>], columns <span class="op">=</span> cnt_vec.get_feature_names_out())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">beef</th>
+<th data-quarto-table-cell-role="th">chicken</th>
+<th data-quarto-table-cell-role="th">chow</th>
+<th data-quarto-table-cell-role="th">crispy</th>
+<th data-quarto-table-cell-role="th">curry</th>
+<th data-quarto-table-cell-role="th">egg</th>
+<th data-quarto-table-cell-role="th">fried</th>
+<th data-quarto-table-cell-role="th">kurma</th>
+<th data-quarto-table-cell-role="th">masala</th>
+<th data-quarto-table-cell-role="th">mein</th>
+<th data-quarto-table-cell-role="th">noodles</th>
+<th data-quarto-table-cell-role="th">pilau</th>
+<th data-quarto-table-cell-role="th">plain</th>
+<th data-quarto-table-cell-role="th">rice</th>
+<th data-quarto-table-cell-role="th">tikka</th>
+<th data-quarto-table-cell-role="th">vegetable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">Order_1</td>
+<td>NaN</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1.693147</td>
+<td>1.693147</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1.693147</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.693147</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">Order_2</td>
+<td>1.693147</td>
+<td>1.0</td>
+<td>1.693147</td>
+<td>1.693147</td>
+<td>1.0</td>
+<td>1.693147</td>
+<td>1.693147</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1.693147</td>
+<td>1.693147</td>
+<td>NaN</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>1.693147</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-5" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.feature_extraction.text <span class="im">import</span> TfidfVectorizer</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>tfidf_vec <span class="op">=</span> TfidfVectorizer(sublinear_tf<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>tfidf_mat <span class="op">=</span> tfidf_vec.fit_transform(takeaway_orders)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(data <span class="op">=</span> tfidf_mat.todense(), index <span class="op">=</span> [<span class="st">'Order_1'</span>, <span class="st">'Order_2'</span>], columns <span class="op">=</span> tfidf_vec.get_feature_names_out())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">beef</th>
+<th data-quarto-table-cell-role="th">chicken</th>
+<th data-quarto-table-cell-role="th">chow</th>
+<th data-quarto-table-cell-role="th">crispy</th>
+<th data-quarto-table-cell-role="th">curry</th>
+<th data-quarto-table-cell-role="th">egg</th>
+<th data-quarto-table-cell-role="th">fried</th>
+<th data-quarto-table-cell-role="th">kurma</th>
+<th data-quarto-table-cell-role="th">masala</th>
+<th data-quarto-table-cell-role="th">mein</th>
+<th data-quarto-table-cell-role="th">noodles</th>
+<th data-quarto-table-cell-role="th">pilau</th>
+<th data-quarto-table-cell-role="th">plain</th>
+<th data-quarto-table-cell-role="th">rice</th>
+<th data-quarto-table-cell-role="th">tikka</th>
+<th data-quarto-table-cell-role="th">vegetable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">Order_1</td>
+<td>0.000000</td>
+<td>0.459492</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.218951</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.307727</td>
+<td>0.521028</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.307727</td>
+<td>0.218951</td>
+<td>0.370715</td>
+<td>0.307727</td>
+<td>0.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">Order_2</td>
+<td>0.269369</td>
+<td>0.324505</td>
+<td>0.269369</td>
+<td>0.269369</td>
+<td>0.191658</td>
+<td>0.269369</td>
+<td>0.269369</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.269369</td>
+<td>0.456081</td>
+<td>0.000000</td>
+<td>0.191658</td>
+<td>0.324505</td>
+<td>0.000000</td>
+<td>0.269369</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Cool, so combining text frequency and inverse document frequency now reveals the most important word in the first order is ‘Masala’, and it is ‘noodles’. Nice.</p>
+<p>Finally, we don’t have to limit ourselves to sentences, and can split stings into character tokens, applying the same logic: for the word <span class="math inline">\(\text{queen}\)</span>, we would find the letters <span class="math inline">\(q\)</span> and <span class="math inline">\(e\)</span> to be the most informative because of their rarity (IDF) and being repeated (TF). This could be useful in predicting the word being types or correcting mispelling - let’s jump into a character-level example when discussing cosine similarity.</p>
+</section>
+</section>
+</section>
+<section id="cosine-similarlity" class="level1">
+<h1>Cosine similarlity</h1>
+<section id="what-is-it-used-for-1" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-it-used-for-1">What is it used for?</h3>
+<p>Cosine similarity can help measure how similar two words or documents are. For example, we could better match a search to a result using this, whereas ‘keywords’ would just weight every word equally.</p>
+<p><img src="https://media.giphy.com/media/13cgadB959Y0BW/giphy.gif"></p>
+</section>
+<section id="what-is-the-intuition-1" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-the-intuition-1">What is the intuition?</h3>
+<p>TF-IDF creates a row of scores for each token in the text, for example the first order had high TF-IDF scores for masala, chicken and rice, and low scores for noodles and fried. If we have another document that has high TF-IF scores for masala, chicken and rice, and low scores for noodles and fried, we might think it is similar to the first order. Cosine similarity gives a measure between one and zero as to how similar the two texts are.</p>
+<section id="vectorization" class="level4">
+<h4 class="anchored" data-anchor-id="vectorization">Vectorization</h4>
+<p>To take this further, what we have done using TF-IDF is a form of ‘vectorization’. If we were to plot the first order in 16 dimensional space, with one axis for each word, the line remains at zero for the ‘beef’ axis, travels 0.46 along the ‘chicken’ axis, etc.</p>
+<p><strong>We can then measure the angle (the cosine) between these lines to get an idea of how similar two documents are.</strong> Cosine similarity is often used to match, how example, a search string to a result.</p>
+<p>This can feel a bit abstract, but hang on in there because this is a key part of intution!</p>
+<p>Let’s dive into this with an example we can visualise in 3 dimensional space to make this clearer.</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

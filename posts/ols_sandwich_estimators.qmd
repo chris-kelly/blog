@@ -9,7 +9,7 @@ format:
     toc: true
     other-links:
       - text: Deriving the variance of the OLS coefficient
-        href: blue_ols.html#coefficient-variance-for-ols
+        href: ols_blue.html#coefficient-variance-for-ols
 ---
 
 ::: {.callout-tip}
@@ -19,7 +19,7 @@ Estimating the correct coefficient variance under different error assumptions
 
 ## Introducing sandwiches
 
-The [variance for the OLS coefficient estimator](blue_ols.html#coefficient-variance-for-ols) is equal to the following:
+The [variance for the OLS coefficient estimator](ols_blue.html#coefficient-variance-for-ols) is equal to the following:
 
 $$
 \displaylines{
@@ -38,7 +38,7 @@ Our coefficient will only be **efficient** if these assumptions about the expect
 
 ## Salmon bagel: Spherical Errors 🐟
 
-Usual OLS is efficient [if the true model has "spherical errors"](blue_ols.html#coefficient-variance-assuming-spherical-errors). What does this mean in practice?
+Usual OLS is efficient [if the true model has "spherical errors"](ols_blue.html#coefficient-variance-assuming-spherical-errors). What does this mean in practice?
 
 - Errors are **homoskedastic**: $V(\epsilon_i)=\sigma^2$ for all observations
 - Errors are **serially uncorrelated**: $cov(\epsilon_i,\epsilon_{j\neq i})=0$

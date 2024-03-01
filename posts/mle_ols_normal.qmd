@@ -1,0 +1,108 @@
+---
+title: "OLS == MLE with gaussian errors:"
+author: "Chris Kelly"
+date: '02-23-24'
+categories: [OLS, MLE, log-likelihood, normal distribution, Gauss-Markov]
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+        - text: Gauss-markov assumptions
+          href: ols_blue.html
+        - text: Minimizing RSS
+          href: ols_coefs_multivariate.html
+---
+
+::: {.callout-tip}
+### What are we exploring?
+Showing why OLS and MLE derive the same coefficients if the errors are assumed to follow a gaussian distribution
+:::
+
+### Normality of errors
+
+Let's assume the errors are normally distributed, with a mean of zero:
+$$
+\epsilon  = y - X\beta \sim N(0,\sigma^2)
+$$
+
+:::{.column-margin}
+Recall that $y$ is a vector of outcomes across all $n$ samples. For any sample $i$, its observed outcome $y_i$ is predicted from $X_i$ via global coefficients $\beta$.
+:::
+
+You might already notice how similar this is to the [Gauss-Markov requirements to ensure OLS coefficients are BLUE](ols_blue.html)!
+
+* The expected error is zero, and consistent for all values of X, so we have "strict exogeneity": $E[\epsilon|X] = 0$
+* The error variance is uniform, again consistent for all values of X, so we have "spherical errors": $E[\epsilon\epsilon^{\intercal}|X] = 0$
+
+### Applying the normal pdf
+
+For any datapoint $i$, we can formulate the likelihood of observing the outcome $y_i$ as being generated from the normal probability density of the squared error:
+
+$$
+\displaylines{
+\begin{align}
+p(y_i|\beta,X_i,\sigma^2) 
+& = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{\frac{-1}{2\sigma^2}\epsilon_i^2\right\}} \\
+& = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{\frac{-1}{2\sigma^2}(y_i-X_i\beta)^2\right\}}
+\end{align}
+}
+$$
+
+Maximum likelihood estimation aims to find the set of coefficients that maximises the likelihood of observing the evidence we have. We thus aim to find the coefficients $\beta$ that maximise the likelihood of observing $y$ across all $n$ samples:
+
+$$
+\displaylines{
+\begin{align}
+\mathcal{L} = p(y|\beta,X,\sigma^2) 
+& = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}
+\end{align}
+}
+$$
+
+
+### Taking the negative log-likelihood
+
+In practice, dealing with a cost function made up of a sum product is tricky - it is easier to take the log and deal with addition instead. Further, rather than maximise, it is common to "minimize" cost functions, so the negative log-likelihood is usually used.
+
+:::{.column-margin}
+Recall that $\log{\left(ab\right)} = \log{\left(a\right)} + \log{\left(b\right)}$
+:::
+
+$$
+\displaylines{
+\begin{align}
+\max_\beta{p(y|\beta,X,\sigma^2)} 
+& \Rightarrow \min_\beta\left[{-\log{\left(\prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}
+\right)}}\right]
+\\ \\ & =
+\min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
+\end{align}
+}
+$$
+
+### Simplifying the cost function
+
+And now we can look to simplify this:
+$$
+\displaylines{
+\begin{align}
+& \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
+\\ = & \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\right)}} -\sum{\log{\left(\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]} 
+\\ = & \min_\beta{\left[ -\sum{\log{((2\pi\sigma^2)^{-\frac{1}{2}})}} - \sum{\left(-\frac{1}{2} \epsilon^{\intercal}\epsilon\right)} \right]} 
+\\ = & \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi\sigma^2)}} + \frac{1}{2}\sum{\epsilon^{\intercal}\epsilon} \right]} 
+\end{align}
+}
+$$
+
+### Equivalence to least-squares
+
+We minimise the cost function by finding the optimum coefficient values $\beta^*$ so that the partial differential is equal to zero.
+
+The constant $\log{(2\pi\sigma^2)}$ doesn't vary with respect to $\beta$, so it drops out. The fractions $\frac{1}{2}$ also drop out as the differential is set to zero. 
+
+Hence we are left finding that we are solving the same problem as usual least-squares!
+
+$$
+\therefore \beta^*=\arg\min_\beta{\left[ \epsilon^T\epsilon \right]}
+$$
