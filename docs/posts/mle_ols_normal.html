@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2024-02-23">
 
-<title>Chris Kelly Blog - OLS == MLE with gaussian errors:</title>
+<title>Chris Kelly Blog - OLS vs MLE coefs with gaussian noise</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,7 +144,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">OLS == MLE with gaussian errors:</h1>
+      <h1 class="title">OLS vs MLE coefs with gaussian noise</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">OLS</div>
                 <div class="quarto-category">MLE</div>
@@ -188,7 +188,9 @@ window.Quarto = {
   <li><a href="#applying-the-normal-pdf" id="toc-applying-the-normal-pdf" class="nav-link" data-scroll-target="#applying-the-normal-pdf">Applying the normal pdf</a></li>
   <li><a href="#taking-the-negative-log-likelihood" id="toc-taking-the-negative-log-likelihood" class="nav-link" data-scroll-target="#taking-the-negative-log-likelihood">Taking the negative log-likelihood</a></li>
   <li><a href="#simplifying-the-cost-function" id="toc-simplifying-the-cost-function" class="nav-link" data-scroll-target="#simplifying-the-cost-function">Simplifying the cost function</a></li>
-  <li><a href="#equivalence-to-least-squares" id="toc-equivalence-to-least-squares" class="nav-link" data-scroll-target="#equivalence-to-least-squares">Equivalence to least-squares</a></li>
+  <li><a href="#coefficient-point-estimate-is-the-same-as-ols" id="toc-coefficient-point-estimate-is-the-same-as-ols" class="nav-link" data-scroll-target="#coefficient-point-estimate-is-the-same-as-ols">Coefficient point-estimate is the same as OLS</a></li>
+  <li><a href="#error-variance-estimate-is-the-same-as-ols" id="toc-error-variance-estimate-is-the-same-as-ols" class="nav-link" data-scroll-target="#error-variance-estimate-is-the-same-as-ols">Error-variance estimate is the same as OLS</a></li>
+  <li><a href="#final-reflections" id="toc-final-reflections" class="nav-link" data-scroll-target="#final-reflections">Final reflections</a></li>
   </ul>
 <div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="ols_blue.html"><i class="bi bi-link-45deg"></i>Gauss-markov assumptions</a></li><li><a href="ols_coefs_multivariate.html"><i class="bi bi-link-45deg"></i>Minimizing RSS</a></li></ul></div></nav>
     </div>
@@ -209,18 +211,18 @@ What are we exploring?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Showing why OLS and MLE derive the same coefficients if the errors are assumed to follow a gaussian distribution</p>
+<p>Why MLE finds the same coefficients as OLS when assuming model errors are generated from a mean-zero gaussian probabilistic process</p>
 </div>
 </div>
-<section id="normality-of-errors" class="level3 page-columns page-full">
+<section id="normality-of-errors" class="level3">
 <h3 class="anchored" data-anchor-id="normality-of-errors">Normality of errors</h3>
-<p>Let’s assume the errors are normally distributed, with a mean of zero: <span class="math display">\[
-\epsilon  = y - X\beta \sim N(0,\sigma^2)
+<p>Let’s assume the errors follow a normal distribution with a mean of zero: <span class="math display">\[
+\epsilon  = y - X\beta \sim \mathcal{N}(0,\sigma^2)
 \]</span></p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Recall that <span class="math inline">\(y\)</span> is a vector of outcomes across all <span class="math inline">\(n\)</span> samples. For any sample <span class="math inline">\(i\)</span>, its observed outcome <span class="math inline">\(y_i\)</span> is predicted from <span class="math inline">\(X_i\)</span> via global coefficients <span class="math inline">\(\beta\)</span>.</p>
-</div></div><p>You might already notice how similar this is to the <a href="ols_blue.html">Gauss-Markov requirements to ensure OLS coefficients are BLUE</a>!</p>
+<!-- :::{.column-margin}
+Recall that $y$ is a vector of outcomes across all $n$ samples. For any sample $i$, its observed outcome $y_i$ is predicted from $X_i$ via global coefficients $\beta$.
+::: -->
+<p>You might already notice how similar this is to the <a href="ols_blue.html">Gauss-Markov requirements to ensure OLS coefficients are BLUE</a>!</p>
 <ul>
 <li>The expected error is zero, and consistent for all values of X, so we have “strict exogeneity”: <span class="math inline">\(E[\epsilon|X] = 0\)</span></li>
 <li>The error variance is uniform, again consistent for all values of X, so we have “spherical errors”: <span class="math inline">\(E[\epsilon\epsilon^{\intercal}|X] = 0\)</span></li>
@@ -233,8 +235,8 @@ What are we exploring?
 \displaylines{
 \begin{align}
 p(y_i|\beta,X_i,\sigma^2)
-&amp; = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{\frac{-1}{2\sigma^2}\epsilon_i^2\right\}} \\
-&amp; = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{\frac{-1}{2\sigma^2}(y_i-X_i\beta)^2\right\}}
+&amp; = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}} \\
+&amp; = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}(y_i-X_i\beta)^2\right\}}
 \end{align}
 }
 \]</span></p>
@@ -242,8 +244,8 @@ p(y_i|\beta,X_i,\sigma^2)
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-\mathcal{L} = p(y|\beta,X,\sigma^2)
-&amp; = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}
+p(y|\beta,X,\sigma^2)
+&amp; = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}
 \end{align}
 }
 \]</span></p>
@@ -258,10 +260,10 @@ p(y_i|\beta,X_i,\sigma^2)
 \displaylines{
 \begin{align}
 \max_\beta{p(y|\beta,X,\sigma^2)}
-&amp; \Rightarrow \min_\beta\left[{-\log{\left(\prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}
-\right)}}\right]
-\\ \\ &amp; =
-\min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
+= &amp;
+\max_\beta{\left[ \prod{ \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}} } \right]}
+\\ \\ \Rightarrow &amp;
+\min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}\right)}} \right]}
 \end{align}
 }
 \]</span></p>
@@ -271,22 +273,63 @@ p(y_i|\beta,X_i,\sigma^2)
 <p>And now we can look to simplify this: <span class="math display">\[
 \displaylines{
 \begin{align}
-&amp; \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
-\\ = &amp; \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\right)}} -\sum{\log{\left(\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
-\\ = &amp; \min_\beta{\left[ -\sum{\log{((2\pi\sigma^2)^{-\frac{1}{2}})}} - \sum{\left(-\frac{1}{2} \epsilon^{\intercal}\epsilon\right)} \right]}
-\\ = &amp; \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi\sigma^2)}} + \frac{1}{2}\sum{\epsilon^{\intercal}\epsilon} \right]}
+&amp; \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}\right)}} \right]}
+\\ = &amp; \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\right)}} -\sum{\log{\left(\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}\right)}} \right]}
+\\ = &amp; \min_\beta{\left[ -\sum{\log{((2\pi\sigma^2)^{-\frac{1}{2}})}} - \sum{\left(-\frac{1}{2\sigma^2} \epsilon_i^2\right)} \right]}
+\\ = &amp; \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi\sigma^2)}} + \frac{1}{2\sigma^2}\sum{\epsilon_i^2} \right]}
+\\ = &amp; \min_\beta{\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]}
 \end{align}
 }
 \]</span></p>
 </section>
-<section id="equivalence-to-least-squares" class="level3">
-<h3 class="anchored" data-anchor-id="equivalence-to-least-squares">Equivalence to least-squares</h3>
+<section id="coefficient-point-estimate-is-the-same-as-ols" class="level3">
+<h3 class="anchored" data-anchor-id="coefficient-point-estimate-is-the-same-as-ols">Coefficient point-estimate is the same as OLS</h3>
 <p>We minimise the cost function by finding the optimum coefficient values <span class="math inline">\(\beta^*\)</span> so that the partial differential is equal to zero.</p>
-<p>The constant <span class="math inline">\(\log{(2\pi\sigma^2)}\)</span> doesn’t vary with respect to <span class="math inline">\(\beta\)</span>, so it drops out. The fractions <span class="math inline">\(\frac{1}{2}\)</span> also drop out as the differential is set to zero.</p>
-<p>Hence we are left finding that we are solving the same problem as usual least-squares!</p>
+<p>The constant <span class="math inline">\(\log{(2\pi\sigma^2)}\)</span> doesn’t vary with respect to <span class="math inline">\(\beta\)</span>, so it drops out. The fraction <span class="math inline">\(\frac{1}{2}\)</span> also drops out when finding where differential is set to zero.</p>
+<p>Hence we are left finding that we are solving the <a href="ols_coefs_multivariate.html">same problem as usual least-squares</a>!</p>
 <p><span class="math display">\[
-\therefore \beta^*=\arg\min_\beta{\left[ \epsilon^T\epsilon \right]}
+\displaylines{
+\begin{align}
+\therefore \beta^* &amp; =\arg\min_\beta{\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]}
+\\ &amp; =\arg\min_\beta{\left[ \epsilon^T\epsilon \right]}
+\end{align}
+}
 \]</span></p>
+</section>
+<section id="error-variance-estimate-is-the-same-as-ols" class="level3">
+<h3 class="anchored" data-anchor-id="error-variance-estimate-is-the-same-as-ols">Error-variance estimate is the same as OLS</h3>
+<p>OLS estimates the variance of the models errors using the residuals from the sample:</p>
+<p><span class="math display">\[
+\sigma^2 = \frac{1}{n}\hat{\epsilon}^{\intercal}\hat{\epsilon}
+\]</span></p>
+<p>Do we see the same with MLE? Well so far we have only found the optimum <span class="math inline">\(\hat{\beta}^*\)</span> to ensure the expected conditional error is zero, we haven’t touched our other parameter <span class="math inline">\(\sigma^2\)</span>.</p>
+<p>Now lets instead find the estimate of <span class="math inline">\(\sigma\)</span> that minimizes the negative log-likelihood:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+&amp; \min_{\sigma^2}{\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]} \\
+\Rightarrow &amp;
+\frac{\partial}{\partial\sigma^2}
+\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]
+\\ &amp; =
+\frac{1}{2} \left(n\frac{2\pi}{2\pi\sigma^2} + \frac{-2}{\sigma^4} \sum{\epsilon_i^2}  \right)
+\\ &amp; =
+\frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \sum{\epsilon_i^2} = 0 \\
+&amp; \therefore \sigma^2 = \frac{1}{n}\sum{\epsilon_i^2} = 0 \\
+\end{align}
+}
+\]</span></p>
+<p>and hence we can see that the estimation of OLS is the same too.</p>
+</section>
+<section id="final-reflections" class="level3">
+<h3 class="anchored" data-anchor-id="final-reflections">Final reflections</h3>
+<p>One advantage of using MLE is we can generate a probabilistic estimate for <span class="math inline">\(y_i\)</span>, rather than just a point-estimate (assuming we have fitted <span class="math inline">\(\hat{\sigma}^2\)</span> as above).</p>
+<ul>
+<li>Point estimate: <span class="math inline">\(\hat{y} = X\hat{\beta}\)</span></li>
+<li>Posterior estimate: <span class="math inline">\(P(\hat{y_i}| X_i,\hat{\beta},\sigma^2) = \mathcal{N}(\hat{y_i}| X_i\hat{\beta},\sigma^2)\)</span>,</li>
+</ul>
+<p>You might already have started to see how probabilistic predictions and coefficients fit by MLE nicely fit into the bayesian paradigm. This opens up nice extensions,such as using priors as a form of regularization. This is for another post though!</p>
+<p>Fin.</p>
 
 
 </section>

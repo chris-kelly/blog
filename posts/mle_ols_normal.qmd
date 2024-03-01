@@ -1,5 +1,5 @@
 ---
-title: "OLS == MLE with gaussian errors:"
+title: "OLS vs MLE coefs with gaussian noise"
 author: "Chris Kelly"
 date: '02-23-24'
 categories: [OLS, MLE, log-likelihood, normal distribution, Gauss-Markov]
@@ -16,19 +16,19 @@ format:
 
 ::: {.callout-tip}
 ### What are we exploring?
-Showing why OLS and MLE derive the same coefficients if the errors are assumed to follow a gaussian distribution
+Why MLE finds the same coefficients as OLS when assuming model errors are generated from a mean-zero gaussian probabilistic process
 :::
 
 ### Normality of errors
 
-Let's assume the errors are normally distributed, with a mean of zero:
+Let's assume the errors follow a normal distribution with a mean of zero:
 $$
-\epsilon  = y - X\beta \sim N(0,\sigma^2)
+\epsilon  = y - X\beta \sim \mathcal{N}(0,\sigma^2)
 $$
 
-:::{.column-margin}
+<!-- :::{.column-margin}
 Recall that $y$ is a vector of outcomes across all $n$ samples. For any sample $i$, its observed outcome $y_i$ is predicted from $X_i$ via global coefficients $\beta$.
-:::
+::: -->
 
 You might already notice how similar this is to the [Gauss-Markov requirements to ensure OLS coefficients are BLUE](ols_blue.html)!
 
@@ -43,8 +43,8 @@ $$
 \displaylines{
 \begin{align}
 p(y_i|\beta,X_i,\sigma^2) 
-& = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{\frac{-1}{2\sigma^2}\epsilon_i^2\right\}} \\
-& = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{\frac{-1}{2\sigma^2}(y_i-X_i\beta)^2\right\}}
+& = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}} \\
+& = \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}(y_i-X_i\beta)^2\right\}}
 \end{align}
 }
 $$
@@ -54,8 +54,8 @@ Maximum likelihood estimation aims to find the set of coefficients that maximise
 $$
 \displaylines{
 \begin{align}
-\mathcal{L} = p(y|\beta,X,\sigma^2) 
-& = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}
+p(y|\beta,X,\sigma^2) 
+& = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}
 \end{align}
 }
 $$
@@ -73,10 +73,10 @@ $$
 \displaylines{
 \begin{align}
 \max_\beta{p(y|\beta,X,\sigma^2)} 
-& \Rightarrow \min_\beta\left[{-\log{\left(\prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}
-\right)}}\right]
-\\ \\ & =
-\min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
+= & 
+\max_\beta{\left[ \prod{ \frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}} } \right]}
+\\ \\ \Rightarrow & 
+\min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}\right)}} \right]}
 \end{align}
 }
 $$
@@ -87,22 +87,69 @@ And now we can look to simplify this:
 $$
 \displaylines{
 \begin{align}
-& \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]}
-\\ = & \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\right)}} -\sum{\log{\left(\exp{\left\{-\frac{1}{2}\epsilon^{\intercal}\epsilon\right\}}\right)}} \right]} 
-\\ = & \min_\beta{\left[ -\sum{\log{((2\pi\sigma^2)^{-\frac{1}{2}})}} - \sum{\left(-\frac{1}{2} \epsilon^{\intercal}\epsilon\right)} \right]} 
-\\ = & \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi\sigma^2)}} + \frac{1}{2}\sum{\epsilon^{\intercal}\epsilon} \right]} 
+& \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}\right)}} \right]}
+\\ = & \min_\beta{\left[ -\sum{\log{\left(\frac{1}{\sigma\sqrt{2\pi}}\right)}} -\sum{\log{\left(\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}}\right)}} \right]} 
+\\ = & \min_\beta{\left[ -\sum{\log{((2\pi\sigma^2)^{-\frac{1}{2}})}} - \sum{\left(-\frac{1}{2\sigma^2} \epsilon_i^2\right)} \right]} 
+\\ = & \min_\beta{\left[ \frac{1}{2}\sum{\log{(2\pi\sigma^2)}} + \frac{1}{2\sigma^2}\sum{\epsilon_i^2} \right]} 
+\\ = & \min_\beta{\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]} 
 \end{align}
 }
 $$
 
-### Equivalence to least-squares
+### Coefficient point-estimate is the same as OLS
 
 We minimise the cost function by finding the optimum coefficient values $\beta^*$ so that the partial differential is equal to zero.
 
-The constant $\log{(2\pi\sigma^2)}$ doesn't vary with respect to $\beta$, so it drops out. The fractions $\frac{1}{2}$ also drop out as the differential is set to zero. 
+The constant $\log{(2\pi\sigma^2)}$ doesn't vary with respect to $\beta$, so it drops out. The fraction $\frac{1}{2}$ also drops out when finding where differential is set to zero.
 
-Hence we are left finding that we are solving the same problem as usual least-squares!
+Hence we are left finding that we are solving the [same problem as usual least-squares](ols_coefs_multivariate.html)!
 
 $$
-\therefore \beta^*=\arg\min_\beta{\left[ \epsilon^T\epsilon \right]}
+\displaylines{
+\begin{align}
+\therefore \beta^* & =\arg\min_\beta{\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]}
+\\ & =\arg\min_\beta{\left[ \epsilon^T\epsilon \right]}
+\end{align}
+}
 $$
+
+### Error-variance estimate is the same as OLS
+
+OLS estimates the variance of the models errors using the residuals from the sample:
+
+$$
+\sigma^2 = \frac{1}{n}\hat{\epsilon}^{\intercal}\hat{\epsilon}
+$$
+
+Do we see the same with MLE? Well so far we have only found the optimum $\hat{\beta}^*$ to ensure the expected conditional error is zero, we haven't touched our other parameter $\sigma^2$.
+
+Now lets instead find the estimate of $\sigma$ that minimizes the negative log-likelihood:
+
+$$
+\displaylines{
+\begin{align}
+& \min_{\sigma^2}{\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]} \\
+\Rightarrow &
+\frac{\partial}{\partial\sigma^2}
+\left[ \frac{1}{2} \left(n\log{(2\pi\sigma^2)} + \frac{1}{\sigma^{2}} \sum{\epsilon_i^2}  \right)\right]
+\\ & =
+\frac{1}{2} \left(n\frac{2\pi}{2\pi\sigma^2} + \frac{-2}{\sigma^4} \sum{\epsilon_i^2}  \right)
+\\ & =
+\frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \sum{\epsilon_i^2} = 0 \\
+& \therefore \sigma^2 = \frac{1}{n}\sum{\epsilon_i^2} = 0 \\
+\end{align}
+}
+$$
+
+and hence we can see that the estimation of OLS is the same too.
+
+### Final reflections
+
+One advantage of using MLE is we can generate a probabilistic estimate for $y_i$, rather than just a point-estimate (assuming we have fitted $\hat{\sigma}^2$ as above). 
+
+* Point estimate: $\hat{y} = X\hat{\beta}$
+* Posterior estimate: $P(\hat{y_i}| X_i,\hat{\beta},\sigma^2) = \mathcal{N}(\hat{y_i}| X_i\hat{\beta},\sigma^2)$,
+
+You might already have started to see how probabilistic predictions and coefficients fit by MLE nicely fit into the bayesian paradigm. This opens up nice extensions,such as using priors as a form of regularization. This is for another post though!
+
+Fin.
