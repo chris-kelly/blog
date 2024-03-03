@@ -1,8 +1,9 @@
 ---
-title: "OLS vs MLE coefs with gaussian noise"
+title: "OLS vs MLE with gaussian noise"
 author: "Chris Kelly"
 date: '02-23-24'
 categories: [OLS, MLE, log-likelihood, normal distribution, Gauss-Markov]
+image: '../images/mle_ols_normal.jpeg'
 format:
   html:
     code-fold: true
@@ -37,7 +38,7 @@ You might already notice how similar this is to the [Gauss-Markov requirements t
 
 ### Applying the normal pdf
 
-For any datapoint $i$, we can formulate the likelihood of observing the outcome $y_i$ as being generated from the normal probability density of the squared error:
+For any datapoint $i$, we can formulate the likelihood of observing the outcome $y_i$ as being generated from the normal probability density function applied to the squared error:
 
 $$
 \displaylines{

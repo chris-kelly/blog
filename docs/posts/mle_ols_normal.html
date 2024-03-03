@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2024-02-23">
 
-<title>Chris Kelly Blog - OLS vs MLE coefs with gaussian noise</title>
+<title>Chris Kelly Blog - OLS vs MLE with gaussian noise</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,7 +144,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">OLS vs MLE coefs with gaussian noise</h1>
+      <h1 class="title">OLS vs MLE with gaussian noise</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">OLS</div>
                 <div class="quarto-category">MLE</div>
@@ -230,7 +230,7 @@ Recall that $y$ is a vector of outcomes across all $n$ samples. For any sample $
 </section>
 <section id="applying-the-normal-pdf" class="level3">
 <h3 class="anchored" data-anchor-id="applying-the-normal-pdf">Applying the normal pdf</h3>
-<p>For any datapoint <span class="math inline">\(i\)</span>, we can formulate the likelihood of observing the outcome <span class="math inline">\(y_i\)</span> as being generated from the normal probability density of the squared error:</p>
+<p>For any datapoint <span class="math inline">\(i\)</span>, we can formulate the likelihood of observing the outcome <span class="math inline">\(y_i\)</span> as being generated from the normal probability density function applied to the squared error:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}

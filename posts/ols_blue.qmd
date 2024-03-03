@@ -12,6 +12,7 @@ format:
         href: ols_coef_derivation.html
       - text: Dealing with non-spherical errors
         href: ols_sandwich_estimators.html
+image: '../images/ols_blue.png'
 ---
 
 ::: {.callout-tip}
