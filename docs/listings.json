@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/bayes_lasso.html",
       "/posts/mle_ols_normal.html",
       "/posts/ols_sandwich_estimators.html",
       "/posts/ols_blue.html",

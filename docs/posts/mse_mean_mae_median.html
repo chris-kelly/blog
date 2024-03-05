@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2024-02-08">
 
-<title>Chris Kelly Blog - Minimizing mse tends to mean, MAE tends to median</title>
+<title>Chris Kelly Blog - Mean Squared Error vs Mean Absolute Error</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,12 +144,10 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Minimizing mse tends to mean, MAE tends to median</h1>
+      <h1 class="title">Mean Squared Error vs Mean Absolute Error</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">differentation</div>
-                <div class="quarto-category">cost functions</div>
-                <div class="quarto-category">MSE</div>
                 <div class="quarto-category">MAE</div>
+                <div class="quarto-category">MSE</div>
               </div>
                   </div>
   </div>
@@ -196,7 +194,7 @@ What we are solving
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Why minimizing the mean absolute error tends towards the median of the sample.</p>
+<p>Minimizing MAE tends predictions towards the sample median, whereas for MSE predictions tend towards the sample mean.</p>
 </div>
 </div>
 <p>In the absence of informative features, an ML algorithm minimizing the sum of squared errors will tend towards predicting the mean of the sample. However, minimizing the sum of absolute errors will tend towards predicting the median of the sample.</p>

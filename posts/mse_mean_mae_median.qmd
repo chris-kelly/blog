@@ -1,16 +1,16 @@
 ---
-title: "Minimizing mse tends to mean, MAE tends to median"
+title: "Mean Squared Error vs Mean Absolute Error"
 author: "Chris Kelly"
 date: '02-08-24'
-categories: [differentation, cost functions, MSE, MAE]
 format:
   html:
     code-fold: true
+categories: [MAE, MSE]
 ---
 
 ::: {.callout-tip}
 ## What we are solving
-Why minimizing the mean absolute error tends towards the median of the sample.
+Minimizing MAE tends predictions towards the sample median, whereas for MSE predictions tend towards the sample mean. 
 :::
 
 In the absence of informative features, an ML algorithm minimizing the sum of squared errors will tend towards predicting the mean of the sample. However, minimizing the sum of absolute errors will tend towards predicting the median of the sample.

@@ -1,0 +1,249 @@
+---
+title: "Shrinkage priors for Lasso"
+author: "Chris Kelly"
+date: '02-24-24'
+categories: [Bayes, MLE, Regularization]
+format:
+  html:
+    code-fold: true
+    toc: true
+    other-links:
+        - text: MLE for Linear regression
+          href: mle_ols_normal.html
+image: '../images/bayes_lasso.png'
+bibliography: ../references.bib
+---
+
+::: {.callout-tip}
+### What are we exploring?
+Showing Laplace priors in bayesian regression are equivalent to Lasso regularization
+:::
+
+
+<!-- # Regularization
+
+Regularization applies a penalty term to the cost function for large coefficients estimates. For example, we can alter the RSS (residual sum of squares) cost function in the following way:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\sum_{k=1}^K{\beta_k^2}\right]}
+$$
+
+The penalty term $\lambda /2$ increases the cost if larger coefficients are estimated, resulting in smaller coefficients being estimated to minimize the the cost function:
+
+$$
+\min_{\beta_j}{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\sum_{k=1}^K{\beta_k^2}\right]}
+\Rightarrow \sum_{i=1}^N 2\epsilon_i\left(\frac{\partial\epsilon_i}{\partial\beta_j}\right)-\lambda\beta_j=0 \\
+$$
+
+As such, we see that minimizing the cost function will artificially reduce the coefficents depending on the size of $\lambda$. This is an example of L2 regularization (ridge). Selecting a good value for $\lambda$ can be found through cross-validation.
+
+However, L2 regularization will never zero-out a coefficient. Instead, we can similarly derive the same penalty through L1 regularisation (LASSO) which actively zeroes out coefficients:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\sum_{k=1}^K{\mid\beta_k\mid}\right]}
+$$
+
+Empirically though, LASSO is shown to be unreliable, zero-es out coefficients that are small but significant.
+
+A more robust method is the elastic net, which combines L1 and L2 regularization. It is often implemented in the following way:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\left(\alpha\sum_{k=1}^K{\mid\beta_k\mid}+(1-\alpha)\sum_{k=1}^K{\beta_k^2}\right)\right]}
+$$
+
+
+However, regularization in a frequentist model can be a blunt instrument when thinking about regularization of coefficients. This is because $\lambda$ is a single penalty for all coefficients, so if poorly specified, can either include a very large number of irrelevant predictors, or over-shink included coefficients. In particular, it might drop small but signficant features.
+An ideal method should thus only induce weak shrinkage on large coefficients, and stronger shrinkage to zero on less relevant effects.
+Cue bayesian regression: -->
+
+# Bayesian Linear regression:
+
+When performing ordinary linear regression using maximum likelihood, we model the noise around $y$ as being generated from a gaussian distributed process - conditional on the data $X$ and estimated model parameters $\beta$ and $\sigma$:
+
+$$
+\displaylines{
+\begin{align}
+p(y|\beta,X,\sigma) 
+& = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}} \\
+& \sim \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}
+\left( y - X \beta \right)^2
+\right\}}
+\end{align}
+}
+$$
+
+We can formulate our estimate of the coefficient in a bayesian way if we model $\beta$ as a random variable (rather than a fixed quantity as per frequenist thinking):
+
+$$
+\displaylines{
+\begin{align}
+p(\beta|X,y,\sigma) 
+& =
+\frac{
+  p(y|\beta,X,\sigma)
+  p(\beta|X,\sigma)
+  }
+  {p(y|X,\sigma)} 
+\\ \\ & =
+\frac{
+  p(y|\beta,X,\sigma)
+  p(\beta|X,\sigma)
+  }
+{\int{}{} p(y|X,\beta,\sigma)p(\beta|X,\sigma) \mathrm{d}\beta}
+\end{align}
+}
+$$
+
+Where:
+
+* $p(Y|\beta,X,\sigma)$ is the likelihood function
+* $p(Y|X,\sigma)$ is the evidence (the data we feed into the model)
+* $p(\beta|X,\sigma)$ is the prior for the coefficient
+
+Now in frequentist regression, we assume no prior at all: $\beta$ is fixed, so $p(\beta|X,\sigma)=1$. Thus we are just left with finding the coefficients that maximise $p(Y|\beta,X,\sigma)$. By taking the negative log likelihood, we find this is identical to finding the coefficient values that minimise the sum of squared residuals [(see the derivation here)](mle_ols_normal.html):
+
+$$
+\displaylines{
+\begin{align}
+\beta^* & =\arg\min_\beta{\left[ 
+  \sum_{i=1}^N{\epsilon_i^2} 
+\right]}
+\end{align}
+}
+$$
+
+However, we could use other types of priors this mass around zero, to apply regularization on our coefficients.
+
+# Using Laplace priors to shrink coefficients:
+
+Regularization aims to eliminate some of our predictors to create a more parsimonious model in a systematic way, and/or reduce their magnitude to prevent overfitting.
+
+Picking a prior for our coefficient that is concentrated at zero can help achieve this - for example, we could use a laplace distribution, with a location parameter $\mu$ of zero as visualised below:
+
+```{r, fig.width=9}
+laplace_dist <- function(x, mu = 0, gamma = 1) {
+  laplace_pdf <- function(x,mu,gamma) {
+    return(
+      exp(-abs(x-mu)/gamma)/(2*gamma)
+    )
+  }
+  y = sapply(x, FUN = function(i) laplace_pdf(i,mu,gamma))
+  return(y)
+}
+
+x = seq(-10,10,0.1)
+plot(
+  x=x,
+  y=laplace_dist(x, gamma=1),
+  type='l',
+  main='Laplace(gamma=0.5)'
+  )
+```
+
+Not only does the Laplace pdf increase when closer to zero, but it increases at an accelerating rate. Thus, we can imagine that the closer the likelihood estimate of the coefficient is to zero, the greater the influence of the prior.
+
+### Laplace priors ~ Lasso Regression
+
+Recall that the probability density function of laplace is
+$$
+f(x|\mu,\gamma) =
+\frac{1}{2\gamma}
+\exp{ \left\{ 
+  \frac{x - \mu}{\gamma} \right
+\} }
+$$
+
+Then the prior can be written as the maximum likelihood across the estimated coefficients each of the $K$ features in the model, for a given penalty importance $\lambda$:
+$$
+\displaylines{
+\begin{align}
+p(\beta|X,\sigma) \sim p(\beta)
+& = \prod_{k=1}^{K}{ 
+  \frac{1}{2 \gamma}
+  \exp{\left\{ \frac{ -\mid \beta - \mu \mid}{\gamma} \right\}}
+}
+\\ \\ & = \prod_{k=1}^{K}{ 
+  \frac{1}{2 \gamma}
+  \exp{\left\{ \frac{ -\mid \beta \mid}{\gamma} \right\}}
+}
+\end{align}
+}
+$$
+
+:::{.column-margin}
+This is how the prior is defined in @tibshirani1996lasso. Since the prior is assumed before any data is observed, intuitively $\beta$ should not need conditioning on $X$.
+
+However, @park2008lasso found that not conditioning on $\sigma^2$ can result in non-unimodal posterior, so in practice a non-informative scale-invariant marginal prior $\pi(\sigma^2) = 1/\sigma$ on $\sigma^2$ is used.
+:::
+
+Now if set this as the prior, we can derive the cost function that we aim to minimize when $X$ is observed.
+
+$$
+\displaylines{
+\begin{align}
+\max_{\beta} {\left\{ p(\beta|y,X,\sigma) \right\}}
+& = \max_\beta{
+  \left[ p(y|\beta,X,\sigma) \times p(\beta)\right] 
+} \\
+& \sim \min_\beta{
+  \left\{ -\log{
+    \left[ p(y|\beta,X,\sigma) \times p(\beta)\right] 
+    }\right\}
+} \\
+& = \min_\beta{
+  \left\{ 
+    -\log{\left[ p(y|\beta,X,\sigma) \right]
+    -\log{\left[p(\beta)\right]}
+    }\right\}
+} \\
+& = \min_\beta \left\{ 
+\frac{1}{2} \left( 
+  \cancel{ n \log{[2 \pi \sigma^2]} }
+  + \frac{1}{\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+\right)
+- \log{\left[ 
+  \prod_{k=1}^{K}{ 
+    \frac{1}{2\gamma}
+    \exp{\left\{ \frac{ -\mid \beta \mid}{\gamma} \right \}}
+  }
+\right]}
+\right\} \\
+& = \min_\beta \left\{ 
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \sum_{k=1}^{K}{ \log{ \left[
+    \frac{1}{2\gamma}
+    \exp{ \left\{ \frac{ -\mid \beta \mid}{\gamma} \right\} }
+    \right]
+    }
+  }
+\right\} \\
+& = \min_\beta \left\{ 
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \cancel{ K \log{ \left[ \frac{1}{2\gamma} \right] } }
+- \sum_{k=1}^{K}{ 
+    \log{ \left[ \exp{\left\{ \frac{ -\mid \beta \mid}{\gamma} \right\}} \right] }
+  }  
+\right\} \\
+& = \min_\beta \left\{ 
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{\gamma} \sum_{k=1}^{K}{ \mid \beta \mid}  
+\right\} \\ \\
+\therefore \beta^* 
+& =\arg\min_\beta{\left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{\gamma}\sum_{k=1}^{K}{\mid\beta\mid} 
+  \right\}
+}
+\end{align}
+}
+$$
+
+::: {.column-margin}
+Note that terms that do not vary with the choice of $\beta$ drop out
+:::
+
+::: {.callout-tip title="Key point"}
+Hence setting a laplace prior on the coefficients is - almost - equivalent to running L1 regularization, where $1/\gamma$ is the parameter influencing the penalty size.
+:::
+
+Although there is sparsity in the mode of the prior, when combining this with the likelihood distribution, the sparsity will not continue into the posterior distribution. Hence an extra adjustment would be required to "zero-out" coefficients that are very small.

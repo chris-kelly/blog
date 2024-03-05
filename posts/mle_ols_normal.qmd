@@ -2,7 +2,7 @@
 title: "OLS vs MLE with gaussian noise"
 author: "Chris Kelly"
 date: '02-23-24'
-categories: [OLS, MLE, log-likelihood, normal distribution, Gauss-Markov]
+categories: [OLS, MLE, Gauss-Markov]
 image: '../images/mle_ols_normal.jpeg'
 format:
   html:
@@ -13,6 +13,8 @@ format:
           href: ols_blue.html
         - text: Minimizing RSS
           href: ols_coefs_multivariate.html
+        - text: Bayesian Regression
+          href: bayes_lasso.html
 ---
 
 ::: {.callout-tip}

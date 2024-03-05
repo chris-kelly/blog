@@ -2,7 +2,7 @@
 title: "Deriving OLS coefficients (multivariate)"
 author: "Chris Kelly"
 date: '02-20-24'
-categories: [OLS, coefficients, partial differentiation, hessian matrix]
+categories: [OLS, Coefficients, Hessian matrix]
 format:
   html:
     code-fold: true
