@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Chris Kelly">
+<meta name="dcterms.date" content="2024-02-25">
 
-<title>Chris Kelly Blog - Sciencing Data</title>
+<title>Chris Kelly Blog - Causal-driven Machine Learning</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,24 +25,22 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,35 +68,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -128,17 +99,17 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Chris Kelly Blog</span>
     </a>
   </div>
@@ -149,7 +120,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -172,323 +143,101 @@ window.Quarto = {
 <!-- content -->
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Sciencing Data</h1>
+    <div class="quarto-title column-body">
+      <h1 class="title">Causal-driven Machine Learning</h1>
                       </div>
   </div>
     
   
-  <div class="quarto-title-meta column-page-left">
+  <div class="quarto-title-meta">
 
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Chris Kelly </p>
+            </div>
+    </div>
       
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">February 25, 2024</p>
+      </div>
+    </div>
     
       
     </div>
     
   
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(7)</span></div><div class="category" data-category="Bayes">Bayes <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Bias">Bias <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Clustered errors">Clustered errors <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Coefficients">Coefficients <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Confidence Intervals">Confidence Intervals <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Efficiency">Efficiency <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Fundamentals">Fundamentals <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Gauss-Markov">Gauss-Markov <span class="quarto-category-count">(3)</span></div><div class="category" data-category="Hessian matrix">Hessian matrix <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Heteroskedastic errors">Heteroskedastic errors <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Laplace">Laplace <span class="quarto-category-count">(1)</span></div><div class="category" data-category="MAE">MAE <span class="quarto-category-count">(1)</span></div><div class="category" data-category="MLE">MLE <span class="quarto-category-count">(2)</span></div><div class="category" data-category="MSE">MSE <span class="quarto-category-count">(1)</span></div><div class="category" data-category="OLS">OLS <span class="quarto-category-count">(4)</span></div><div class="category" data-category="Regularization">Regularization <span class="quarto-category-count">(1)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
+<p>Classic ML focuses on “association” (Judea Pearl) - which features correlate with a specific response variable. This is about trying to find the correlations between the features and the response (supervised learning).</p>
+<p>Causal ML focuses on the “intervention” - what happens if we take a certain action, such as putting an individual in the treatment or control group.</p>
+<p>Hence the dataset structures look quite different:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/causalml_datastructure.png" class="img-fluid figure-img"></p>
+<figcaption>Dataset structure</figcaption>
+</figure>
+</div>
+<ul>
+<li><span class="math inline">\(W\)</span> is a dummy indicator for whether the observation was in treatment or control</li>
+<li><span class="math inline">\(Y\)</span> is the observation, which for individual <span class="math inline">\(i\)</span> is either <span class="math inline">\(Y_i^0\)</span> or <span class="math inline">\(Y_i^1\)</span> depending on <span class="math inline">\(W\)</span></li>
+</ul>
+<p>Thus - a key question in causal ML is how well we can estimate that counterfactual value, the “potential outcome” resulting from an “alternative action” we do not observe. There is no Clarence the angel to tell us the counterfactual</p>
+</section>
+<section id="some-notes" class="level3">
+<h3 class="anchored" data-anchor-id="some-notes">Some notes</h3>
+<p>The causal effect of receiving treatment for a unit <span class="math inline">\(i\)</span> is thus a comparison of potential outcomes, such as <span class="math inline">\(Y_i^1 − Y_i^0\)</span>, the difference between outcomes when units are treated versus not.</p>
+<p>Note that this is the difference in potential outcomes. It is only after the individual is assigned to treatment or control that we observe one - just one - of these outcomes.</p>
+<p>We can formulate the</p>
+</section>
+<section id="randomized-treatment-assignment" class="level3">
+<h3 class="anchored" data-anchor-id="randomized-treatment-assignment">Randomized treatment assignment</h3>
+<p>Randomisation at a large scale allows us to ensure three key assumptions are met:</p>
+<ol type="1">
+<li>Positivity</li>
+<li>Stable Unit Treatment Value Assumption (SUTVA)</li>
+<li>Common Support</li>
+</ol>
+<p>In general, we find four critical assumptions behind causal inference:</p>
+<p>https://www.linkedin.com/pulse/critical-causal-inference-assumptions-jason-shafrin</p>
+<ol type="1">
+<li>SUTVA: no network effects (no contagion or spillovers)</li>
+<li>Consistency: the potential outcome matches the actual outcome relevant for that treatment effect</li>
+<li>Ignorability: after conditioning on relevant observed confounders (X), the treatment assignment is independent of outcomes</li>
+<li>Positivity: everyone has some chance of getting the treatment.</li>
+</ol>
+</section>
+<section id="positivity" class="level3">
+<h3 class="anchored" data-anchor-id="positivity">Positivity</h3>
+<p>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8492528/</p>
+<p>In order to estimate conditional average treatment effects, we need all the combinations of relevant covariates present in the population to be sufficiently represented in both the treatment and control groups.</p>
+<p>If this is not the case, we say there is “nonoverlap”. This may result due to two reasons:</p>
+<ul>
+<li>Structural/non-random allocation of treatment/control: one group could not (or always will) receieve the treatment</li>
+<li>Small sample size: meaning that not enough data was collected to validate</li>
+</ul>
+<p>Random non-positivity is likely for continuous variables, since they take such a large range of values. We usually need to assume that its okay to borrow info from sufficiently similar people to estimate CATE (a.k.a interpolation). Structural is a far bigger issue, which really means those individuals have to be excluded.</p>
+<p>One way of detecting nonoverlap is to build a model that predicts whether an individual received the treatment or not, as a function of its covariates. If the model is highly predictable - i.e.&nbsp;a lot of individuals having predicted probabilities of receiving treatment near 0 or 1, rather than 0.5 - then we get some indication that overlap in those covariate combinations is low.</p>
+<p>This might seem non-intuitive for those coming from an ML background - we want the model to be a bad predictor! In other words - if the features that influence the outcome also influence treatment assignment greatly, the propensity model will pick this up and</p>
+<p>The positivity assumption requires that all treatments of interest be observed in every patient subgroup. Violations of this assumption are indicated by nonoverlap in the data in the sense that patients with certain covariate combinations are not observed to receive a treatment of interest, which may arise from contraindications to treatment or small sample size. In this paper, we emphasize the importance and implications of this often-overlooked assumption. Further, we elaborate on the challenges nonoverlap poses to estimation and inference and discuss previously proposed methods. We distinguish between structural and practical violations and provide insight into which methods are appropriate for each. To demonstrate alternative approaches and relevant considerations (including how overlap is defined and the target population to which results may be generalized) when addressing positivity violations, we employ an electronic health record-derived data set to assess the effects of metformin on colon cancer recurrence among diabetic patients.</p>
 
 
+</section>
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="Bayes,MLE,Regularization,Laplace" data-listing-date-sort="1708732800000" data-listing-file-modified-sort="1709915067518" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1347">
-<div class="thumbnail">
-<p><a href="./posts/bayes_lasso.html" class="no-external"></a></p><a href="./posts/bayes_lasso.html" class="no-external">
-<p><img src="./images/bayes_lasso.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/bayes_lasso.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/bayes_lasso.html" class="no-external">Shrinkage priors for Lasso and Ridge</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/bayes_lasso.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Bayes'); return false;">
-Bayes
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('MLE'); return false;">
-MLE
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Regularization'); return false;">
-Regularization
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Laplace'); return false;">
-Laplace
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/bayes_lasso.html" class="no-external">Showing Laplace priors in bayesian regression are equivalent to Lasso regularization</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/bayes_lasso.html" class="no-external">
-<div class="listing-date">
-Feb 24, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="OLS,MLE,Gauss-Markov" data-listing-date-sort="1708646400000" data-listing-file-modified-sort="1709653886647" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="602">
-<div class="thumbnail">
-<p><a href="./posts/mle_ols_normal.html" class="no-external"></a></p><a href="./posts/mle_ols_normal.html" class="no-external">
-<p><img src="./images/mle_ols_normal.jpeg" class="thumbnail-image"></p>
-</a><p><a href="./posts/mle_ols_normal.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/mle_ols_normal.html" class="no-external">OLS vs MLE with gaussian noise</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/mle_ols_normal.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('MLE'); return false;">
-MLE
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Gauss-Markov'); return false;">
-Gauss-Markov
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/mle_ols_normal.html" class="no-external">Why MLE finds the same coefficients as OLS when assuming model errors are generated from a mean-zero gaussian probabilistic process</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/mle_ols_normal.html" class="no-external">
-<div class="listing-date">
-Feb 23, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="OLS,Confidence Intervals,Gauss-Markov,Clustered errors,Heteroskedastic errors" data-listing-date-sort="1708560000000" data-listing-file-modified-sort="1709653715042" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1192">
-<div class="thumbnail">
-<p><a href="./posts/ols_sandwich_estimators.html" class="no-external"></a></p><a href="./posts/ols_sandwich_estimators.html" class="no-external">
-<p><img src="./images/ols_sandwich_estimators.jpeg" class="thumbnail-image"></p>
-</a><p><a href="./posts/ols_sandwich_estimators.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/ols_sandwich_estimators.html" class="no-external">Sandwiches: robust covariance error estimation</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/ols_sandwich_estimators.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Confidence Intervals'); return false;">
-Confidence Intervals
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Gauss-Markov'); return false;">
-Gauss-Markov
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Clustered errors'); return false;">
-Clustered errors
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Heteroskedastic errors'); return false;">
-Heteroskedastic errors
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/ols_sandwich_estimators.html" class="no-external">Estimating the correct coefficient variance under different error assumptions</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/ols_sandwich_estimators.html" class="no-external">
-<div class="listing-date">
-Feb 22, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="OLS,Coefficients,Gauss-Markov,Bias,Efficiency" data-listing-date-sort="1708473600000" data-listing-file-modified-sort="1709653814072" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1720">
-<div class="thumbnail">
-<p><a href="./posts/ols_blue.html" class="no-external"></a></p><a href="./posts/ols_blue.html" class="no-external">
-<p><img src="./images/ols_blue.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/ols_blue.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/ols_blue.html" class="no-external">BLUE coefficients: bias and efficiency</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/ols_blue.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Coefficients'); return false;">
-Coefficients
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Gauss-Markov'); return false;">
-Gauss-Markov
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Bias'); return false;">
-Bias
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Efficiency'); return false;">
-Efficiency
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/ols_blue.html" class="no-external">Proving that the OLS coefficient is the best linear unbiased estimator.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/ols_blue.html" class="no-external">
-<div class="listing-date">
-Feb 21, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-categories="OLS,Coefficients,Hessian matrix" data-listing-date-sort="1708387200000" data-listing-file-modified-sort="1709653556828" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1208">
-<div class="thumbnail">
-<p><a href="./posts/ols_coefs_multivariate.html" class="no-external"></a></p><a href="./posts/ols_coefs_multivariate.html" class="no-external">
-<p><img src="./images/ols_coefs_multivariate.jpeg" class="thumbnail-image"></p>
-</a><p><a href="./posts/ols_coefs_multivariate.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/ols_coefs_multivariate.html" class="no-external">Deriving OLS coefficients (multivariate)</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/ols_coefs_multivariate.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('OLS'); return false;">
-OLS
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Coefficients'); return false;">
-Coefficients
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Hessian matrix'); return false;">
-Hessian matrix
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/ols_coefs_multivariate.html" class="no-external">Deriving a unique, analytical solution to the set of coefficients that minimize the sum of squared residuals.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/ols_coefs_multivariate.html" class="no-external">
-<div class="listing-date">
-Feb 20, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="5" data-categories="MAE,MSE" data-listing-date-sort="1707350400000" data-listing-file-modified-sort="1709653438767" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="402">
-<div class="thumbnail">
-<p><a href="./posts/mse_mean_mae_median.html" class="no-external"></a></p><a href="./posts/mse_mean_mae_median.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/mse_mean_mae_median.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/mse_mean_mae_median.html" class="no-external">Mean Squared Error vs Mean Absolute Error</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/mse_mean_mae_median.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('MAE'); return false;">
-MAE
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('MSE'); return false;">
-MSE
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/mse_mean_mae_median.html" class="no-external">Minimizing MAE tends predictions towards the sample median, whereas for MSE predictions tend towards the sample mean.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/mse_mean_mae_median.html" class="no-external">
-<div class="listing-date">
-Feb 8, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="6" data-categories="Fundamentals" data-listing-date-sort="1707350400000" data-listing-file-modified-sort="1709653765707" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="274">
-<div class="thumbnail">
-<p><a href="./posts/techniques_differentiation.html" class="no-external"></a></p><a href="./posts/techniques_differentiation.html" class="no-external">
-<p><img src="./images/techniques_differentiation.jpeg" class="thumbnail-image"></p>
-</a><p><a href="./posts/techniques_differentiation.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/techniques_differentiation.html" class="no-external">Differentiation formulae</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/techniques_differentiation.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('Fundamentals'); return false;">
-Fundamentals
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/techniques_differentiation.html" class="no-external">Deriving why <span class="math inline">\(\frac{d}{dx} \left(x^{n} \right) = nx^{n-1}\)</span></a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/techniques_differentiation.html" class="no-external">
-<div class="listing-date">
-Feb 8, 2024
-</div>
-<div class="listing-author">
-Chris Kelly
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

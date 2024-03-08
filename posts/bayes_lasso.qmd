@@ -1,8 +1,8 @@
 ---
-title: "Shrinkage priors for Lasso"
+title: "Shrinkage priors for Lasso and Ridge"
 author: "Chris Kelly"
 date: '02-24-24'
-categories: [Bayes, MLE, Regularization]
+categories: [Bayes, MLE, Regularization, Laplace]
 format:
   html:
     code-fold: true
@@ -100,7 +100,9 @@ Where:
 * $p(Y|X,\sigma)$ is the evidence (the data we feed into the model)
 * $p(\beta|X,\sigma)$ is the prior for the coefficient
 
-Now in frequentist regression, we assume no prior at all: $\beta$ is fixed, so $p(\beta|X,\sigma)=1$. Thus we are just left with finding the coefficients that maximise $p(Y|\beta,X,\sigma)$. By taking the negative log likelihood, we find this is identical to finding the coefficient values that minimise the sum of squared residuals [(see the derivation here)](mle_ols_normal.html):
+Now in frequentist regression, we assume no prior at all: $\beta$ is fixed, so $p(\beta|X,\sigma)=p(\beta)=1$, regardless of the evidence observed. Thus we are just left with finding the coefficients that maximise $p(Y|\beta,X,\sigma)$.
+
+By taking the negative log likelihood, we find this is identical to finding the coefficient values that minimise the sum of squared residuals [(see the derivation here)](mle_ols_normal.html):
 
 $$
 \displaylines{
@@ -112,13 +114,13 @@ $$
 }
 $$
 
-However, we could use other types of priors this mass around zero, to apply regularization on our coefficients.
+However, we could use other types of priors, with mass around zero, to  apply regularization on our coefficients.
 
 # Using Laplace priors to shrink coefficients:
 
 Regularization aims to eliminate some of our predictors to create a more parsimonious model in a systematic way, and/or reduce their magnitude to prevent overfitting.
 
-Picking a prior for our coefficient that is concentrated at zero can help achieve this - for example, we could use a laplace distribution, with a location parameter $\mu$ of zero as visualised below:
+Picking a prior for our coefficient that is concentrated at zero can help achieve this - for example, we could use a Laplace distribution, with a location parameter $\mu$ of zero as visualised below:
 
 ```{r, fig.width=9}
 laplace_dist <- function(x, mu = 0, gamma = 1) {
@@ -144,7 +146,7 @@ Not only does the Laplace pdf increase when closer to zero, but it increases at 
 
 ### Laplace priors ~ Lasso Regression
 
-Recall that the probability density function of laplace is
+Recall that the probability density function of Laplace is
 $$
 f(x|\mu,\gamma) =
 \frac{1}{2\gamma}
@@ -243,7 +245,98 @@ Note that terms that do not vary with the choice of $\beta$ drop out
 :::
 
 ::: {.callout-tip title="Key point"}
-Hence setting a laplace prior on the coefficients is - almost - equivalent to running L1 regularization, where $1/\gamma$ is the parameter influencing the penalty size.
+Hence setting a Laplace prior on the coefficients is - almost - equivalent to running L1 regularization, where $1/\gamma$ is the parameter influencing the penalty size.
 :::
 
-Although there is sparsity in the mode of the prior, when combining this with the likelihood distribution, the sparsity will not continue into the posterior distribution. Hence an extra adjustment would be required to "zero-out" coefficients that are very small.
+Although there is sparsity in the mode of the prior, when combining this with the likelihood distribution, the sparsity will not continue into the posterior distribution. In practice, if the posterior of $\beta$ is sufficiently small, we would want to drop it - so a threshold value for the size at which coefficients are zero-oed out is set as a hyperparameter.
+
+# Using Gaussian priors to shrink coefficients:
+
+In a similar way to before for Lasso, we set our coefficient priors to each have a Gaussian distribution, with a location parameter $\mu=0$:
+
+```{r, fig.width=9}
+normal_pdf <- function(x, mu = 0, sigma = 2) {
+  z = (x-mu)/sigma
+  y = (2*pi*sigma^2)^(-1/2) * exp(-0.5*z^2)
+  return(y)
+}
+
+x = seq(-10,10,0.1)
+plot(
+  x=x,
+  y=normal_pdf(x),
+  type='l',
+  main='Normal(sigma=1)'
+  )
+```
+
+### Gaussian priors ~ Ridge Regression
+
+The gaussian prior can be written as the maximum likelihood across the estimated coefficients each of the $K$ features in the model, for a given penalty importance $\lambda$:
+
+$$
+\displaylines{
+\begin{align}
+p(\beta|X,\sigma) \sim p(\beta)
+& = \prod_{k=1}^{K}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+\end{align}
+}
+$$
+
+Now if set this as the prior, we can derive the cost function that we aim to minimize when $X$ is observed.
+
+$$
+\displaylines{
+\begin{align}
+\max_{\beta} {\left\{ p(\beta|y,X,\sigma) \right\}}
+& \sim \min_\beta{
+  \left\{ 
+    -\log{\left[ p(y|\beta,X,\sigma) \right]
+    -\log{\left[p(\beta)\right]}
+    }\right\}
+} \\
+& = \min_\beta \left\{ 
+\frac{1}{2} \left( 
+  \cancel{ n \log{[2 \pi \sigma^2]} }
+  + \frac{1}{\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+\right)
+- \log{\left[ 
+  \prod_{k=1}^{K}{
+    \frac{1}{\sigma\sqrt{2\pi}}
+    \exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+    }
+\right]}
+\right\} \\
+& = \min_\beta \left\{ 
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \sum_{k=1}^{K}{ \log{ \left[
+    \frac{1}{\sigma\sqrt{2\pi}}
+    \exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+    \right]
+    }
+  }
+\right\} \\
+& = \min_\beta \left\{ 
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \cancel{ K \log{ \left[ \frac{1}{\sigma\sqrt{2\pi}} \right] } }
+- \sum_{k=1}^{K}{ 
+    \log{ \left[ \exp{\left\{ -\frac{1}{2\sigma^2}\beta_k^2 \right\}} \right] }
+  }  
+\right\} \\
+& = \min_\beta \left\{ 
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{2\sigma^2} \sum_{k=1}^{K}{ \beta^2 }  
+\right\} \\ \\
+\therefore \beta^* 
+& =\arg\min_\beta{\left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{2\sigma^2} \sum_{k=1}^{K}{ \beta^2 }
+  \right\}
+}
+\end{align}
+}
+$$
+
+::: {.callout-tip title="Key point"}
+Hence setting a Gaussian prior on the coefficients is - almost - equivalent to running L1 regularization, where the variance of the prior - $\sigma^2$ is the parameter directly influencing the penalty size.
+:::

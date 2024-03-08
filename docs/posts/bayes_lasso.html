@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2024-02-24">
 
-<title>Chris Kelly Blog - Shrinkage priors for Lasso</title>
+<title>Chris Kelly Blog - Shrinkage priors for Lasso and Ridge</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -198,11 +198,12 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Shrinkage priors for Lasso</h1>
+      <h1 class="title">Shrinkage priors for Lasso and Ridge</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">Bayes</div>
                 <div class="quarto-category">MLE</div>
                 <div class="quarto-category">Regularization</div>
+                <div class="quarto-category">Laplace</div>
               </div>
                   </div>
   </div>
@@ -241,6 +242,10 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#laplace-priors-lasso-regression" id="toc-laplace-priors-lasso-regression" class="nav-link" data-scroll-target="#laplace-priors-lasso-regression">Laplace priors ~ Lasso Regression</a></li>
   </ul></li>
+  <li><a href="#using-gaussian-priors-to-shrink-coefficients" id="toc-using-gaussian-priors-to-shrink-coefficients" class="nav-link" data-scroll-target="#using-gaussian-priors-to-shrink-coefficients">Using Gaussian priors to shrink coefficients:</a>
+  <ul class="collapse">
+  <li><a href="#gaussian-priors-ridge-regression" id="toc-gaussian-priors-ridge-regression" class="nav-link" data-scroll-target="#gaussian-priors-ridge-regression">Gaussian priors ~ Ridge Regression</a></li>
+  </ul></li>
   </ul>
 <div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="mle_ols_normal.html"><i class="bi bi-link-45deg"></i>MLE for Linear regression</a></li></ul></div></nav>
     </div>
@@ -261,7 +266,7 @@ What are we exploring?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Showing that laplace coefficient priors in bayesian regression are equivalent to Lasso regularization</p>
+<p>Showing Laplace priors in bayesian regression are equivalent to Lasso regularization</p>
 </div>
 </div>
 <!-- # Regularization
@@ -339,7 +344,8 @@ p(\beta|X,y,\sigma)
 <li><span class="math inline">\(p(Y|X,\sigma)\)</span> is the evidence (the data we feed into the model)</li>
 <li><span class="math inline">\(p(\beta|X,\sigma)\)</span> is the prior for the coefficient</li>
 </ul>
-<p>Now in frequentist regression, we assume no prior at all: <span class="math inline">\(\beta\)</span> is fixed, so <span class="math inline">\(p(\beta|X,\sigma)=1\)</span>. Thus we are just left with finding the coefficients that maximise <span class="math inline">\(p(Y|\beta,X,\sigma)\)</span>. By taking the negative log likelihood, we find this is identical to finding the coefficient values that minimise the sum of squared residuals <a href="mle_ols_normal.html">(see the derivation here)</a>:</p>
+<p>Now in frequentist regression, we assume no prior at all: <span class="math inline">\(\beta\)</span> is fixed, so <span class="math inline">\(p(\beta|X,\sigma)=p(\beta)=1\)</span>, regardless of the evidence observed. Thus we are just left with finding the coefficients that maximise <span class="math inline">\(p(Y|\beta,X,\sigma)\)</span>.</p>
+<p>By taking the negative log likelihood, we find this is identical to finding the coefficient values that minimise the sum of squared residuals <a href="mle_ols_normal.html">(see the derivation here)</a>:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
@@ -349,12 +355,12 @@ p(\beta|X,y,\sigma)
 \end{align}
 }
 \]</span></p>
-<p>However, we could use other types of priors this mass around zero, to apply regularization on our coefficients.</p>
+<p>However, we could use other types of priors, with mass around zero, to apply regularization on our coefficients.</p>
 </section>
 <section id="using-laplace-priors-to-shrink-coefficients" class="level1 page-columns page-full">
 <h1>Using Laplace priors to shrink coefficients:</h1>
 <p>Regularization aims to eliminate some of our predictors to create a more parsimonious model in a systematic way, and/or reduce their magnitude to prevent overfitting.</p>
-<p>Picking a prior for our coefficient that is concentrated at zero can help achieve this - for example, we could use a laplace distribution, with a location parameter <span class="math inline">\(\mu\)</span> of zero as visualised below:</p>
+<p>Picking a prior for our coefficient that is concentrated at zero can help achieve this - for example, we could use a Laplace distribution, with a location parameter <span class="math inline">\(\mu\)</span> of zero as visualised below:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -387,7 +393,7 @@ p(\beta|X,y,\sigma)
 <p>Not only does the Laplace pdf increase when closer to zero, but it increases at an accelerating rate. Thus, we can imagine that the closer the likelihood estimate of the coefficient is to zero, the greater the influence of the prior.</p>
 <section id="laplace-priors-lasso-regression" class="level3 page-columns page-full">
 <h3 class="anchored" data-anchor-id="laplace-priors-lasso-regression">Laplace priors ~ Lasso Regression</h3>
-<p>Recall that the probability density function of laplace is <span class="math display">\[
+<p>Recall that the probability density function of Laplace is <span class="math display">\[
 f(x|\mu,\gamma) =
 \frac{1}{2\gamma}
 \exp{ \left\{
@@ -486,10 +492,116 @@ Key point
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Hence setting a laplace prior on the coefficients is - almost - equivalent to running L1 regularization, where <span class="math inline">\(1/\gamma\)</span> is the parameter influencing the penalty size.</p>
+<p>Hence setting a Laplace prior on the coefficients is - almost - equivalent to running L1 regularization, where <span class="math inline">\(1/\gamma\)</span> is the parameter influencing the penalty size.</p>
 </div>
 </div>
-<p>Although there is sparsity in the mode of the prior, when combining this with the likelihood distribution, the sparsity will not continue into the posterior distribution. Hence an extra adjustment would be required to “zero-out” coefficients that are very small.</p>
+<p>Although there is sparsity in the mode of the prior, when combining this with the likelihood distribution, the sparsity will not continue into the posterior distribution. In practice, if the posterior of <span class="math inline">\(\beta\)</span> is sufficiently small, we would want to drop it - so a threshold value for the size at which coefficients are zero-oed out is set as a hyperparameter.</p>
+</section>
+</section>
+<section id="using-gaussian-priors-to-shrink-coefficients" class="level1">
+<h1>Using Gaussian priors to shrink coefficients:</h1>
+<p>In a similar way to before for Lasso, we set our coefficient priors to each have a Gaussian distribution, with a location parameter <span class="math inline">\(\mu=0\)</span>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>normal_pdf <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">sigma =</span> <span class="dv">2</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">=</span> (x<span class="sc">-</span>mu)<span class="sc">/</span>sigma</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=</span> (<span class="dv">2</span><span class="sc">*</span>pi<span class="sc">*</span>sigma<span class="sc">^</span><span class="dv">2</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span><span class="sc">/</span><span class="dv">2</span>) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fl">0.5</span><span class="sc">*</span>z<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">normal_pdf</span>(x),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">main=</span><span class="st">'Normal(sigma=1)'</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_lasso_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="gaussian-priors-ridge-regression" class="level3">
+<h3 class="anchored" data-anchor-id="gaussian-priors-ridge-regression">Gaussian priors ~ Ridge Regression</h3>
+<p>The gaussian prior can be written as the maximum likelihood across the estimated coefficients each of the <span class="math inline">\(K\)</span> features in the model, for a given penalty importance <span class="math inline">\(\lambda\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+p(\beta|X,\sigma) \sim p(\beta)
+&amp; = \prod_{k=1}^{K}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+\end{align}
+}
+\]</span></p>
+<p>Now if set this as the prior, we can derive the cost function that we aim to minimize when <span class="math inline">\(X\)</span> is observed.</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\max_{\beta} {\left\{ p(\beta|y,X,\sigma) \right\}}
+&amp; \sim \min_\beta{
+  \left\{
+    -\log{\left[ p(y|\beta,X,\sigma) \right]
+    -\log{\left[p(\beta)\right]}
+    }\right\}
+} \\
+&amp; = \min_\beta \left\{
+\frac{1}{2} \left(
+  \cancel{ n \log{[2 \pi \sigma^2]} }
+  + \frac{1}{\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+\right)
+- \log{\left[
+  \prod_{k=1}^{K}{
+    \frac{1}{\sigma\sqrt{2\pi}}
+    \exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+    }
+\right]}
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \sum_{k=1}^{K}{ \log{ \left[
+    \frac{1}{\sigma\sqrt{2\pi}}
+    \exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+    \right]
+    }
+  }
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \cancel{ K \log{ \left[ \frac{1}{\sigma\sqrt{2\pi}} \right] } }
+- \sum_{k=1}^{K}{
+    \log{ \left[ \exp{\left\{ -\frac{1}{2\sigma^2}\beta_k^2 \right\}} \right] }
+  }  
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{2\sigma^2} \sum_{k=1}^{K}{ \beta^2 }  
+\right\} \\ \\
+\therefore \beta^*
+&amp; =\arg\min_\beta{\left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{2\sigma^2} \sum_{k=1}^{K}{ \beta^2 }
+  \right\}
+}
+\end{align}
+}
+\]</span></p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Key point">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Key point
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hence setting a Gaussian prior on the coefficients is - almost - equivalent to running L1 regularization, where the variance of the prior - <span class="math inline">\(\sigma^2\)</span> is the parameter directly influencing the penalty size.</p>
+</div>
+</div>
 
 
 

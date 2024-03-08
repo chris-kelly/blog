@@ -1,0 +1,77 @@
+---
+title: "Causal-driven Machine Learning"
+author: "Chris Kelly"
+date: '02-25-24'
+categories: []
+format:
+  html:
+    code-fold: true
+draft: true
+---
+
+### Introduction
+
+Classic ML focuses on "association" (Judea Pearl)  - which features correlate with a specific response variable.
+This is about trying to find the correlations between the features and the response (supervised learning).
+
+Causal ML focuses on the "intervention" - what happens if we take a certain action, such as putting an individual in the treatment or control group.
+
+Hence the dataset structures look quite different:
+
+![Dataset structure](../images/causalml_datastructure.png)
+ 
+* $W$ is a dummy indicator for whether the observation was in treatment or control
+* $Y$ is the observation, which for individual $i$ is either $Y_i^0$ or $Y_i^1$ depending on $W$
+
+Thus - a key question in causal ML is how well we can estimate that counterfactual value, the "potential outcome" resulting from an "alternative action" we do not observe. There is no Clarence the angel to tell us the counterfactual
+
+### Some notes
+
+The causal effect of receiving treatment for a unit $i$ is thus a comparison of potential outcomes, such as $Y_i^1 − Y_i^0$, the difference between outcomes when units are
+treated versus not.
+
+Note that this is the difference in potential outcomes. It is only after the individual is assigned to treatment or control that we observe one - just one - of these outcomes. 
+
+We can formulate the 
+
+### Randomized treatment assignment
+
+Randomisation at a large scale allows us to ensure three key assumptions are met:
+
+1. Positivity
+2. Stable Unit Treatment Value Assumption (SUTVA)
+3. Common Support
+
+In general, we find four critical assumptions behind causal inference:
+
+https://www.linkedin.com/pulse/critical-causal-inference-assumptions-jason-shafrin
+
+1. SUTVA: no network effects (no contagion or spillovers)
+2. Consistency: the potential outcome matches the actual outcome relevant for that treatment effect
+3. Ignorability: after conditioning on relevant observed confounders (X), the treatment assignment is independent of outcomes
+4. Positivity: everyone has some chance of getting the treatment.
+
+
+### Positivity
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8492528/
+
+In order to estimate conditional average treatment effects, we need all the combinations of relevant covariates present in the population to be sufficiently represented in both the treatment and control groups.
+
+If this is not the case, we say there is "nonoverlap". This may result due to two reasons:
+
+* Structural/non-random allocation of treatment/control: one group could not (or always will) receieve the treatment
+* Small sample size: meaning that not enough data was collected to validate
+
+Random non-positivity is likely for continuous variables, since they take such a large range of values. We usually need to assume  that its okay to borrow info from sufficiently similar people to estimate CATE (a.k.a interpolation). Structural is a far bigger issue, which really means those individuals have to be excluded.
+
+One way of detecting nonoverlap is to build a model that predicts whether an individual received the treatment or not, as a function of its covariates. If the model is highly predictable - i.e. a lot of individuals having predicted probabilities of receiving treatment near 0 or 1, rather than 0.5 - then we get some indication that overlap in those covariate combinations is low.
+
+This might seem non-intuitive for those coming from an ML background - we want the model to be a bad predictor! In other words - if the features that influence the outcome also influence treatment assignment greatly, the propensity model will pick this up and 
+
+
+
+
+
+The positivity assumption requires that all treatments of interest be observed in every patient subgroup. Violations of this assumption are indicated by nonoverlap in the data in the sense that patients with certain covariate combinations are not observed to receive a treatment of interest, which may arise from contraindications to treatment or small sample size. In this paper, we emphasize the importance and implications of this often-overlooked assumption. Further, we elaborate on the challenges nonoverlap poses to estimation and inference and discuss previously proposed methods. We distinguish between structural and practical violations and provide insight into which methods are appropriate for each. To demonstrate alternative approaches and relevant considerations (including how overlap is defined and the target population to which results may be generalized) when addressing positivity violations, we employ an electronic health record-derived data set to assess the effects of metformin on colon cancer recurrence among diabetic patients.
+
