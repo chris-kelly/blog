@@ -2,7 +2,7 @@
 title: "OLS vs MLE with gaussian noise"
 author: "Chris Kelly"
 date: '02-23-24'
-categories: [OLS, MLE, Gauss-Markov]
+categories: [Linear Models, Maximum Likelihood, Gauss-Markov]
 image: '../images/mle_ols_normal.jpeg'
 format:
   html:

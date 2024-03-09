@@ -5,7 +5,7 @@ date: '02-08-24'
 format:
   html:
     code-fold: true
-categories: [MAE, MSE]
+categories: [Cost functions]
 ---
 
 ::: {.callout-tip}

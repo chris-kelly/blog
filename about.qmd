@@ -1,6 +1,6 @@
 ---
 title: "About"
-image: profile.jpg
+image: images/about.jpeg
 about:
   template: jolla
   links:
@@ -11,6 +11,8 @@ about:
 
 ---
 
-About me!
+I've taught myself Data Science over the last few years, and I've taken lots of notes to solidify my understanding along the way. I thought it was worthwhile to share them!
 
-Coming soon :)
+All notes and code are my own, or references have been added. 
+
+All images are generated using [Microsoft Copilot in Bing](https://www.bing.com/chat).

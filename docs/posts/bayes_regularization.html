@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chris Kelly">
-<meta name="dcterms.date" content="2025-02-21">
+<meta name="dcterms.date" content="2024-02-24">
 
-<title>Chris Kelly Blog - Deriving Logistic Regression Coefficients</title>
+<title>Chris Kelly Blog - Shrinkage priors for Lasso and Ridge</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -56,7 +56,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -178,10 +198,12 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Deriving Logistic Regression Coefficients</h1>
+      <h1 class="title">Shrinkage priors for Lasso and Ridge</h1>
                                 <div class="quarto-categories">
+                <div class="quarto-category">Bayes</div>
                 <div class="quarto-category">Maximum Likelihood</div>
-                <div class="quarto-category">Generalized Linear Models</div>
+                <div class="quarto-category">Regularization</div>
+                <div class="quarto-category">Laplace</div>
               </div>
                   </div>
   </div>
@@ -199,7 +221,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 21, 2025</p>
+        <p class="date">February 24, 2024</p>
       </div>
     </div>
     
@@ -215,17 +237,17 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#setting-some-intuition" id="toc-setting-some-intuition" class="nav-link active" data-scroll-target="#setting-some-intuition">Setting some intuition</a></li>
-  <li><a href="#cost-function-for-bernoulli-regression" id="toc-cost-function-for-bernoulli-regression" class="nav-link" data-scroll-target="#cost-function-for-bernoulli-regression">Cost function for bernoulli regression</a>
+  <li><a href="#bayesian-linear-regression" id="toc-bayesian-linear-regression" class="nav-link active" data-scroll-target="#bayesian-linear-regression">Bayesian Linear regression:</a></li>
+  <li><a href="#using-laplace-priors-to-shrink-coefficients" id="toc-using-laplace-priors-to-shrink-coefficients" class="nav-link" data-scroll-target="#using-laplace-priors-to-shrink-coefficients">Using Laplace priors to shrink coefficients:</a>
   <ul class="collapse">
-  <li><a href="#applying-the-bernoulli-pdf" id="toc-applying-the-bernoulli-pdf" class="nav-link" data-scroll-target="#applying-the-bernoulli-pdf">Applying the bernoulli pdf</a></li>
-  <li><a href="#taking-the-negative-log-likelihood" id="toc-taking-the-negative-log-likelihood" class="nav-link" data-scroll-target="#taking-the-negative-log-likelihood">Taking the negative log-likelihood</a></li>
-  <li><a href="#deriving-the-gradient-with-respect-to-the-coefficients" id="toc-deriving-the-gradient-with-respect-to-the-coefficients" class="nav-link" data-scroll-target="#deriving-the-gradient-with-respect-to-the-coefficients">Deriving the gradient with respect to the coefficients</a></li>
+  <li><a href="#laplace-priors-lasso-regression" id="toc-laplace-priors-lasso-regression" class="nav-link" data-scroll-target="#laplace-priors-lasso-regression">Laplace priors ~ Lasso Regression</a></li>
   </ul></li>
-  <li><a href="#logistic-activation" id="toc-logistic-activation" class="nav-link" data-scroll-target="#logistic-activation">Logistic activation</a></li>
-  <li><a href="#optimal-coefficients-for-the-coefficient" id="toc-optimal-coefficients-for-the-coefficient" class="nav-link" data-scroll-target="#optimal-coefficients-for-the-coefficient">Optimal coefficients for the coefficient</a></li>
+  <li><a href="#using-gaussian-priors-to-shrink-coefficients" id="toc-using-gaussian-priors-to-shrink-coefficients" class="nav-link" data-scroll-target="#using-gaussian-priors-to-shrink-coefficients">Using Gaussian priors to shrink coefficients:</a>
+  <ul class="collapse">
+  <li><a href="#gaussian-priors-ridge-regression" id="toc-gaussian-priors-ridge-regression" class="nav-link" data-scroll-target="#gaussian-priors-ridge-regression">Gaussian priors ~ Ridge Regression</a></li>
+  </ul></li>
   </ul>
-</nav>
+<div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="mle_ols_normal.html"><i class="bi bi-link-45deg"></i>MLE for Linear regression</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
@@ -244,270 +266,356 @@ What are we exploring?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Deriving coefficients to predict the likelihood of a binary outcome using maximum likelihood estimation and the logit link funciton.</p>
+<p>Showing Laplace and Gaussian priors in Bayesian regression are equivalent to Lasso and Ridge regularization</p>
 </div>
 </div>
-<section id="setting-some-intuition" class="level1 page-columns page-full">
-<h1>Setting some intuition</h1>
-<p>Imagine a basketball player has a 90% chance of making a freethrow.</p>
-<p>For freethrow attempt <span class="math inline">\(i\)</span>, we observe the outcome, <span class="math inline">\(y_i\)</span>, as being 1 if there is a success (i.e.&nbsp;the freethrow is made), or 0 if it is a failure (a miss).</p>
-<p>We can denote <span class="math inline">\(p\)</span> as a fixed probability for success. It follows that the probability of failure as <span class="math inline">\(1-p\)</span> (i.e.&nbsp;a 10% chance of missing).</p>
-<p>This can be formalised as the following (the probability mass function of the bernoulli):</p>
+<!-- # Regularization
+
+Regularization applies a penalty term to the cost function for large coefficients estimates. For example, we can alter the RSS (residual sum of squares) cost function in the following way:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\sum_{k=1}^K{\beta_k^2}\right]}
+$$
+
+The penalty term $\lambda /2$ increases the cost if larger coefficients are estimated, resulting in smaller coefficients being estimated to minimize the the cost function:
+
+$$
+\min_{\beta_j}{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\sum_{k=1}^K{\beta_k^2}\right]}
+\Rightarrow \sum_{i=1}^N 2\epsilon_i\left(\frac{\partial\epsilon_i}{\partial\beta_j}\right)-\lambda\beta_j=0 \\
+$$
+
+As such, we see that minimizing the cost function will artificially reduce the coefficents depending on the size of $\lambda$. This is an example of L2 regularization (ridge). Selecting a good value for $\lambda$ can be found through cross-validation.
+
+However, L2 regularization will never zero-out a coefficient. Instead, we can similarly derive the same penalty through L1 regularisation (LASSO) which actively zeroes out coefficients:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\sum_{k=1}^K{\mid\beta_k\mid}\right]}
+$$
+
+Empirically though, LASSO is shown to be unreliable, zero-es out coefficients that are small but significant.
+
+A more robust method is the elastic net, which combines L1 and L2 regularization. It is often implemented in the following way:
+
+$$
+\min_\beta{\left[\sum_{i=1}^N{\epsilon_i^2}-\frac{\lambda}{2}\left(\alpha\sum_{k=1}^K{\mid\beta_k\mid}+(1-\alpha)\sum_{k=1}^K{\beta_k^2}\right)\right]}
+$$
+
+
+However, regularization in a frequentist model can be a blunt instrument when thinking about regularization of coefficients. This is because $\lambda$ is a single penalty for all coefficients, so if poorly specified, can either include a very large number of irrelevant predictors, or over-shink included coefficients. In particular, it might drop small but signficant features.
+An ideal method should thus only induce weak shrinkage on large coefficients, and stronger shrinkage to zero on less relevant effects.
+Cue bayesian regression: -->
+<section id="bayesian-linear-regression" class="level1">
+<h1>Bayesian Linear regression:</h1>
+<p>When performing ordinary linear regression using maximum likelihood, we model the noise around <span class="math inline">\(y\)</span> as being generated from a gaussian distributed process - conditional on the data <span class="math inline">\(X\)</span> and estimated model parameters <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\sigma\)</span>:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-p(y_i) =
-\begin{cases}
-  p &amp; \text{if}\ y_i=1 \\
-  1-p &amp; \text{if}\ y_i=0
-\end{cases}
+p(y|\beta,X,\sigma)
+&amp; = \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\epsilon_i^2\right\}} \\
+&amp; \sim \prod_{i=1}^{n}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}
+\left( y - X \beta \right)^2
+\right\}}
 \end{align}
 }
 \]</span></p>
-<p>Which is equivalent to the following:</p>
+<p>We can formulate our estimate of the coefficient in a bayesian way if we model <span class="math inline">\(\beta\)</span> as a random variable (rather than a fixed quantity as per frequenist thinking):</p>
 <p><span class="math display">\[
-p(y_i) = p^{y_i}(1-p)^{1-y_i}
+\displaylines{
+\begin{align}
+p(\beta|X,y,\sigma)
+&amp; =
+\frac{
+  p(y|\beta,X,\sigma)
+  p(\beta|X,\sigma)
+  }
+  {p(y|X,\sigma)}
+\\ \\ &amp; =
+\frac{
+  p(y|\beta,X,\sigma)
+  p(\beta|X,\sigma)
+  }
+{\int{}{} p(y|X,\beta,\sigma)p(\beta|X,\sigma) \mathrm{d}\beta}
+\end{align}
+}
 \]</span></p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Since <span class="math inline">\(x^0 = 1\)</span>:</p>
+<p>Where:</p>
 <ul>
-<li>if <span class="math inline">\(y_i=1\)</span>, <span class="math inline">\(p^{1}(1-p)^{0} = p\)</span></li>
-<li>if <span class="math inline">\(y_i=0\)</span>, <span class="math inline">\(p^{0}(1-p)^{1} = 1-p\)</span></li>
+<li><span class="math inline">\(p(Y|\beta,X,\sigma)\)</span> is the likelihood function</li>
+<li><span class="math inline">\(p(Y|X,\sigma)\)</span> is the evidence (the data we feed into the model)</li>
+<li><span class="math inline">\(p(\beta|X,\sigma)\)</span> is the prior for the coefficient</li>
 </ul>
-</div></div><p>Now imagine that, rather than <span class="math inline">\(p\)</span> being fixed at one value, there are some external variables that influence the shooter (for example, whether the game is at home or away). Let’s denote these relevant variables <span class="math inline">\(X\)</span>, and the relationship they have on the probability of success as <span class="math inline">\(\beta\)</span>.</p>
-<p>We can denote then denote the probability of success as the following:</p>
-<p><span class="math display">\[
-p(y_i|X_i\beta) = p(y_i=1|X_i\beta)^{y_i}(1-p(y_i=1|X_i\beta))^{1-y_i}
-\]</span></p>
-<p>Now imagine we observe the shooter take 100 freethrows (sample size <span class="math inline">\(N\)</span>), against many different teams, point differentials etc. We want to learn from this past experience to estimate the probability that they make the next one.</p>
-<!-- Note how this is modelling the probability $p_i$, but we only actually observe the binary outcome $y_i$. In econometrics, we often assume there is some underlying threshold $y^*$,  -->
-</section>
-<section id="cost-function-for-bernoulli-regression" class="level1 page-columns page-full">
-<h1>Cost function for bernoulli regression</h1>
-<section id="applying-the-bernoulli-pdf" class="level3">
-<h3 class="anchored" data-anchor-id="applying-the-bernoulli-pdf">Applying the bernoulli pdf</h3>
-<p>Across <span class="math inline">\(N\)</span> observations collected, we want to find the values of <span class="math inline">\(\beta\)</span> that maximise the likelihood of observing all outcomes (the vector of results <span class="math inline">\(y\)</span>).</p>
-<p>Let’s split the outcomes between successes and failures. We thus derive the cost function:</p>
-<p><span class="math display">\[
-p(y|X\beta) =
-\underbrace{
-  \prod_{i=1}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
-}_{y_i=1} \times
-\underbrace{
-  \prod_{i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }    
-}_{y_i=0}
-\]</span></p>
-<p>Maximum likelihood estimation aims to find the set of coefficients that maximises the likelihood of observing the evidence we have. We thus aim to find the coefficients <span class="math inline">\(\beta\)</span> that maximise the likelihood of observing <span class="math inline">\(y\)</span> across all <span class="math inline">\(n\)</span> samples.</p>
-</section>
-<section id="taking-the-negative-log-likelihood" class="level3 page-columns page-full">
-<h3 class="anchored" data-anchor-id="taking-the-negative-log-likelihood">Taking the negative log-likelihood</h3>
-<p>In practice, dealing with a cost function made up of a sum product is tricky - it is easier to take the log and deal with addition instead. Further, rather than maximise, it is common to “minimize” cost functions, so the negative log-likelihood is usually used.</p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Recall that <span class="math inline">\(\log{\left(ab\right)} = \log{\left(a\right)} + \log{\left(b\right)}\)</span></p>
-</div></div><p><span class="math display">\[
-\displaylines{
-\begin{align}
-&amp; \max_\beta{p(y|\beta,X)} \\
-= &amp;
-\max_\beta{\left\{
-  \prod_{i=1}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
-  \times
-  \prod_{i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }
-  \right\}}
-\\ \\ \Rightarrow &amp;
-\min_\beta{\left\{ -\log{ \left[
-  \prod_{i=1}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
-  \times
-  \prod_{i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }
-  \right] } \right\}}
-\\ \\ = &amp;
-\min_\beta{\left\{
-  \sum_{i=1}^{N}{ -\log{ \left[ p(y_i=1|X_i\beta)^{y_i} \right] } } +
-  \sum_{i=1}^{N}{ -\log{ \left[ (1-p(y_i=1|X_i\beta))^{1-y_i}\right] } }
-  \right\}}  
-\\ \\ = &amp;
-\min_\beta{\left\{
-  \sum_{i=1}^{N}{ -y_i\log{ \left[ p(y_i=1|X_i\beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p(y_i=1|X_i\beta)\right] } }
-  \right\}}  
-\end{align}
-}
-\]</span></p>
-</section>
-<section id="deriving-the-gradient-with-respect-to-the-coefficients" class="level3">
-<h3 class="anchored" data-anchor-id="deriving-the-gradient-with-respect-to-the-coefficients">Deriving the gradient with respect to the coefficients</h3>
-<p>We minimise the cost function by finding the optimum coefficient values <span class="math inline">\(\beta^*\)</span> so that the partial differential is equal to zero.</p>
+<p>Now in frequentist regression, we assume no prior at all: <span class="math inline">\(\beta\)</span> is fixed, so <span class="math inline">\(p(\beta|X,\sigma)=p(\beta)=1\)</span>, regardless of the evidence observed. Thus we are just left with finding the coefficients that maximise <span class="math inline">\(p(Y|\beta,X,\sigma)\)</span>.</p>
+<p>By taking the negative log likelihood, we find this is identical to finding the coefficient values that minimise the sum of squared residuals <a href="mle_ols_normal.html">(see the derivation here)</a>:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-&amp; \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
-= &amp;
-\frac{\partial}{\partial \beta_j} \left(
-\sum_{i=1}^{N}{ -y_i\log{ \left[ p(y_i=1|X_i\beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p(y_i=1|X_i\beta)\right] } }
-\right) \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{\frac{\partial}{\partial \beta_j}p(y_i=1|X_i\beta)}{p(y_i=1|X_i\beta)}
-  } +
-  \sum_{i=1}^{N}{ (1-y_i)
-    \frac{\frac{\partial}{\partial \beta_j}\left(1-p(y_i=1|X_i\beta)\right)}{1-p(y_i=1|X_i\beta)}
-    }
+\beta^* &amp; =\arg\min_\beta{\left[
+  \sum_{i=1}^N{\epsilon_i^2}
+\right]}
 \end{align}
 }
 \]</span></p>
-<p>This is as far as we can get, without now making some more assumptions. Let’s imagine that we can model the</p>
+<p>However, we could use other types of priors, with mass around zero, to apply regularization on our coefficients.</p>
 </section>
-</section>
-<section id="logistic-activation" class="level1 page-columns page-full">
-<h1>Logistic activation</h1>
-<p>We might assume that the the log-odds - the logarithm of the probability of success divided by the probability of failure - is linearly related to its predictors, i.e.</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\ln{\left(\frac{p}{1-p}\right)} = X\beta + \epsilon
-&amp;&amp; \epsilon \sim N(0,\sigma^2)
-\end{align}
-}
-\]</span></p>
-<p>This is called a “link function” - the link between the outcome, <span class="math inline">\(y\)</span>, and the linear predictors <span class="math inline">\(X\beta\)</span>. This specific link function is called the “logit link function”.</p>
-<p>To make predictions then for the probability of success, we need the inverse of the link function - sometimes called the “activation function” in the context of neural network.</p>
-<p>We can derive the inverse of the logit link by rearranging it in terms of <span class="math inline">\(p\)</span>:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-E\left[
-  \ln{\left(\frac{p}{1-p}\right)}
-  \right] = X\beta
-&amp; \Rightarrow \frac{p}{1-p}\ = \exp{\{X\beta\}}
-\\ \\
-&amp; \Rightarrow p = \exp{\{X\beta\}}(1-p)
-\\ \\
-&amp; \Rightarrow p - (1+\exp{\{X\beta\}}) = \exp{\{X\beta\}}
-\\ \\
-&amp; \Rightarrow p = \frac{\exp{\{X\beta\}}}{1 + \exp{\{X\beta\}}}
-=  \left( 1 + \exp{\{-X\beta\}} \right)^{-1}
-\end{align}
-}
-\]</span></p>
-<p>We can see that this activation function “squashes” all outputs <span class="math inline">\(X\beta \in [-\infty,\infty]\)</span> between 0 and 1:</p>
+<section id="using-laplace-priors-to-shrink-coefficients" class="level1 page-columns page-full">
+<h1>Using Laplace priors to shrink coefficients:</h1>
+<p>Regularization aims to eliminate some of our predictors to create a more parsimonious model in a systematic way, and/or reduce their magnitude to prevent overfitting.</p>
+<p>Picking a prior for our coefficient that is concentrated at zero can help achieve this - for example, we could use a Laplace distribution, with a location parameter <span class="math inline">\(\mu\)</span> of zero as visualised below:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>logistic_dist <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>( (<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>x))<span class="sc">^-</span><span class="dv">1</span> )</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">logistic_dist</span>(x),</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"blue"</span>,,<span class="at">lty=</span><span class="dv">1</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="fl">0.1</span>),</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">4</span>)<span class="sc">*</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="fl">0.1</span>)<span class="sc">+</span><span class="fl">0.5</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"red"</span>,<span class="at">lty=</span><span class="dv">2</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">10</span>,<span class="dv">1</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend=</span><span class="fu">c</span>(</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"logistic activation"</span>,</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"linear activation"</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">col=</span><span class="fu">c</span>(<span class="st">"blue"</span>,<span class="st">"red"</span>),</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>laplace_dist <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">gamma =</span> <span class="dv">1</span>) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  laplace_pdf <span class="ot">&lt;-</span> <span class="cf">function</span>(x,mu,gamma) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">exp</span>(<span class="sc">-</span><span class="fu">abs</span>(x<span class="sc">-</span>mu)<span class="sc">/</span>gamma)<span class="sc">/</span>(<span class="dv">2</span><span class="sc">*</span>gamma)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=</span> <span class="fu">sapply</span>(x, <span class="at">FUN =</span> <span class="cf">function</span>(i) <span class="fu">laplace_pdf</span>(i,mu,gamma))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">laplace_dist</span>(x, <span class="at">gamma=</span><span class="dv">1</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">main=</span><span class="st">'Laplace(gamma=0.5)'</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="glm_logistic_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="864"></p>
+<p><img src="bayes_regularization_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="864"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>Not only does the Laplace pdf increase when closer to zero, but it increases at an accelerating rate. Thus, we can imagine that the closer the likelihood estimate of the coefficient is to zero, the greater the influence of the prior.</p>
+<section id="laplace-priors-lasso-regression" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="laplace-priors-lasso-regression">Laplace priors ~ Lasso Regression</h3>
+<p>Recall that the probability density function of Laplace is <span class="math display">\[
+f(x|\mu,\gamma) =
+\frac{1}{2\gamma}
+\exp{ \left\{
+  \frac{x - \mu}{\gamma} \right
+\} }
+\]</span></p>
+<p>Then the prior can be written as the maximum likelihood across the estimated coefficients each of the <span class="math inline">\(K\)</span> features in the model, for a given penalty importance <span class="math inline">\(\lambda\)</span>: <span class="math display">\[
+\displaylines{
+\begin{align}
+p(\beta|X,\sigma) \sim p(\beta)
+&amp; = \prod_{k=1}^{K}{
+  \frac{1}{2 \gamma}
+  \exp{\left\{ \frac{ -\mid \beta - \mu \mid}{\gamma} \right\}}
+}
+\\ \\ &amp; = \prod_{k=1}^{K}{
+  \frac{1}{2 \gamma}
+  \exp{\left\{ \frac{ -\mid \beta \mid}{\gamma} \right\}}
+}
+\end{align}
+}
+\]</span></p>
 
 <div class="no-row-height column-margin column-container"><div class="">
-<p>For probabilities of between 0.3 to 0.7, we see that the logistic activation function maps very closely to that of a simply linear one. It is only at the more extreme probabilities that they diverge.</p>
-</div></div><p>We can now use this activation function to derive some coefficients.</p>
-</section>
-<section id="optimal-coefficients-for-the-coefficient" class="level1">
-<h1>Optimal coefficients for the coefficient</h1>
-<p>Given that:</p>
-<p><span class="math display">\[
-\hat{p_i} = \hat{p}(y_i=1|X_i \hat{\beta}) =
-\frac{1}{1+\exp{\left\{-X_i\hat{\beta}\right\}}}
-\]</span></p>
-<p>Then the partial differential of the probability with respect to feature <span class="math inline">\(j\)</span> is:</p>
+<p>This is how the prior is defined in <span class="citation" data-cites="tibshirani1996lasso">Tibshirani (<a href="#ref-tibshirani1996lasso" role="doc-biblioref">1996</a>)</span>. Since the prior is assumed before any data is observed, intuitively <span class="math inline">\(\beta\)</span> should not need conditioning on <span class="math inline">\(X\)</span>.</p>
+<p>However, <span class="citation" data-cites="park2008lasso">Park and Casella (<a href="#ref-park2008lasso" role="doc-biblioref">2008</a>)</span> found that not conditioning on <span class="math inline">\(\sigma^2\)</span> can result in non-unimodal posterior, so in practice a non-informative scale-invariant marginal prior <span class="math inline">\(\pi(\sigma^2) = 1/\sigma\)</span> on <span class="math inline">\(\sigma^2\)</span> is used.</p>
+</div></div><p>Now if set this as the prior, we can derive the cost function that we aim to minimize when <span class="math inline">\(X\)</span> is observed.</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-&amp; \frac{\partial }{\partial \beta_j}
-\hat{p}(y_i=1|X_i \hat{\beta_j})
-\\ = &amp;
-\frac{\partial }{\partial \beta_j} (1+\exp{\{-X_i\hat{\beta}\}})^{-1}
-\\ = &amp;
-\frac{\partial }{\partial \beta_j} -1(1+\exp{\{-X_i\hat{\beta}\}})^{-2}
-\times x_{ij}\exp{\{-X_i\hat{\beta}\}}
-\\ = &amp;
-x_{ij} \left( \frac{\exp{\{-X_i\hat{\beta}\}}}{(1+\exp{\{-X_i\hat{\beta}\}})^{2}} \right)
-\\ = &amp;
-x_{ij} \left( \frac{1}{(1+\exp{\{-X_i\hat{\beta}\}})} \times \frac{\exp{\{-X_i\hat{\beta}\}}}{(1+\exp{\{-X_i\hat{\beta}\}})} \right)
-\\ = &amp;
-x_{ij} \left( \frac{1}{(1+\exp{\{-X_i\hat{\beta}\}})} \times \left( 1 - \frac{1}{(1+\exp{\{-X_i\hat{\beta}\}})} \right) \right)
-\\ \\ = &amp;
-x_{ij} ( \hat{p}(y_i=1|X_i \hat{\beta_j}) \times (1-\hat{p}(y_i=1|X_i \hat{\beta_j})) )
-\\ \\ = &amp;
-x_{ij} ( \hat{p_i} \times (1-\hat{p_i}) )
-\end{align}
-}
-\]</span></p>
-<p>And thus we can substitute this into our cost function:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-&amp; \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{\frac{\partial}{\partial \beta_j}p(y_i=1|X_i\beta)}{p(y_i=1|X_i\beta)}
-  } +
-\sum_{i=1}^{N}{ (1-y_i)
-  \frac{\frac{\partial}{\partial \beta_j}\left(1-p(y_i=1|X_i\beta)\right)}{1-p(y_i=1|X_i\beta)}
-  } \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{x_{ij} ( \hat{p_i} \times (1-\hat{p_i}) )}{\hat{p_i}}
-  } +
-\sum_{i=1}^{N}{ (1-y_i)
-  \frac{x_{ij} ( \hat{p_i} \times (1-\hat{p_i}) )}{(1-\hat{p_i})}
-  } \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{x_{ij} ( \cancel{\hat{p_i}} \times (1-\hat{p_i}) )}{\cancel{\hat{p_i}}}
-  } +
-\sum_{i=1}^{N}{ (1-y_i)
-  \frac{x_{ij} ( \hat{p_i} \times \cancel{(1-\hat{p_i})} )}{\cancel{(1-\hat{p_i})}}
-  } \\ \\  
-= &amp;
-\sum_{i=1}^{N}{ y_ix_{ij} (1-\hat{p_i})} +
-\sum_{i=1}^{N}{ (1-y_i)x_{ij} \hat{p_i}} \\ \\
-= &amp;
-\sum_{i=1}^{N}{ x_{ij} \left[
-    y_i(1-\hat{p_i}) (1-y_i)(\hat{p_i})
-   \right]
+\max_{\beta} {\left\{ p(\beta|y,X,\sigma) \right\}}
+&amp; = \max_\beta{
+  \left[ p(y|\beta,X,\sigma) \times p(\beta)\right]
+} \\
+&amp; \sim \min_\beta{
+  \left\{ -\log{
+    \left[ p(y|\beta,X,\sigma) \times p(\beta)\right]
+    }\right\}
+} \\
+&amp; = \min_\beta{
+  \left\{
+    -\log{\left[ p(y|\beta,X,\sigma) \right]
+    -\log{\left[p(\beta)\right]}
+    }\right\}
+} \\
+&amp; = \min_\beta \left\{
+\frac{1}{2} \left(
+  \cancel{ n \log{[2 \pi \sigma^2]} }
+  + \frac{1}{\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+\right)
+- \log{\left[
+  \prod_{k=1}^{K}{
+    \frac{1}{2\gamma}
+    \exp{\left\{ \frac{ -\mid \beta \mid}{\gamma} \right \}}
   }
+\right]}
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \sum_{k=1}^{K}{ \log{ \left[
+    \frac{1}{2\gamma}
+    \exp{ \left\{ \frac{ -\mid \beta \mid}{\gamma} \right\} }
+    \right]
+    }
+  }
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \cancel{ K \log{ \left[ \frac{1}{2\gamma} \right] } }
+- \sum_{k=1}^{K}{
+    \log{ \left[ \exp{\left\{ \frac{ -\mid \beta \mid}{\gamma} \right\}} \right] }
+  }  
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{\gamma} \sum_{k=1}^{K}{ \mid \beta \mid}  
+\right\} \\ \\
+\therefore \beta^*
+&amp; =\arg\min_\beta{\left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{\gamma}\sum_{k=1}^{K}{\mid\beta\mid}
+  \right\}
+}
 \end{align}
 }
 \]</span></p>
-<p>Which is the coefficient from logistic regression.</p>
-<p>Fin.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Note that terms that do not vary with the choice of <span class="math inline">\(\beta\)</span> drop out</p>
+</div></div><div class="callout callout-style-default callout-tip callout-titled" title="Key point">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Key point
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hence setting a Laplace prior on the coefficients is - almost - equivalent to running L1 regularization, where <span class="math inline">\(1/\gamma\)</span> is the parameter influencing the penalty size.</p>
+</div>
+</div>
+<p>Although there is sparsity in the mode of the prior, when combining this with the likelihood distribution, the sparsity will not continue into the posterior distribution. In practice, if the posterior of <span class="math inline">\(\beta\)</span> is sufficiently small, we would want to drop it - so a threshold value for the size at which coefficients are zero-oed out is set as a hyperparameter.</p>
+</section>
+</section>
+<section id="using-gaussian-priors-to-shrink-coefficients" class="level1">
+<h1>Using Gaussian priors to shrink coefficients:</h1>
+<p>In a similar way to before for Lasso, we set our coefficient priors to each have a Gaussian distribution, with a location parameter <span class="math inline">\(\mu=0\)</span>:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>normal_pdf <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">sigma =</span> <span class="dv">2</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">=</span> (x<span class="sc">-</span>mu)<span class="sc">/</span>sigma</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=</span> (<span class="dv">2</span><span class="sc">*</span>pi<span class="sc">*</span>sigma<span class="sc">^</span><span class="dv">2</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span><span class="sc">/</span><span class="dv">2</span>) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fl">0.5</span><span class="sc">*</span>z<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">normal_pdf</span>(x),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">main=</span><span class="st">'Normal(sigma=1)'</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_regularization_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="gaussian-priors-ridge-regression" class="level3">
+<h3 class="anchored" data-anchor-id="gaussian-priors-ridge-regression">Gaussian priors ~ Ridge Regression</h3>
+<p>The gaussian prior can be written as the maximum likelihood across the estimated coefficients each of the <span class="math inline">\(K\)</span> features in the model, for a given penalty importance <span class="math inline">\(\lambda\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+p(\beta|X,\sigma) \sim p(\beta)
+&amp; = \prod_{k=1}^{K}{\frac{1}{\sigma\sqrt{2\pi}}}\exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+\end{align}
+}
+\]</span></p>
+<p>Now if set this as the prior, we can derive the cost function that we aim to minimize when <span class="math inline">\(X\)</span> is observed.</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\max_{\beta} {\left\{ p(\beta|y,X,\sigma) \right\}}
+&amp; \sim \min_\beta{
+  \left\{
+    -\log{\left[ p(y|\beta,X,\sigma) \right]
+    -\log{\left[p(\beta)\right]}
+    }\right\}
+} \\
+&amp; = \min_\beta \left\{
+\frac{1}{2} \left(
+  \cancel{ n \log{[2 \pi \sigma^2]} }
+  + \frac{1}{\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+\right)
+- \log{\left[
+  \prod_{k=1}^{K}{
+    \frac{1}{\sigma\sqrt{2\pi}}
+    \exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+    }
+\right]}
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \sum_{k=1}^{K}{ \log{ \left[
+    \frac{1}{\sigma\sqrt{2\pi}}
+    \exp{\left\{-\frac{1}{2\sigma^2}\beta_k^2\right\}}
+    \right]
+    }
+  }
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
+- \cancel{ K \log{ \left[ \frac{1}{\sigma\sqrt{2\pi}} \right] } }
+- \sum_{k=1}^{K}{
+    \log{ \left[ \exp{\left\{ -\frac{1}{2\sigma^2}\beta_k^2 \right\}} \right] }
+  }  
+\right\} \\
+&amp; = \min_\beta \left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{2\sigma^2} \sum_{k=1}^{K}{ \beta^2 }  
+\right\} \\ \\
+\therefore \beta^*
+&amp; =\arg\min_\beta{\left\{
+  \frac{1}{2\sigma^2} \sum_{i=1}^N{\epsilon_i^2}
++ \frac{1}{2\sigma^2} \sum_{k=1}^{K}{ \beta^2 }
+  \right\}
+}
+\end{align}
+}
+\]</span></p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Key point">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Key point
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hence setting a Gaussian prior on the coefficients is - almost - equivalent to running L1 regularization, where the variance of the prior - <span class="math inline">\(\sigma^2\)</span> is the parameter directly influencing the penalty size.</p>
+</div>
+</div>
+
 
 
 </section>
+</section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-park2008lasso" class="csl-entry" role="listitem">
+Park, Trevor, and George Casella. 2008. <span>“The Bayesian Lasso.”</span> <em>Journal of the American Statistical Association</em> 103 (482): 681–86. <a href="https://doi.org/10.1198/016214508000000337">https://doi.org/10.1198/016214508000000337</a>.
+</div>
+<div id="ref-tibshirani1996lasso" class="csl-entry" role="listitem">
+Tibshirani, Robert. 1996. <span>“Regression Shrinkage and Selection via the Lasso.”</span> <em>Journal of the Royal Statistical Society: Series B (Methodological)</em> 58 (1): 267–88. <a href="https://doi.org/10.1111/j.1467-9868.2011.00771.x">https://doi.org/10.1111/j.1467-9868.2011.00771.x</a>.
+</div>
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

@@ -2,8 +2,8 @@
 title: "Sandwiches: robust covariance error estimation"
 author: "Chris Kelly"
 date: '02-22-24'
-categories: [OLS, Confidence Intervals, Gauss-Markov, Clustered errors, Heteroskedastic errors]
-image: '../images/ols_sandwich_estimators.jpeg'
+categories: [Linear Models, Gauss-Markov, Standard errors]
+image: '../images/ols_sandwich_estimators.png'
 format:
   html:
     code-fold: true
@@ -15,7 +15,7 @@ format:
 
 ::: {.callout-tip}
 ### What are we exploring?
-Estimating the correct coefficient variance under different error assumptions
+Estimating the correct coefficient variance when relaxing homoskedastic error assumptions
 :::
 
 ## Introducing sandwiches

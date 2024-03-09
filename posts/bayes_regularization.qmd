@@ -2,7 +2,7 @@
 title: "Shrinkage priors for Lasso and Ridge"
 author: "Chris Kelly"
 date: '02-24-24'
-categories: [Bayes, MLE, Regularization, Laplace]
+categories: [Bayes, Maximum Likelihood, Regularization, Laplace]
 format:
   html:
     code-fold: true
@@ -16,7 +16,7 @@ bibliography: ../references.bib
 
 ::: {.callout-tip}
 ### What are we exploring?
-Showing Laplace priors in bayesian regression are equivalent to Lasso regularization
+Showing Laplace and Gaussian priors in Bayesian regression are equivalent to Lasso and Ridge regularization
 :::
 
 
