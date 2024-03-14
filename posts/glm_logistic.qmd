@@ -15,20 +15,20 @@ image: '../images/glm_logistic.png'
 Deriving coefficients to predict the likelihood of a binary outcome using maximum likelihood estimation and the logit link funciton.
 :::
 
-# Setting some intuition
+# The bernoulli PMF
 
-Imagine a basketball player has a 90% chance of making a freethrow. 
+Imagine a basketball player is taking free throws.
 
-For freethrow attempt $i$, we observe the outcome, $y_i$, as being 1 if there is a success (i.e. the freethrow is made), or 0 if it is a failure (a miss). 
+For each trial $i$ (a freethrow attempt), we observe the outcome $y_i$ as being 1 if there is a success (i.e. the freethrow is made), or 0 if it is a failure (a miss). 
 
-We can denote $p$ as a fixed probability for success. It follows that the probability of failure as $1-p$ (i.e. a 10% chance of missing).
+We can denote $p$ as the player's fixed probability for success (the likelihood they make the free throw, e.g. 90%). It follows that the probability of failure as $1-p$ (i.e. a 10% chance of missing).
 
-This can be formalised as the following (the probability mass function of the bernoulli):
+This can be formalised as the following (the probability mass function of the bernoulli distribution):
 
 $$
 \displaylines{
 \begin{align}
-p(y_i) = 
+P(y_i) = 
 \begin{cases}
   p & \text{if}\ y_i=1 \\
   1-p & \text{if}\ y_i=0
@@ -40,47 +40,60 @@ $$
 Which is equivalent to the following:
 
 $$
-p(y_i) = p^{y_i}(1-p)^{1-y_i}
+P(y_i) = p^{y_i}(1-p)^{1-y_i}
 $$
 
 :::{.column-margin}
-Since $x^0 = 1$:
+Since $g(x)^0 = 1$:
 
 * if $y_i=1$, $p^{1}(1-p)^{0} = p$
 * if $y_i=0$, $p^{0}(1-p)^{1} = 1-p$
 :::
 
-Now imagine that, rather than $p$ being fixed at one value, there are some external variables that influence the shooter (for example, whether the game is at home or away). Let's denote these relevant variables $X$, and the relationship they have on the probability of success as $\beta$.
+Now imagine that, rather than $p$ being fixed for all attempts, there are some external variables that influence the shooter (for example, whether the game is at home or away). Let's denote these relevant variables $X$.
 
-We can denote then denote the probability of success as the following:
+We can then denote the probability of success as the following:
 
 $$
-p(y_i|X_i\beta) = p(y_i=1|X_i\beta)^{y_i}(1-p(y_i=1|X_i\beta))^{1-y_i}
+P(y_i|X_i) = P(y_i=1|X_i)^{y_i}(1-P(y_i=1|X_i))^{1-y_i}
 $$
 
-Now imagine we observe the shooter take 100 freethrows (sample size $N$), against many different teams, point differentials etc. We want to learn from this past experience to estimate the probability that they make the next one.
+# Maximum Likelihood
 
-<!-- Note how this is modelling the probability $p_i$, but we only actually observe the binary outcome $y_i$. In econometrics, we often assume there is some underlying threshold $y^*$,  -->
+Imagine we observe the player make the first two freethrows but miss the third. If we guess the probability of them scoring is 80%, then the chance of what we observed occuring in that order is $80\%\times80\%\times20\%=12.8\%$. They could also have got 2/3 by missing the first (scoring the last two) or missing the second (scoring first and third). So the overall probability is $3\times8.1\%=38.4\%$
 
-# Cost function for bernoulli regression
+We might make a better guess - say that the probability of them scoring is 67%, since they made 2/3. Then the probability of what we observed occuring is $3\times(67\%\times67\%\times33\%)=44\%$.
 
-### Applying the bernoulli pdf
+What we have done is estimated the maximum likelihood - the value of $\hat{p}$ that maximises the chance of observing the outcomes saw.
 
-Across $N$ observations collected, we want to find the values of $\beta$ that maximise the likelihood of observing all outcomes (the vector of results $y$).
+However, in our problem, 
 
-Let's split the outcomes between successes and failures. We thus derive the cost function:
+
+* But 
 
 $$
 p(y|X\beta) =
 \underbrace{
-  \prod_{i=1}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
+  \prod_{y_i=0}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
 }_{y_i=1} \times
 \underbrace{
-  \prod_{i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }    
+  \prod_{y_i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }    
 }_{y_i=0}
 $$
 
-Maximum likelihood estimation aims to find the set of coefficients that maximises the likelihood of observing the evidence we have. We thus aim to find the coefficients $\beta$ that maximise the likelihood of observing $y$ across all $n$ samples.
+<!-- In reality, we don't observe $p_i$ (the true probability of making the free throw), only $y_i$ (whether they made the free throw or not). We can use these binary observations to make estimates for $\hat{p_i}$ though (e.g. if they made 85/100 freethrows in away games previously, our best guess for the probability of making one away is 85%). -->
+
+<!-- We might collect $N$ trials in our sample (say analyse the shooter's  freethrows so far this season, against many different teams, point differentials etc). We want to learn from this past experience to estimate the probability that they make the next one. -->
+
+<!-- In other words, our aim is to learn the relationship between all $X$ and $p$ (so we can infer e.g. the impact of taking freethrows at home or away), and this should allow us to make good predictions for future freethrows. -->
+
+<!-- Across $N$ observations collected, we want to find the values of $\beta$ that maximise the likelihood of observing all outcomes (the vector of results $y$). -->
+
+Let's split the outcomes between successes and failures. We thus derive the cost function:
+
+
+
+<!-- Maximum likelihood estimation aims to find the set of coefficients that maximises the likelihood of observing the evidence we have. We thus aim to find the coefficients $\beta$ that maximise the likelihood of observing $y$ across all $n$ samples. -->
 
 ### Taking the negative log-likelihood
 
@@ -120,43 +133,15 @@ $$
 }
 $$
 
-### Deriving the gradient with respect to the coefficients
+# Modelling the probability
 
-We minimise the cost function by finding the optimum coefficient values $\beta^*$ so that the partial differential is equal to zero.
-
-$$
-\displaylines{
-\begin{align}
-& \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
-= &
-\frac{\partial}{\partial \beta_j} \left(
-\sum_{i=1}^{N}{ -y_i\log{ \left[ p(y_i=1|X_i\beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p(y_i=1|X_i\beta)\right] } }
-\right) \\ \\
-= &
-\sum_{i=1}^{N}{ y_i
-  \frac{\frac{\partial}{\partial \beta_j}p(y_i=1|X_i\beta)}{p(y_i=1|X_i\beta)}
-  } +
-  \sum_{i=1}^{N}{ (1-y_i)
-    \frac{\frac{\partial}{\partial \beta_j}\left(1-p(y_i=1|X_i\beta)\right)}{1-p(y_i=1|X_i\beta)}
-    }
-\end{align}
-}
-$$
-
-This is as far as we can get, without now making some more assumptions. Let's imagine that we can model the 
-
-# Logistic activation
+### Logistic activation function
 
 We might assume that the the log-odds - the logarithm of the probability of success divided by the probability of failure - is linearly related to its predictors, i.e.
 
 $$
-\displaylines{
-\begin{align}
-\ln{\left(\frac{p}{1-p}\right)} = X\beta + \epsilon 
-&& \epsilon \sim N(0,\sigma^2)
-\end{align}
-}
+\text{logit}(E[Y_i|X_i]) = \text{logit}(p_i) =
+\ln{\left(\frac{p_i}{1-p_i}\right)} = X_i \beta
 $$
 
 This is called a "link function" - the link between the outcome, $y$, and the linear predictors $X\beta$. This specific link function is called the "logit link function".
@@ -168,9 +153,7 @@ We can derive the inverse of the logit link by rearranging it in terms of $p$:
 $$
 \displaylines{
 \begin{align}
-E\left[
-  \ln{\left(\frac{p}{1-p}\right)}
-  \right] = X\beta
+\ln{\left(\frac{p}{1-p}\right)} = X\beta
 & \Rightarrow \frac{p}{1-p}\ = \exp{\{X\beta\}}
 \\ \\
 & \Rightarrow p = \exp{\{X\beta\}}(1-p)
@@ -214,9 +197,155 @@ legend(
 For probabilities of between 0.3 to 0.7, we see that the logistic activation function maps very closely to that of a simply linear one. It is only at the more extreme probabilities that they diverge.
 :::
 
-We can now use this activation function to derive some coefficients.
+
+### A latent variable model
+
+Economists often frame binary regression as a "latent variable model". What this means is they frame the problem as though there is a hidden continuous variable we do not observe, $y_i^*$, and if it exceeds a certain threshold (usually zero) then there is a success:
+
+$$
+\displaylines{
+\begin{align}
+y_i^* & = X_i\beta + \epsilon_i
+\\ \\
+y_i & = 
+\begin{cases}
+  1 & \text{if}\ y_i^* > 0 & \text{i.e. } -\epsilon_i > X_i\beta\\
+  0 & \text{otherwise}
+\end{cases}
+\end{align}
+}
+$$
+
+In other words, the latent variable $y_i^*$ is purely a function of its predictors $X_i$, their relationship to $p_i$ given by $\beta$, and additive noise $\epsilon_i$. If $y_i^*$ is positive, we observe a success (where $y_i = 1$).
+
+We can thus formulate $P(y_i=1|X)$ as the likelihood that the addtive noise $\epsilon_i$ is less than $X\beta$, resulting in the probability $y_i^*$ above zero:
+
+$$
+\displaylines{
+\begin{align}
+P(y_i=1|X_i) 
+& = P(y_i^* > 0 | X_i)
+\\
+& = P(X_i\beta + \epsilon_i > 0)
+\\
+& = P(\epsilon_i > -X_i\beta )
+\\
+& = P(\epsilon_i < X_i\beta ) & \iff \epsilon \sim f(\mu,s) \text{ is symmetric}
+\end{align}
+}
+$$
+
+So a good assumption for the probabilistic process that generates the errors $\epsilon$ is very important! 
+
+The error is often assumed to be generated from a logistic distribution, with location parameter $\mu=0$ and scale parameter $s=1$:
+
+$$
+\epsilon \sim \text{Logistic}(0,1)
+$$
+
+Recall the pdf of the logistic distribution is:
+
+$$
+\displaylines{
+\begin{align}
+f(x,\mu,s) & = 
+\frac{\exp{\left\{ -(x-\mu)/s \right\}}}
+{s(1+\exp{\left\{ -(x-\mu)/s \right\})^2}}
+\\ \\
+\therefore f(x,0,1) & = 
+\frac{\exp{\left\{ -x \right\}}}
+{(1+\exp{\left\{ -x \right\})^2}}
+\end{align}
+}
+$$
+
+Then the CDF is the integral of the pdf:
+$$
+\displaylines{
+\begin{align}
+\int {f(x,0,1) \,dx} & = 
+\int{
+  \frac{e^{-x}}
+  {(1+e^{-x})^2}
+\,dx}
+\\ \\
+\text{let } u = 1+e^{-x} & \therefore \frac{du}{dx} = -e^{-x} 
+\\
+& \therefore dx = -\frac{du}{e^x}
+\\ \\
+\therefore 
+\int {f(x,0,1) \,dx} & = 
+\int {\frac{e^x}{u^2} \times -\frac{du}{e^x}}
+\\ 
+& = \int {-u^{-2}\,du}
+\\ 
+& = u^{-1} + c
+\\ 
+& = (1+\exp{\{-x\}})^{-1} + c
+% \therefore 
+% P(y_i=1|X_i) & = P(X_i\beta + \epsilon_i > 0) 
+% \\ & = 
+% [(1+\exp{\{-(X_i\beta+\epsilon_i)\}})^{-1} + c] -
+% [(1+\exp{\{-0\}})^{-1} + c]
+% \\ & = 
+% [(1+\exp{\{-(X_i\beta+\epsilon_i)\}})^{-1}] -
+% \frac{1}{2}
+\end{align}
+}
+$$
+
+Note that this is the inverse of the logit function!
+
+$$
+\displaylines{
+\begin{align}
+\text{logit}(x) 
+& = \ln{\left(\frac{x}{1-x}\right)} 
+\\
+\therefore \text{let } y & = \ln{\left(\frac{x}{1-x}\right)}
+\\
+e^y & = \frac{x}{1-x}
+\\
+e^y - xe^y & = x
+\\
+e^y & = x(1+e^y)
+\\
+x & = \frac{e^y}{1+e^y}
+= (1+\exp{\{e^{-x}\}})^{-1}
+\\ \\
+\therefore
+P(\epsilon_i < X_i\beta ) & = \text{Logit}^{-1}(X\beta)
+\end{align}
+}
+$$
 
 # Optimal coefficients for the coefficient
+
+### Deriving the gradient with respect to the coefficients
+
+We minimise the cost function by finding the optimum coefficient values $\beta^*$ so that the partial differential is equal to zero.
+
+$$
+\displaylines{
+\begin{align}
+& \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
+= &
+\frac{\partial}{\partial \beta_j} \left(
+\sum_{i=1}^{N}{ -y_i\log{ \left[ p(y_i=1|X_i\beta) \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p(y_i=1|X_i\beta)\right] } }
+\right) \\ \\
+= &
+\sum_{i=1}^{N}{ y_i
+  \frac{\frac{\partial}{\partial \beta_j}p(y_i=1|X_i\beta)}{p(y_i=1|X_i\beta)}
+  } +
+  \sum_{i=1}^{N}{ (1-y_i)
+    \frac{\frac{\partial}{\partial \beta_j}\left(1-p(y_i=1|X_i\beta)\right)}{1-p(y_i=1|X_i\beta)}
+    }
+\end{align}
+}
+$$
+
+This is as far as we can get, without now making some more assumptions. Let's imagine that we can model the 
 
 Given that: 
 

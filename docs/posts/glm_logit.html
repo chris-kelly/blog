@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2025-02-21">
 
-<title>Chris Kelly Blog - Deriving Logistic Regression Coefficients</title>
+<title>Chris Kelly Blog - Deriving Logistic Regression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -178,7 +178,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Deriving Logistic Regression Coefficients</h1>
+      <h1 class="title">Deriving Logistic Regression</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">Maximum Likelihood</div>
                 <div class="quarto-category">Generalized Linear Models</div>
@@ -215,20 +215,13 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#the-bernoulli-pmf" id="toc-the-bernoulli-pmf" class="nav-link active" data-scroll-target="#the-bernoulli-pmf">The bernoulli PMF</a></li>
-  <li><a href="#maximum-likelihood" id="toc-maximum-likelihood" class="nav-link" data-scroll-target="#maximum-likelihood">Maximum Likelihood</a>
-  <ul class="collapse">
-  <li><a href="#taking-the-negative-log-likelihood" id="toc-taking-the-negative-log-likelihood" class="nav-link" data-scroll-target="#taking-the-negative-log-likelihood">Taking the negative log-likelihood</a></li>
-  </ul></li>
-  <li><a href="#modelling-the-probability" id="toc-modelling-the-probability" class="nav-link" data-scroll-target="#modelling-the-probability">Modelling the probability</a>
-  <ul class="collapse">
-  <li><a href="#logistic-activation-function" id="toc-logistic-activation-function" class="nav-link" data-scroll-target="#logistic-activation-function">Logistic activation function</a></li>
-  <li><a href="#a-latent-variable-model" id="toc-a-latent-variable-model" class="nav-link" data-scroll-target="#a-latent-variable-model">A latent variable model</a></li>
-  </ul></li>
-  <li><a href="#optimal-coefficients-for-the-coefficient" id="toc-optimal-coefficients-for-the-coefficient" class="nav-link" data-scroll-target="#optimal-coefficients-for-the-coefficient">Optimal coefficients for the coefficient</a>
-  <ul class="collapse">
-  <li><a href="#deriving-the-gradient-with-respect-to-the-coefficients" id="toc-deriving-the-gradient-with-respect-to-the-coefficients" class="nav-link" data-scroll-target="#deriving-the-gradient-with-respect-to-the-coefficients">Deriving the gradient with respect to the coefficients</a></li>
-  </ul></li>
+  <li><a href="#latent-variable-model" id="toc-latent-variable-model" class="nav-link active" data-scroll-target="#latent-variable-model">Latent variable model</a></li>
+  <li><a href="#the-bernoulli-pmf" id="toc-the-bernoulli-pmf" class="nav-link" data-scroll-target="#the-bernoulli-pmf">The Bernoulli PMF</a></li>
+  <li><a href="#maximum-likelihood-estimation" id="toc-maximum-likelihood-estimation" class="nav-link" data-scroll-target="#maximum-likelihood-estimation">Maximum Likelihood Estimation</a></li>
+  <li><a href="#assuming-errors-come-from-a-logistic-distribution" id="toc-assuming-errors-come-from-a-logistic-distribution" class="nav-link" data-scroll-target="#assuming-errors-come-from-a-logistic-distribution">Assuming errors come from a logistic distribution</a></li>
+  <li><a href="#linearity-in-terms-of-log-odds" id="toc-linearity-in-terms-of-log-odds" class="nav-link" data-scroll-target="#linearity-in-terms-of-log-odds">Linearity in terms of log-odds!</a></li>
+  <li><a href="#rearranging-in-terms-of-the-outcome" id="toc-rearranging-in-terms-of-the-outcome" class="nav-link" data-scroll-target="#rearranging-in-terms-of-the-outcome">Rearranging in terms of the outcome</a></li>
+  <li><a href="#optimising-the-coefficients" id="toc-optimising-the-coefficients" class="nav-link" data-scroll-target="#optimising-the-coefficients">Optimising the coefficients</a></li>
   </ul>
 </nav>
     </div>
@@ -252,26 +245,67 @@ What are we exploring?
 <p>Deriving coefficients to predict the likelihood of a binary outcome using maximum likelihood estimation and the logit link funciton.</p>
 </div>
 </div>
-<section id="the-bernoulli-pmf" class="level1 page-columns page-full">
-<h1>The bernoulli PMF</h1>
+<section id="latent-variable-model" class="level2">
+<h2 class="anchored" data-anchor-id="latent-variable-model">Latent variable model</h2>
 <p>Imagine a basketball player is taking free throws.</p>
 <p>For each trial <span class="math inline">\(i\)</span> (a freethrow attempt), we observe the outcome <span class="math inline">\(y_i\)</span> as being 1 if there is a success (i.e.&nbsp;the freethrow is made), or 0 if it is a failure (a miss).</p>
-<p>We can denote <span class="math inline">\(p\)</span> as the player’s fixed probability for success (the likelihood they make the free throw, e.g.&nbsp;90%). It follows that the probability of failure as <span class="math inline">\(1-p\)</span> (i.e.&nbsp;a 10% chance of missing).</p>
-<p>This can be formalised as the following (the probability mass function of the bernoulli distribution):</p>
+<p>When the player takes the freethrow, there are exogenous features <span class="math inline">\(X_i\)</span> that influence their likelihood of making it (e.g.&nbsp;whether they are home or away). Also there is some randomness, <span class="math inline">\(\varepsilon_i\)</span> that is unpredictable: a 99% accurate shooter still has a 1% chance of missing.</p>
+<p>Economists often frame this problem as a “latent variable model”. What this means is they frame the problem as though there is a hidden continuous variable we do not observe, <span class="math inline">\(y_i^*\)</span>, and if it exceeds a certain threshold (usually zero) then there is a success (e.g.&nbsp;the freethrow is made):</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+y_i^* &amp; = X_i\beta + \varepsilon_i
+\\ \\
+y_i &amp; =
+\begin{cases}
+  1 &amp; \text{if}\ y_i^* &gt; 0 &amp; \text{i.e. } -\varepsilon_i &gt; X_i\beta\\
+  0 &amp; \text{otherwise}
+\end{cases}
+\end{align}
+}
+\]</span></p>
+<p>In other words, the latent variable <span class="math inline">\(y_i^*\)</span> is purely a function of its predictors <span class="math inline">\(X_i\)</span>, their relationship to <span class="math inline">\(y_i^*\)</span> given by <span class="math inline">\(\beta\)</span>, and some additive noise <span class="math inline">\(\varepsilon_i\)</span>. If <span class="math inline">\(y_i^*\)</span> is positive, we observe a success (i.e.&nbsp;<span class="math inline">\(y_i = 1\)</span>).</p>
+<p>We can thus formulate the probability of success <span class="math inline">\(P(y_i=1|X)\)</span> as the likelihood that the additive noise <span class="math inline">\(\varepsilon_i\)</span> is less than <span class="math inline">\(X\beta\)</span>, resulting in the probability <span class="math inline">\(y_i^*\)</span> above zero:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+p_i &amp; = P(y_i=1|X_i) \\
+&amp; = P(y_i^* &gt; 0 | X_i)
+\\
+&amp; = P(X_i\beta + \varepsilon_i &gt; 0)
+\\
+&amp; = P(\varepsilon_i &gt; -X_i\beta )
+\\
+&amp; = P(\varepsilon_i &lt; X_i\beta ) &amp; \iff \varepsilon_i \sim f(\mu,s) \text{ is symmetric}
+\end{align}
+}
+\]</span></p>
+<p>So a good assumption for the probabilistic process that generates the error <span class="math inline">\(\varepsilon_i\)</span> is very important! We will come back to this shortly, after discussing the Bernoulli probability mass function.</p>
+</section>
+<section id="the-bernoulli-pmf" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="the-bernoulli-pmf">The Bernoulli PMF</h2>
+<p>Even if a player has a 99% of making freethrows, they would be expected to miss 1 in 100. We can capture this through the probability mass function of the Bernoulli distribution:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
 P(y_i) =
 \begin{cases}
-  p &amp; \text{if}\ y_i=1 \\
-  1-p &amp; \text{if}\ y_i=0
+  p_i &amp; \text{if}\ y_i=1 \\
+  1-p_i &amp; \text{if}\ y_i=0
 \end{cases}
 \end{align}
 }
 \]</span></p>
 <p>Which is equivalent to the following:</p>
 <p><span class="math display">\[
-P(y_i) = p^{y_i}(1-p)^{1-y_i}
+\displaylines{
+\begin{align}
+P(y_i)
+&amp; = p_i^{y_i}(1-p_i)^{1-y_i} \\ \\
+&amp; = P(\varepsilon_i &lt; X_i\beta)^{y_i}
+(1-P(\varepsilon_i &lt; X_i\beta))^{1-y_i}
+\end{align}
+}
 \]</span></p>
 
 <div class="no-row-height column-margin column-container"><div class="">
@@ -280,192 +314,131 @@ P(y_i) = p^{y_i}(1-p)^{1-y_i}
 <li>if <span class="math inline">\(y_i=1\)</span>, <span class="math inline">\(p^{1}(1-p)^{0} = p\)</span></li>
 <li>if <span class="math inline">\(y_i=0\)</span>, <span class="math inline">\(p^{0}(1-p)^{1} = 1-p\)</span></li>
 </ul>
-</div></div><p>Now imagine that, rather than <span class="math inline">\(p\)</span> being fixed for all attempts, there are some external variables that influence the shooter (for example, whether the game is at home or away). Let’s denote these relevant variables <span class="math inline">\(X\)</span>.</p>
-<p>We can then denote the probability of success as the following:</p>
-<p><span class="math display">\[
-P(y_i|X_i) = P(y_i=1|X_i)^{y_i}(1-P(y_i=1|X_i))^{1-y_i}
-\]</span></p>
+</div></div><p>Until now, we have just been looking at the likelihood of making a success for a single trial <span class="math inline">\(i\)</span>. But we want to find values for <span class="math inline">\(\beta\)</span> that optimize predictions across all trials, to learn the impact of <span class="math inline">\(X\)</span> so we can better predict <span class="math inline">\(y\)</span> next time - aka maximum likelihood estimation.</p>
 </section>
-<section id="maximum-likelihood" class="level1 page-columns page-full">
-<h1>Maximum Likelihood</h1>
-<p>Imagine we observe the player make the first two freethrows but miss the third. If we guess the probability of them scoring is 80%, then the chance of what we observed occuring in that order is <span class="math inline">\(80\%\times80\%\times20\%=12.8\%\)</span>. They could also have got 2/3 by missing the first (scoring the last two) or missing the second (scoring first and third). So the overall probability is <span class="math inline">\(3\times8.1\%=38.4\%\)</span></p>
-<p>We might make a better guess - say that the probability of them scoring is 67%, since they made 2/3. Then the probability of what we observed occuring is <span class="math inline">\(3\times(67\%\times67\%\times33\%)=44\%\)</span>.</p>
-<p>What we have done is estimated the maximum likelihood - the value of <span class="math inline">\(\hat{p}\)</span> that maximises the chance of observing the outcomes saw.</p>
-<p>However, in our problem,</p>
-<ul>
-<li>But</li>
-</ul>
+<section id="maximum-likelihood-estimation" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="maximum-likelihood-estimation">Maximum Likelihood Estimation</h2>
+<p>Assuming each trial is independent (a big assumption for free throws!) - the probability of making two then missing one is <span class="math inline">\(p_i \times p_i \ \times (1-p_i)\)</span>. In other words - the combined probability is the multiplication of the individual probabilities.</p>
+<p>We can generalize this to a sample size <span class="math inline">\(N\)</span> as the following:</p>
 <p><span class="math display">\[
-p(y|X\beta) =
-\underbrace{
-  \prod_{y_i=0}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
-}_{y_i=1} \times
-\underbrace{
-  \prod_{y_i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }    
-}_{y_i=0}
-\]</span></p>
-<!-- In reality, we don't observe $p_i$ (the true probability of making the free throw), only $y_i$ (whether they made the free throw or not). We can use these binary observations to make estimates for $\hat{p_i}$ though (e.g. if they made 85/100 freethrows in away games previously, our best guess for the probability of making one away is 85%). -->
-<!-- We might collect $N$ trials in our sample (say analyse the shooter's  freethrows so far this season, against many different teams, point differentials etc). We want to learn from this past experience to estimate the probability that they make the next one. -->
-<!-- In other words, our aim is to learn the relationship between all $X$ and $p$ (so we can infer e.g. the impact of taking freethrows at home or away), and this should allow us to make good predictions for future freethrows. -->
-<!-- Across $N$ observations collected, we want to find the values of $\beta$ that maximise the likelihood of observing all outcomes (the vector of results $y$). -->
-<p>Let’s split the outcomes between successes and failures. We thus derive the cost function:</p>
-<!-- Maximum likelihood estimation aims to find the set of coefficients that maximises the likelihood of observing the evidence we have. We thus aim to find the coefficients $\beta$ that maximise the likelihood of observing $y$ across all $n$ samples. -->
-<section id="taking-the-negative-log-likelihood" class="level3 page-columns page-full">
-<h3 class="anchored" data-anchor-id="taking-the-negative-log-likelihood">Taking the negative log-likelihood</h3>
-<p>In practice, dealing with a cost function made up of a sum product is tricky - it is easier to take the log and deal with addition instead. Further, rather than maximise, it is common to “minimize” cost functions, so the negative log-likelihood is usually used.</p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Recall that <span class="math inline">\(\log{\left(ab\right)} = \log{\left(a\right)} + \log{\left(b\right)}\)</span></p>
-</div></div><p><span class="math display">\[
 \displaylines{
 \begin{align}
-&amp; \max_\beta{p(y|\beta,X)} \\
+p(y|X)
+&amp; =
+\prod_{i=1}^{N}{
+  p_i^{y_i} (1-p_i)^{1-y_i}
+  }
+\\ &amp; =
+\underbrace{
+  \prod_{y_i=0}^{n_1}{ p_i^{y_i} }
+}_{y_i=1} \times
+\underbrace{
+  \prod_{y_i=1}^{n_0}{ (1-p_i)^{1-y_i} }    
+}_{y_i=0}
+\end{align}
+}
+\]</span></p>
+<p>In practice, it is common to minimize the negative log-likelihood, which is shown to be equivalent to maximising the likelihood directly:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+&amp; \max_\beta{p(y|X)} \\
 = &amp;
 \max_\beta{\left\{
-  \prod_{i=1}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
+  \prod_{i=1}^{N}{ p_i^{y_i} }
   \times
-  \prod_{i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }
+  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
   \right\}}
 \\ \\ \Rightarrow &amp;
 \min_\beta{\left\{ -\log{ \left[
-  \prod_{i=1}^{N}{ p(y_i=1|X_i\beta)^{y_i} }
+  \prod_{i=1}^{N}{ p_i^{y_i} }
   \times
-  \prod_{i=1}^{N}{ (1-p(y_i=1|X_i\beta))^{1-y_i} }
+  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
   \right] } \right\}}
 \\ \\ = &amp;
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -\log{ \left[ p(y_i=1|X_i\beta)^{y_i} \right] } } +
-  \sum_{i=1}^{N}{ -\log{ \left[ (1-p(y_i=1|X_i\beta))^{1-y_i}\right] } }
+  \sum_{i=1}^{N}{ -\log{ \left[ p_i^{y_i} \right] } } +
+  \sum_{i=1}^{N}{ -\log{ \left[ (1-p_i)^{1-y_i}\right] } }
   \right\}}  
 \\ \\ = &amp;
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -y_i\log{ \left[ p(y_i=1|X_i\beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p(y_i=1|X_i\beta)\right] } }
-  \right\}}  
+  \sum_{i=1}^{N}{ -y_i\log{ \left[ p_i \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p_i\right] } }
+  \right\}}
+\\ \\ = &amp;
+\min_\beta{\left\{
+  \sum_{i=1}^{N}{ -y_i\log{ \left[ P(\varepsilon_i &lt; X \beta) \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-P(\varepsilon_i &lt; X \beta)\right] } }
+  \right\}}    
 \end{align}
 }
 \]</span></p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Recall that <span class="math inline">\(\log{\left(ab\right)} = \log{\left(a\right)} + \log{\left(b\right)}\)</span></p>
+</div></div><p>We now - almost - have a well defined problem we can solve! We just need to make an assumption for the distribution of errors <span class="math inline">\(\varepsilon\)</span>.</p>
 </section>
-</section>
-<section id="modelling-the-probability" class="level1 page-columns page-full">
-<h1>Modelling the probability</h1>
-<section id="logistic-activation-function" class="level3 page-columns page-full">
-<h3 class="anchored" data-anchor-id="logistic-activation-function">Logistic activation function</h3>
-<p>We might assume that the the log-odds - the logarithm of the probability of success divided by the probability of failure - is linearly related to its predictors, i.e.</p>
+<section id="assuming-errors-come-from-a-logistic-distribution" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="assuming-errors-come-from-a-logistic-distribution">Assuming errors come from a logistic distribution</h2>
+<p>The errors are often assumed to be generated from a logistic distribution, with location parameter <span class="math inline">\(\mu=0\)</span> and scale parameter <span class="math inline">\(s=1\)</span>:</p>
 <p><span class="math display">\[
-\text{logit}(E[Y_i|X_i]) = \text{logit}(p_i) =
-\ln{\left(\frac{p_i}{1-p_i}\right)} = X_i \beta
+\epsilon \sim \text{Logistic}(0,1)
 \]</span></p>
-<p>This is called a “link function” - the link between the outcome, <span class="math inline">\(y\)</span>, and the linear predictors <span class="math inline">\(X\beta\)</span>. This specific link function is called the “logit link function”.</p>
-<p>To make predictions then for the probability of success, we need the inverse of the link function - sometimes called the “activation function” in the context of neural network.</p>
-<p>We can derive the inverse of the logit link by rearranging it in terms of <span class="math inline">\(p\)</span>:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\ln{\left(\frac{p}{1-p}\right)} = X\beta
-&amp; \Rightarrow \frac{p}{1-p}\ = \exp{\{X\beta\}}
-\\ \\
-&amp; \Rightarrow p = \exp{\{X\beta\}}(1-p)
-\\ \\
-&amp; \Rightarrow p - (1+\exp{\{X\beta\}}) = \exp{\{X\beta\}}
-\\ \\
-&amp; \Rightarrow p = \frac{\exp{\{X\beta\}}}{1 + \exp{\{X\beta\}}}
-=  \left( 1 + \exp{\{-X\beta\}} \right)^{-1}
-\end{align}
-}
-\]</span></p>
-<p>We can see that this activation function “squashes” all outputs <span class="math inline">\(X\beta \in [-\infty,\infty]\)</span> between 0 and 1:</p>
+<p>Why a logistic? Well because is highly similar to a normal distribution, but with fatter tails, so its seen as an approximation that is more robust. Furthermore, it has easier algebra to unpick - which we will show shortly.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>logistic_dist <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>( (<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>x))<span class="sc">^-</span><span class="dv">1</span> )</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>logistic_func <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>( <span class="fu">exp</span>(<span class="sc">-</span>x)<span class="sc">*</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>x))<span class="sc">^-</span><span class="dv">2</span> )</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">logistic_dist</span>(x),</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"blue"</span>,,<span class="at">lty=</span><span class="dv">1</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="fl">0.1</span>),</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">4</span>)<span class="sc">*</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="fl">0.1</span>)<span class="sc">+</span><span class="fl">0.5</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"red"</span>,<span class="at">lty=</span><span class="dv">2</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">10</span>,<span class="dv">1</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend=</span><span class="fu">c</span>(</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"logistic activation"</span>,</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"linear activation"</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">col=</span><span class="fu">c</span>(<span class="st">"blue"</span>,<span class="st">"red"</span>),</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>normal_func <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>( (<span class="dv">2</span><span class="sc">*</span>pi)<span class="sc">^</span>(<span class="sc">-</span><span class="fl">0.5</span>) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fl">0.5</span> <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span>) )</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">normal_func</span>(x),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"blue"</span>,<span class="at">lty=</span><span class="dv">1</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">logistic_func</span>(x),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"red"</span>,<span class="at">lty=</span><span class="dv">1</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">10</span>,<span class="fl">0.4</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend=</span><span class="fu">c</span>(</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Normal PDF"</span>,</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Logistic function"</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">col=</span><span class="fu">c</span>(<span class="st">"blue"</span>,<span class="st">"red"</span>),</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="glm_logistic_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="864"></p>
+<p><img src="glm_logit_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="864"></p>
 </figure>
 </div>
 </div>
 </div>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>For probabilities of between 0.3 to 0.7, we see that the logistic activation function maps very closely to that of a simply linear one. It is only at the more extreme probabilities that they diverge.</p>
-</div></div></section>
-<section id="a-latent-variable-model" class="level3">
-<h3 class="anchored" data-anchor-id="a-latent-variable-model">A latent variable model</h3>
-<p>Economists often frame binary regression as a “latent variable model”. What this means is they frame the problem as though there is a hidden continuous variable we do not observe, <span class="math inline">\(y_i^*\)</span>, and if it exceeds a certain threshold (usually zero) then there is a success:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-y_i^* &amp; = X_i\beta + \epsilon_i
-\\ \\
-y_i &amp; =
-\begin{cases}
-  1 &amp; \text{if}\ y_i^* &gt; 0 &amp; \text{i.e. } -\epsilon_i &gt; X_i\beta\\
-  0 &amp; \text{otherwise}
-\end{cases}
-\end{align}
-}
-\]</span></p>
-<p>In other words, the latent variable <span class="math inline">\(y_i^*\)</span> is purely a function of its predictors <span class="math inline">\(X_i\)</span>, their relationship to <span class="math inline">\(p_i\)</span> given by <span class="math inline">\(\beta\)</span>, and additive noise <span class="math inline">\(\epsilon_i\)</span>. If <span class="math inline">\(y_i^*\)</span> is positive, we observe a success (where <span class="math inline">\(y_i = 1\)</span>).</p>
-<p>We can thus formulate <span class="math inline">\(P(y_i=1|X)\)</span> as the likelihood that the addtive noise <span class="math inline">\(\epsilon_i\)</span> is less than <span class="math inline">\(X\beta\)</span>, resulting in the probability <span class="math inline">\(y_i^*\)</span> above zero:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-P(y_i=1|X_i)
-&amp; = P(y_i^* &gt; 0 | X_i)
-\\
-&amp; = P(X_i\beta + \epsilon_i &gt; 0)
-\\
-&amp; = P(\epsilon_i &gt; -X_i\beta )
-\\
-&amp; = P(\epsilon_i &lt; X_i\beta ) &amp; \iff \epsilon \sim f(\mu,s) \text{ is symmetric}
-\end{align}
-}
-\]</span></p>
-<p>So a good assumption for the probabilistic process that generates the errors <span class="math inline">\(\epsilon\)</span> is very important!</p>
-<p>The error is often assumed to be generated from a logistic distribution, with location parameter <span class="math inline">\(\mu=0\)</span> and scale parameter <span class="math inline">\(s=1\)</span>:</p>
-<p><span class="math display">\[
-\epsilon \sim \text{Logistic}(0,1)
-\]</span></p>
-<p>Recall the pdf of the logistic distribution is:</p>
+<p>For now, you might recall the pdf of the logistic distribution is:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
 f(x,\mu,s) &amp; =
-\frac{\exp{\left\{ -(x-\mu)/s \right\}}}
-{s(1+\exp{\left\{ -(x-\mu)/s \right\})^2}}
+\frac{e^{-(x-\mu)/s)}}
+{s(1+e^{-(x-\mu)/s)})^2}
 \\ \\
 \therefore f(x,0,1) &amp; =
-\frac{\exp{\left\{ -x \right\}}}
-{(1+\exp{\left\{ -x \right\})^2}}
+\frac{e^{-x}}
+{(1+e^{-x})^2}
 \end{align}
 }
 \]</span></p>
-<p>Then the CDF is the integral of the pdf: <span class="math display">\[
+<p>Then we can obtain the CDF by taking the integral of the pdf:</p>
+<p><span class="math display">\[
 \displaylines{
 \begin{align}
 \int {f(x,0,1) \,dx} &amp; =
@@ -476,57 +449,140 @@ f(x,\mu,s) &amp; =
 \\ \\
 \text{let } u = 1+e^{-x} &amp; \therefore \frac{du}{dx} = -e^{-x}
 \\
-&amp; \therefore dx = -\frac{du}{e^x}
-\\ \\
-\therefore
+&amp; \therefore dx = -\frac{du}{e^{-x}}
+\\ \\ \therefore
 \int {f(x,0,1) \,dx} &amp; =
-\int {\frac{e^x}{u^2} \times -\frac{du}{e^x}}
-\\
-&amp; = \int {-u^{-2}\,du}
+\int {\frac{e^{-x}}{u^2} \times -\frac{du}{e^{-x}}}
+\\ &amp;
+= \int {-u^{-2}\,du}
 \\
 &amp; = u^{-1} + c
 \\
-&amp; = (1+\exp{\{-x\}})^{-1} + c
-% \therefore
-% P(y_i=1|X_i) &amp; = P(X_i\beta + \epsilon_i &gt; 0)
-% \\ &amp; =
-% [(1+\exp{\{-(X_i\beta+\epsilon_i)\}})^{-1} + c] -
-% [(1+\exp{\{-0\}})^{-1} + c]
-% \\ &amp; =
-% [(1+\exp{\{-(X_i\beta+\epsilon_i)\}})^{-1}] -
-% \frac{1}{2}
+&amp; = (1+e^{-x})^{-1} + c
 \end{align}
 }
 \]</span></p>
-<p>Note that this is the inverse of the logit function!</p>
+<p>And hence, we derive the “logisitic function”:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-\text{logit}(x)
-&amp; = \ln{\left(\frac{x}{1-x}\right)}
+p(y_i|X_i)
+&amp; = p(\varepsilon_i &lt; X_i\beta) \\
+&amp; = (1+e^{-X_i\beta})^{-1} \\
+&amp; = \frac{1}{1+e^{-X_i\beta}} \\ \\
+&amp; = \text{logistic}(X_i\beta)
+\end{align}
+}
+\]</span></p>
+<p>So we now have a mapping of <span class="math inline">\(X\)</span> to <span class="math inline">\(y\)</span>, given by <span class="math inline">\(\beta\)</span> and the activation function: the “logistic function”.</p>
+<p>We can see that this activation function “squashes” all outputs <span class="math inline">\(X\beta \in [-\infty,\infty]\)</span> between 0 and 1:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>logistic_dist <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>( (<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>x))<span class="sc">^-</span><span class="dv">1</span> )</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">0.1</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span>x,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span><span class="fu">logistic_dist</span>(x),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"blue"</span>,,<span class="at">lty=</span><span class="dv">1</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">x=</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="fl">0.1</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">y=</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">4</span>)<span class="sc">*</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">3</span>,<span class="fl">0.1</span>)<span class="sc">+</span><span class="fl">0.5</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">type=</span><span class="st">'l'</span>,<span class="at">col=</span><span class="st">"red"</span>,<span class="at">lty=</span><span class="dv">2</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">10</span>,<span class="dv">1</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend=</span><span class="fu">c</span>(</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"logistic activation"</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"linear activation"</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">col=</span><span class="fu">c</span>(<span class="st">"blue"</span>,<span class="st">"red"</span>),</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="glm_logit_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>For probabilities of between 0.3 to 0.7, we see that the logistic activation function maps very closely to that of a simply linear one. It is only at the more extreme probabilities that they diverge.</p>
+</div></div></section>
+<section id="linearity-in-terms-of-log-odds" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="linearity-in-terms-of-log-odds">Linearity in terms of log-odds!</h2>
+<p>To further intuition, it can also be useful to rearrange the regression in terms of <span class="math inline">\(X_i\beta\)</span>.</p>
+<p>By doing this, we find that we are fitting a model where the “log-odds” are linearly related to its predictors:</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Log-odds means taking the logarithm of the probability of success divided by the probability of failure</p>
+</div></div><p><span class="math display">\[
+\displaylines{
+\begin{align}
+p(y_i|X_i) = p_i &amp; = \frac{1}{1+e^{-X_i\beta}} \\
+\therefore 1 + e^{-X_i\beta} &amp; = \frac{1}{p_i} \\
+\therefore e^{-X_i\beta} &amp; = \frac{1}{p_i} - \frac{p_i}{p_i} = \frac{1-p_i}{p_i} \\
+\therefore e^{X_i\beta} &amp; = \frac{p_i}{1-p_i} \\
+\therefore \ln{
+  \left\{ \frac{p_i}{1-p_i} \right\}
+  } &amp; = X_i\beta
+\end{align}
+}
+\]</span></p>
+<p>This is a “link function” - the link between the outcome, <span class="math inline">\(y\)</span>, and the linear predictors <span class="math inline">\(X\)</span> via <span class="math inline">\(\beta\)</span>. This specific link function is called the “logit function”.</p>
+<p>And so it is now clear the inverse logit is the logistic function:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\text{logit}(x) &amp; = \ln{
+  \left\{ \frac{x}{1-x} \right\}
+  } \\
+\text{logistic}(x)
+&amp; = \frac{1}{1+e^{-x}} \\
+&amp; = \text{logit}^{-1}(x) \\
+\end{align}
+}  
+\]</span></p>
+</section>
+<section id="rearranging-in-terms-of-the-outcome" class="level2">
+<h2 class="anchored" data-anchor-id="rearranging-in-terms-of-the-outcome">Rearranging in terms of the outcome</h2>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+P(y|X) = p = &amp;
+-\sum_{i=1}^{N}{ y_i\log{ \left[
+  P(\varepsilon_i &lt; X \beta)
+  \right] } + (1-y_i)\log{ \left[
+  1-P(\varepsilon_i &lt; X \beta)
+  \right] } }
 \\
-\therefore \text{let } y &amp; = \ln{\left(\frac{x}{1-x}\right)}
-\\
-e^y &amp; = \frac{x}{1-x}
-\\
-e^y - xe^y &amp; = x
-\\
-e^y &amp; = x(1+e^y)
-\\
-x &amp; = \frac{e^y}{1+e^y}
-= (1+\exp{\{e^{-x}\}})^{-1}
-\\ \\
-\therefore
-P(\epsilon_i &lt; X_i\beta ) &amp; = \text{Logit}^{-1}(X\beta)
+= &amp;
+-\sum_{i=1}^{N}{ y_i\log{ \left[
+  (1+e^{-X_i\beta})
+  \right] } + (1-y_i)\log{ \left[
+  1-(1+e^{-X_i\beta})
+  \right] } }
+\end{align}
+}
+\]</span></p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+p &amp; = -\sum_{i=1}^{N}{ y_i\log{ \left[ P(\varepsilon_i &lt; X \beta) \right] } } +
+(1-y_i)\log{ \left[ 1-P(\varepsilon_i &lt; X \beta)\right] } \\
+\therefore e^p = &amp; 1
 \end{align}
 }
 \]</span></p>
 </section>
-</section>
-<section id="optimal-coefficients-for-the-coefficient" class="level1">
-<h1>Optimal coefficients for the coefficient</h1>
-<section id="deriving-the-gradient-with-respect-to-the-coefficients" class="level3">
-<h3 class="anchored" data-anchor-id="deriving-the-gradient-with-respect-to-the-coefficients">Deriving the gradient with respect to the coefficients</h3>
+<section id="optimising-the-coefficients" class="level2">
+<h2 class="anchored" data-anchor-id="optimising-the-coefficients">Optimising the coefficients</h2>
 <p>We minimise the cost function by finding the optimum coefficient values <span class="math inline">\(\beta^*\)</span> so that the partial differential is equal to zero.</p>
 <p><span class="math display">\[
 \displaylines{
@@ -534,91 +590,37 @@ P(\epsilon_i &lt; X_i\beta ) &amp; = \text{Logit}^{-1}(X\beta)
 &amp; \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
 = &amp;
 \frac{\partial}{\partial \beta_j} \left(
-\sum_{i=1}^{N}{ -y_i\log{ \left[ p(y_i=1|X_i\beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p(y_i=1|X_i\beta)\right] } }
+\sum_{i=1}^{N}{ -y_i\log{ \left[ p_i \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p_i\right] } }
 \right) \\ \\
 = &amp;
 \sum_{i=1}^{N}{ y_i
-  \frac{\frac{\partial}{\partial \beta_j}p(y_i=1|X_i\beta)}{p(y_i=1|X_i\beta)}
-  } +
-  \sum_{i=1}^{N}{ (1-y_i)
-    \frac{\frac{\partial}{\partial \beta_j}\left(1-p(y_i=1|X_i\beta)\right)}{1-p(y_i=1|X_i\beta)}
-    }
-\end{align}
-}
-\]</span></p>
-<p>This is as far as we can get, without now making some more assumptions. Let’s imagine that we can model the</p>
-<p>Given that:</p>
-<p><span class="math display">\[
-\hat{p_i} = \hat{p}(y_i=1|X_i \hat{\beta}) =
-\frac{1}{1+\exp{\left\{-X_i\hat{\beta}\right\}}}
-\]</span></p>
-<p>Then the partial differential of the probability with respect to feature <span class="math inline">\(j\)</span> is:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-&amp; \frac{\partial }{\partial \beta_j}
-\hat{p}(y_i=1|X_i \hat{\beta_j})
-\\ = &amp;
-\frac{\partial }{\partial \beta_j} (1+\exp{\{-X_i\hat{\beta}\}})^{-1}
-\\ = &amp;
-\frac{\partial }{\partial \beta_j} -1(1+\exp{\{-X_i\hat{\beta}\}})^{-2}
-\times x_{ij}\exp{\{-X_i\hat{\beta}\}}
-\\ = &amp;
-x_{ij} \left( \frac{\exp{\{-X_i\hat{\beta}\}}}{(1+\exp{\{-X_i\hat{\beta}\}})^{2}} \right)
-\\ = &amp;
-x_{ij} \left( \frac{1}{(1+\exp{\{-X_i\hat{\beta}\}})} \times \frac{\exp{\{-X_i\hat{\beta}\}}}{(1+\exp{\{-X_i\hat{\beta}\}})} \right)
-\\ = &amp;
-x_{ij} \left( \frac{1}{(1+\exp{\{-X_i\hat{\beta}\}})} \times \left( 1 - \frac{1}{(1+\exp{\{-X_i\hat{\beta}\}})} \right) \right)
-\\ \\ = &amp;
-x_{ij} ( \hat{p}(y_i=1|X_i \hat{\beta_j}) \times (1-\hat{p}(y_i=1|X_i \hat{\beta_j})) )
-\\ \\ = &amp;
-x_{ij} ( \hat{p_i} \times (1-\hat{p_i}) )
-\end{align}
-}
-\]</span></p>
-<p>And thus we can substitute this into our cost function:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-&amp; \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{\frac{\partial}{\partial \beta_j}p(y_i=1|X_i\beta)}{p(y_i=1|X_i\beta)}
+  \frac{\partial p_i/\partial \beta_j}{p_i}
   } +
 \sum_{i=1}^{N}{ (1-y_i)
-  \frac{\frac{\partial}{\partial \beta_j}\left(1-p(y_i=1|X_i\beta)\right)}{1-p(y_i=1|X_i\beta)}
-  } \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{x_{ij} ( \hat{p_i} \times (1-\hat{p_i}) )}{\hat{p_i}}
-  } +
-\sum_{i=1}^{N}{ (1-y_i)
-  \frac{x_{ij} ( \hat{p_i} \times (1-\hat{p_i}) )}{(1-\hat{p_i})}
-  } \\ \\
-= &amp;
-\sum_{i=1}^{N}{ y_i
-  \frac{x_{ij} ( \cancel{\hat{p_i}} \times (1-\hat{p_i}) )}{\cancel{\hat{p_i}}}
-  } +
-\sum_{i=1}^{N}{ (1-y_i)
-  \frac{x_{ij} ( \hat{p_i} \times \cancel{(1-\hat{p_i})} )}{\cancel{(1-\hat{p_i})}}
-  } \\ \\  
-= &amp;
-\sum_{i=1}^{N}{ y_ix_{ij} (1-\hat{p_i})} +
-\sum_{i=1}^{N}{ (1-y_i)x_{ij} \hat{p_i}} \\ \\
-= &amp;
-\sum_{i=1}^{N}{ x_{ij} \left[
-    y_i(1-\hat{p_i}) (1-y_i)(\hat{p_i})
-   \right]
+  \frac{(1-\partial p_i)/\partial \beta_j}{1-p_i}
   }
+\\ \\ &amp; =0
 \end{align}
 }
 \]</span></p>
-<p>Which is the coefficient from logistic regression.</p>
-<p>Fin.</p>
+<p>This is as far as we can get without modelling <span class="math inline">\(P(\varepsilon_i &lt; X \beta)\)</span>. So let’s look at substituting <span class="math inline">\(p_i\)</span> into our first moment condition to derive the optimal coefficients:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+&amp; \text{Let } P(\varepsilon_i &lt; X \beta) = p_i = (1+e^{-X\beta})^{-1} = \frac{1}{1+e^{-X\beta}} \\
+&amp; \therefore 1-p_i = 1 - (1+e^{-X\beta})^{-1} = \frac{1+e^{-X\beta}}{1+e^{-X\beta}} - \frac{1}{1+e^{-X\beta}} = \frac{e^{-X\beta}}{1+e^{-X\beta}}  \\
+&amp; \therefore \frac{\partial p_i}{\partial \beta_j}
+= -1(1+e^{-X\beta})^{-2} \times -x_je^{-X\beta} = \frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2} \\
+&amp; \therefore \frac{\partial (1-p_i)}{\partial \beta_j}
+= -1(1+e^{-X\beta})^{-2} \times x_j \times e^{-X\beta} = \frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
+\end{align}
+}
+\]</span></p>
+<p>$$ $$</p>
+<p>Thus there is no closed form solution, but using an optimization</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

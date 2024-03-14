@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/ols_finite_sample_correction.html",
       "/posts/glm_logistic.html",
       "/posts/bayes_regularization.html",
       "/posts/mle_ols_normal.html",

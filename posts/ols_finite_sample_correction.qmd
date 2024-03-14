@@ -1,0 +1,225 @@
+---
+title: "Estimating population variance from a sample"
+author: "Chris Kelly"
+date: '02-21-25'
+categories: [Fundamentals, Bias]
+format:
+  html:
+    code-fold: true
+    toc: true
+image: '../images/ols_finite_sample_correction.png'
+---
+
+::: {.callout-tip}
+### What are we exploring?
+Why is sample variance divided by $n-1$, but population variance by $N$.
+:::
+
+## Intro: Population variance vs. variance estimate from sample
+
+If we have an entire population of size $N$, we can perfectly calculate the true population mean $\mu$. As a result, we calculate the variance statistic in an intuitive way: 
+
+$$
+\displaylines{
+\begin{align}
+\mu & 
+= \frac{1}{N} \sum_{i=1}^{N}{X_i}
+\\
+\sigma^2 & 
+= \frac{1}{N}\sum_{i=1}^{N}{(X_i-\mu)^2}
+\end{align}
+}
+$$
+
+However, if we are creating an estimate of the population variance from a finite sample of size $n$, then we need to do some bias correction, where we divide by $n-1$ instead:
+
+$$
+\displaylines{
+\begin{align}
+\bar{x} & 
+= \frac{1}{n} \sum_{i=1}^{n}{x_i}
+\\
+\hat{\sigma}^2 & 
+= \frac{1}{n-1}\sum_{i=1}^{n}{(x_i-\bar{x})^2}
+\end{align}
+}
+$$
+
+## Some intuition as to why:
+
+The reason for this is because our sample mean $\bar{x}$ is almost always not going to be exactly the population mean $\mu$, i.e. $\bar{x} \neq \mu$.
+
+Now because $\bar{x}$ is calculated from the sample, the datapoints in that same sample will be closer to it than they would be $\mu$. So if using the squared distances between each sample and the sample mean to estimate the population variance, we need to take this into account!
+
+## Proving the difference:
+
+Imagine there are $N$ i.i.d random variables $X_1, X_2,...,X_n$[^3]., generated from a population process with mean $\mu$ and $\sigma$. Then we might derive the following:
+
+* The mean $\bar{X} = \frac{1}{n}\sum_{i=1}^{n}{(X_{i})}$
+* The *uncorrected* variance $s^2 = \frac{1}{n} \sum_{i=1}^{n}{(X_{i}-\bar{X})^2}$
+
+Let's now analyse the expected value for this uncorrected population variance:
+
+$$
+\displaylines{
+\begin{align}
+E[s^2] & = 
+E\left[
+  \frac{1}{n} \sum_{i=1}^{n}{(X_i-\bar{X})^2}
+\right]
+\\ & = 
+E\left[
+  \frac{1}{n} \sum_{i=1}^{n}{\bigg( 
+    (X_i-\mu)-(\bar{X}-\mu)
+  \bigg)^2}
+\right]
+\\ & = 
+E\left[
+  \frac{1}{n} \sum_{i=1}^{n}{\bigg( 
+    (X_i-\mu)^2-2(X_i-\mu)(\bar{X}-\mu)+(\bar{X}-\mu)^2
+  \bigg)}
+\right]
+\\ & = 
+E\left[
+  \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
+  - \frac{2}{n} \bigg((\bar{X}-\mu) \sum_{i=1}^{n}{(X_i-\mu)} \bigg)
+  + \frac{1}{n} \bigg(n(\bar{X}-\mu)^2 \bigg)
+\right] & \because \bar{X}-\mu \text{ is constant}
+\\ & = 
+E\left[
+  \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
+  - \frac{2}{n} \bigg( (\bar{X}-\mu) [n(\bar{X}-\mu)] \bigg)
+  + (\bar{X}-\mu)^2
+  \bigg)
+\right] & \because \frac{1}{n}\sum_{i=1}^{n}{(X_i-\mu)} = \bar{X} - \mu
+\\ & = 
+E\left[
+  \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
+  - (\bar{X}-\mu)^2
+  \bigg)
+\right] 
+\\ & = 
+\underbrace{
+E\left[
+  \frac{1}{n} \sum_{i=1}^{n}{ (X_i-\mu)^2 } 
+\right]
+}_{\text{True population variance}} - 
+\underbrace{
+E\Bigg[
+  (\bar{X}-\mu)^2
+\Bigg]
+}_{\text{Sample vs pop. mean}}
+\end{align}
+}
+$$
+
+So we can see that $E[s^2]$ is too small by that extra term, $E[(\bar{x}-\mu)^2]$. 
+
+Note this is the expected variance of $\bar{X}$ i.e. $\text{Var}[\bar{X}]=E[(\bar{x}-\mu)^2]$
+
+## Exploring the variance of mean
+
+It can be shown that the variance of the sum of uncorrelated random variables is equal to the sum of their variances[^1]:
+
+$$
+\text{Var}\left( \sum_{i=1}^{n}{X_i} \right) 
+= \sum_{i=1}^{n}{\text{Var}\left(X_i\right) }
+$$
+
+Now since every $X_i$ has the same variance $\sigma^2$, then we can derive the following:
+
+$$
+\displaylines{
+\begin{align}
+E\left[ (\bar{X}-\mu)^2 \right]
+& = 
+\text{Var}\left[\bar{X}\right]
+=
+\text{Var}\left[\frac{1}{n}\sum_{i=1}^{n}{X_i}\right]
+\\ & =
+\left( \frac{1}{n} \right)^2
+\text{Var} \left[ \sum_{i=1}^{n}{X_i} \right]
+\\ & =
+\left( \frac{1}{n} \right)^2
+\sum_{i=1}^{n}{ \text{Var} \big[X_i\big] }
+\\ & =
+\frac{1}{n^2}
+\left( n \times \sigma^2 \right)
+\\ & =
+\frac{\sigma^2}{n}
+\end{align}
+}
+$$
+
+:::{.column-margin}
+Since $\text{Var}(aX) = a^2\text{Var}(X)$[^2]
+:::
+
+## Bessel's correction:
+
+So if we sub this into our original equation:
+$$
+\displaylines{
+\begin{align}
+E[s^2] & =
+\underbrace{E \left[ \frac{1}{n} \sum_{i=1}^{n}{ (x_i-\mu)^2 } \right]}_{\sigma}
+ - 
+\underbrace{E\Bigg[ (\bar{x}-\mu)^2 \Bigg]}_{\sigma/n}
+\\ & = 
+\left(1-\frac{1}{n} \right)\sigma^2 
+\\ \\ & = 
+\frac{(n-1)}{n}\sigma^2
+\end{align}
+}
+$$
+
+Then  we can see that we need to make a correction - *Bessel's correction* - to the statistic!
+
+$$
+\displaylines{
+\begin{align}
+\hat{\sigma}^2 
+& = \frac{n}{n-1}\left(s^2\right) \\
+& = \frac{1}{n-1} \left( \sum_{i=1}^{n}{x_i-\bar{x}} \right)
+\end{align}
+}
+$$
+
+Fin.
+
+[^3]:
+  *Random variables* can take on a range of possible values that are not yet realised (e.g. for a dice, $X \in \{1,2,3,4,5,6\}$). These are often signified using capital letters.<br><br>
+  *Samples* have values that are already realised e.g. someone rolled a 3, then a 5 with the dice. We didn't observe an infinite number of dice roles, but just two: $x_1=3,x_2=5$ ($\therefore n=2,\bar{x}=4$).<br><br>
+  The *population* is usually denoted with capital letters too (since we usually don't observe the entire population!), where e.g. for dice $E[X]=\mu=3.5$ <br>
+
+[^1]:
+  Showing $\text{Var}\big[ X+Y \big] = \text{Var}\big[ X \big] + \text{Var}\big[ Y \big]$:
+  $$
+  \displaylines{
+  \begin{align}
+  \text{Var}\big[ X+Y \big]
+  & = E\big[ (X+Y)^2 \big] - \big( E[X+Y] \big)^2 \\
+  & = E\big[ X^2+2XY+Y^2 \big] - \big( E[X]+E[Y] \big)^2 \\
+  & = E\big[ X^2 \big] + 2E\big[ XY \big] + E\big[Y^2 \big] - \bigg(E[X]^2 + 2E[X]E[Y] + E[Y]^2 \bigg)  \\
+  & = \bigg( E\big[ X^2 \big] - E[X]^2 \bigg) + \bigg( E\big[Y^2 \big]- E[Y]^2 \bigg) \\
+  & = \text{Var}\big[ X \big] + \text{Var}\big[ Y \big]
+  \end{align}
+  }
+  $$
+  <br>
+
+[^2]: 
+  Showing $\text{Var}\big[ aX \big] = a^2\text{Var}\big[ X \big]$:
+  $$
+  \displaylines{
+  \begin{align}
+  \text{Var}\big[ aX \big] 
+  & = E\big[ (aX)^2 \big] - \big( E[aX] \big)^2
+  = E\big[ a^2X^2 \big] - \big( a E[X] \big)^2 \\
+  & = a^2 E\big[ X^2 \big] - a^2 \big(E[X]\big)^2
+  = a^2 \bigg( E\big[ X^2 \big] - \big(E[X]\big)^2 \bigg) \\
+  & = a^2\text{Var}\big[ X \big] 
+  \end{align}
+  }
+  $$
+

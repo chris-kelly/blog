@@ -1,0 +1,33 @@
+---
+title: "OLS vs GLM"
+author: "Chris Kelly"
+date: '02-08-24'
+categories: [differentation, cost functions, MSE, MAE]
+format:
+  html:
+    code-fold: true
+draft: true
+---
+
+::: {.callout-tip}
+## What we are exploring
+Cmparing OLS and GLM
+:::
+
+### 
+GLM is a flexible generalization of ordinary linear regression:
+
+* Permits the linear model to be related to the response variable via a link function
+* Allow the magnitude of the variance of each measurement to be a function of its predicted value
+
+Formally we can state that:
+$$
+\displaylines{
+\begin{align}
+E[y|X] & = \mu = g^{-1}{(X\beta)} \\
+V[y|X] & = V[g^{-1}{(X\beta)}]
+\end{align}
+}
+$$
+
+Which 

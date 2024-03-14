@@ -1,0 +1,450 @@
+---
+title: "Deriving Logistic Regression"
+author: "Chris Kelly"
+date: '02-21-25'
+categories: [Maximum Likelihood, Generalized Linear Models]
+format:
+  html:
+    code-fold: true
+    toc: true
+image: '../images/glm_logistic.png'
+draft: true
+---
+
+::: {.callout-tip}
+### What are we exploring?
+Deriving coefficients to predict the likelihood of a binary outcome using maximum likelihood estimation and the logit link funciton.
+:::
+
+## Latent variable model
+
+Imagine a basketball player is taking free throws.
+
+For each trial $i$ (a freethrow attempt), we observe the outcome $y_i$ as being 1 if there is a success (i.e. the freethrow is made), or 0 if it is a failure (a miss). 
+
+When the player takes the freethrow, there are exogenous features $X_i$ that influence their likelihood of making it (e.g. whether they are home or away). Also there is some randomness, $\varepsilon_i$ that is unpredictable: a 99% accurate shooter still has a 1% chance of missing.
+
+Economists often frame this problem as a "latent variable model". What this means is they frame the problem as though there is a hidden continuous variable we do not observe, $y_i^*$, and if it exceeds a certain threshold (usually zero) then there is a success (e.g. the freethrow is made):
+
+$$
+\displaylines{
+\begin{align}
+y_i^* & = X_i\beta + \varepsilon_i
+\\ \\
+y_i & = 
+\begin{cases}
+  1 & \text{if}\ y_i^* > 0 & \text{i.e. } -\varepsilon_i > X_i\beta\\
+  0 & \text{otherwise}
+\end{cases}
+\end{align}
+}
+$$
+
+In other words, the latent variable $y_i^*$ is purely a function of its predictors $X_i$, their relationship to $y_i^*$ given by $\beta$, and some additive noise $\varepsilon_i$. If $y_i^*$ is positive, we observe a success (i.e. $y_i = 1$).
+
+We can thus formulate the probability of success $P(y_i=1|X)$ as the likelihood that the additive noise $\varepsilon_i$ is less than $X\beta$, resulting in the probability $y_i^*$ above zero:
+
+$$
+\displaylines{
+\begin{align}
+p_i & = P(y_i=1|X_i) \\
+& = P(y_i^* > 0 | X_i)
+\\
+& = P(X_i\beta + \varepsilon_i > 0)
+\\
+& = P(\varepsilon_i > -X_i\beta )
+\\
+& = P(\varepsilon_i < X_i\beta ) & \iff \varepsilon_i \sim f(\mu,s) \text{ is symmetric}
+\end{align}
+}
+$$
+
+So a good assumption for the probabilistic process that generates the error $\varepsilon_i$ is very important! We will come back to this shortly, after discussing the Bernoulli probability mass function.
+
+## The Bernoulli PMF
+
+Even if a player has a 99% of making freethrows, they would be expected to miss 1 in 100. We can capture this through the probability mass function of the Bernoulli distribution:
+
+$$
+\displaylines{
+\begin{align}
+P(y_i) = 
+\begin{cases}
+  p_i & \text{if}\ y_i=1 \\
+  1-p_i & \text{if}\ y_i=0
+\end{cases}
+\end{align}
+}
+$$
+
+Which is equivalent to the following:
+
+$$
+\displaylines{
+\begin{align}
+P(y_i) 
+& = p_i^{y_i}(1-p_i)^{1-y_i} \\ \\
+& = P(\varepsilon_i < X_i\beta)^{y_i}
+(1-P(\varepsilon_i < X_i\beta))^{1-y_i}
+\end{align}
+}
+$$
+
+:::{.column-margin}
+Since $g(x)^0 = 1$:
+
+* if $y_i=1$, $p^{1}(1-p)^{0} = p$
+* if $y_i=0$, $p^{0}(1-p)^{1} = 1-p$
+:::
+
+Until now, we have just been looking at the likelihood of making a success for a single trial $i$. But we want to find values for $\beta$ that optimize predictions across all trials, to learn the impact of $X$ so we can better predict $y$ next time - aka maximum likelihood estimation.
+
+## Maximum Likelihood Estimation
+
+Assuming each trial is independent (a big assumption for free throws!) - the probability of making two then missing one is $p_i \times p_i \ \times (1-p_i)$. In other words - the combined probability is the multiplication of the individual probabilities.
+
+We can generalize this to a sample size $N$ as the following:
+
+$$
+\displaylines{
+\begin{align}
+p(y|X) 
+& =
+\prod_{i=1}^{N}{ 
+  p_i^{y_i} (1-p_i)^{1-y_i}
+  }
+\\ & =
+\underbrace{
+  \prod_{y_i=0}^{n_1}{ p_i^{y_i} }
+}_{y_i=1} \times
+\underbrace{
+  \prod_{y_i=1}^{n_0}{ (1-p_i)^{1-y_i} }    
+}_{y_i=0}
+\end{align}
+}
+$$
+
+In practice, it is common to minimize the negative log-likelihood, which is shown to be equivalent to maximising the likelihood directly:
+
+$$
+\displaylines{
+\begin{align}
+& \max_\beta{p(y|X)} \\
+= & 
+\max_\beta{\left\{ 
+  \prod_{i=1}^{N}{ p_i^{y_i} }
+  \times
+  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
+  \right\}}
+\\ \\ \Rightarrow & 
+\min_\beta{\left\{ -\log{ \left[
+  \prod_{i=1}^{N}{ p_i^{y_i} }
+  \times
+  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
+  \right] } \right\}}
+\\ \\ = & 
+\min_\beta{\left\{
+  \sum_{i=1}^{N}{ -\log{ \left[ p_i^{y_i} \right] } } +
+  \sum_{i=1}^{N}{ -\log{ \left[ (1-p_i)^{1-y_i}\right] } }
+  \right\}}  
+\\ \\ = & 
+\min_\beta{\left\{
+  \sum_{i=1}^{N}{ -y_i\log{ \left[ p_i \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p_i\right] } }
+  \right\}}
+\\ \\ = & 
+\min_\beta{\left\{
+  \sum_{i=1}^{N}{ -y_i\log{ \left[ P(\varepsilon_i < X \beta) \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-P(\varepsilon_i < X \beta)\right] } }
+  \right\}}    
+\end{align}
+}
+$$
+
+:::{.column-margin}
+Recall that $\log{\left(ab\right)} = \log{\left(a\right)} + \log{\left(b\right)}$
+:::
+
+We now - almost - have a well defined problem we can solve! We just need to make an assumption for the distribution of errors $\varepsilon$.
+
+## Assuming errors come from a logistic distribution
+
+The errors are often assumed to be generated from a logistic distribution, with location parameter $\mu=0$ and scale parameter $s=1$:
+
+$$
+\epsilon \sim \text{Logistic}(0,1)
+$$
+
+Why a logistic? Well because is highly similar to a normal distribution, but with fatter tails, so its seen as an approximation that is more robust. Furthermore, it has easier algebra to unpick - which we will show shortly.
+
+```{r, fig.width=9}
+logistic_func <- function(x) {
+  return( exp(-x)*(1+exp(-x))^-2 )
+}
+normal_func <- function(x) {
+  return( (2*pi)^(-0.5) * exp(-0.5 * x^2) )
+}
+x = seq(-10,10,0.1)
+plot(
+  x=x,
+  y=normal_func(x),
+  type='l',col="blue",lty=1
+  )
+lines(
+  x=x,
+  y=logistic_func(x),
+  type='l',col="red",lty=1
+)
+legend(
+  -10,0.4,
+  legend=c(
+    "Normal PDF",
+    "Logistic function"
+    ),
+  col=c("blue","red"),
+  lty=c(1,1)
+  )
+```
+
+For now, you might recall the pdf of the logistic distribution is:
+
+$$
+\displaylines{
+\begin{align}
+f(x,\mu,s) & = 
+\frac{e^{-(x-\mu)/s)}}
+{s(1+e^{-(x-\mu)/s)})^2}
+\\ \\
+\therefore f(x,0,1) & = 
+\frac{e^{-x}}
+{(1+e^{-x})^2}
+\end{align}
+}
+$$
+
+Then we can obtain the CDF by taking the integral of the pdf:
+
+$$
+\displaylines{
+\begin{align}
+\int {f(x,0,1) \,dx} & = 
+\int{
+  \frac{e^{-x}}
+  {(1+e^{-x})^2}
+\,dx}
+\\ \\
+\text{let } u = 1+e^{-x} & \therefore \frac{du}{dx} = -e^{-x} 
+\\
+& \therefore dx = -\frac{du}{e^{-x}}
+\\ \\ \therefore
+\int {f(x,0,1) \,dx} & = 
+\int {\frac{e^{-x}}{u^2} \times -\frac{du}{e^{-x}}}
+\\ & 
+= \int {-u^{-2}\,du}
+\\ 
+& = u^{-1} + c
+\\ 
+& = (1+e^{-x})^{-1} + c
+\end{align}
+}
+$$
+
+And hence, we derive the "logisitic function":
+
+$$
+\displaylines{
+\begin{align}
+p(y_i|X_i) 
+& = p(\varepsilon_i < X_i\beta) \\
+& = (1+e^{-X_i\beta})^{-1} \\
+& = \frac{1}{1+e^{-X_i\beta}} \\ \\
+& = \text{logistic}(X_i\beta)
+\end{align}
+}
+$$
+
+So we now have a mapping of $X$ to $y$, given by $\beta$ and the activation function: the "logistic function".
+
+We can see that this activation function "squashes" all outputs $X\beta \in [-\infty,\infty]$ between 0 and 1:
+
+```{r, fig.width=9}
+logistic_dist <- function(x) {
+  return( (1+exp(-x))^-1 )
+}
+x = seq(-10,10,0.1)
+plot(
+  x=x,
+  y=logistic_dist(x),
+  type='l',col="blue",,lty=1
+  )
+lines(
+  x=seq(-3,3,0.1),
+  y=(1/4)*seq(-3,3,0.1)+0.5,
+  type='l',col="red",lty=2
+)
+legend(
+  -10,1,
+  legend=c(
+    "logistic activation",
+    "linear activation"
+    ),
+  col=c("blue","red"),
+  lty=c(1,2)
+  )
+```
+
+:::{.column-margin}
+For probabilities of between 0.3 to 0.7, we see that the logistic activation function maps very closely to that of a simply linear one. It is only at the more extreme probabilities that they diverge.
+:::
+
+## Linearity in terms of log-odds!
+
+To further intuition, it can also be useful to rearrange the regression in terms of $X_i\beta$.
+
+By doing this, we find that we are fitting a model where the "log-odds" are linearly related to its predictors:
+
+:::{.column-margin}
+Log-odds means taking the logarithm of the probability of success divided by the probability of failure
+:::
+
+$$
+\displaylines{
+\begin{align}
+p(y_i|X_i) = p_i & = \frac{1}{1+e^{-X_i\beta}} \\
+\therefore 1 + e^{-X_i\beta} & = \frac{1}{p_i} \\
+\therefore e^{-X_i\beta} & = \frac{1}{p_i} - \frac{p_i}{p_i} = \frac{1-p_i}{p_i} \\
+\therefore e^{X_i\beta} & = \frac{p_i}{1-p_i} \\
+\therefore \ln{
+  \left\{ \frac{p_i}{1-p_i} \right\}
+  } & = X_i\beta 
+\end{align}
+}
+$$
+
+This is a "link function" - the link between the outcome, $y$, and the linear predictors $X$ via $\beta$. This specific link function is called the "logit function".
+
+And so it is now clear the inverse logit is the logistic function:
+
+$$
+\displaylines{
+\begin{align}
+\text{logit}(x) & = \ln{
+  \left\{ \frac{x}{1-x} \right\}
+  } \\ 
+\text{logistic}(x)
+& = \frac{1}{1+e^{-x}} \\
+& = \text{logit}^{-1}(x) \\
+\end{align}
+}  
+$$
+
+## Rearranging in terms of the outcome
+
+$$
+\displaylines{
+\begin{align}
+P(y|X) = p = &
+-\sum_{i=1}^{N}{ y_i\log{ \left[ 
+  P(\varepsilon_i < X \beta) 
+  \right] } + (1-y_i)\log{ \left[ 
+  1-P(\varepsilon_i < X \beta)
+  \right] } }
+\\ 
+= &
+-\sum_{i=1}^{N}{ y_i\log{ \left[ 
+  (1+e^{-X_i\beta})
+  \right] } + (1-y_i)\log{ \left[ 
+  1-(1+e^{-X_i\beta})
+  \right] } }
+\end{align}
+}
+$$
+
+$$
+\displaylines{
+\begin{align}
+p & = -\sum_{i=1}^{N}{ y_i\log{ \left[ P(\varepsilon_i < X \beta) \right] } } +
+(1-y_i)\log{ \left[ 1-P(\varepsilon_i < X \beta)\right] } \\
+\therefore e^p = & 1
+\end{align}
+}
+$$
+
+## Optimising the coefficients
+
+We minimise the cost function by finding the optimum coefficient values $\beta^*$ so that the partial differential is equal to zero.
+
+$$
+\displaylines{
+\begin{align}
+& \frac{\partial}{\partial \beta_j}p(y|\beta,X) \\ \\
+= &
+\frac{\partial}{\partial \beta_j} \left(
+\sum_{i=1}^{N}{ -y_i\log{ \left[ p_i \right] } } +
+  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p_i\right] } }
+\right) \\ \\
+= &
+\sum_{i=1}^{N}{ y_i
+  \frac{\partial p_i/\partial \beta_j}{p_i}
+  } +
+\sum_{i=1}^{N}{ (1-y_i)
+  \frac{(1-\partial p_i)/\partial \beta_j}{1-p_i}
+  }
+\\ \\ & =0
+\end{align}
+}
+$$
+
+This is as far as we can get without modelling $P(\varepsilon_i < X \beta)$. So let's look at substituting $p_i$ into our first moment condition to derive the optimal coefficients:
+
+$$
+\displaylines{
+\begin{align}
+& \text{Let } P(\varepsilon_i < X \beta) = p_i = (1+e^{-X\beta})^{-1} = \frac{1}{1+e^{-X\beta}} \\
+& \therefore 1-p_i = 1 - (1+e^{-X\beta})^{-1} = \frac{1+e^{-X\beta}}{1+e^{-X\beta}} - \frac{1}{1+e^{-X\beta}} = \frac{e^{-X\beta}}{1+e^{-X\beta}}  \\
+& \therefore \frac{\partial p_i}{\partial \beta_j}
+= -1(1+e^{-X\beta})^{-2} \times -x_je^{-X\beta} = \frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2} \\
+& \therefore \frac{\partial (1-p_i)}{\partial \beta_j} 
+= -1(1+e^{-X\beta})^{-2} \times x_j \times e^{-X\beta} = \frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
+\end{align}
+}
+$$
+
+$$
+\displaylines{
+\begin{align}
+\therefore \frac{\partial}{\partial \beta_j}p(y|\beta,X) & =
+\sum_{i=1}^{N}{ y_i
+  \frac{\partial p_i/\partial \beta_j}{p_i}
+  } +
+\sum_{i=1}^{N}{ (1-y_i)
+  \frac{\partial(1-\partial p_i)/ \beta_j}{1-p_i}
+  } \\
+& =
+\sum_{i=1}^{N}{ y_i
+  \frac{\frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}}{\frac{1}{1+e^{-X\beta}}}
+  } +
+\sum_{i=1}^{N}{ (1-y_i)
+  \frac{\frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}}{\frac{e^{-X\beta}}{1+e^{-X\beta}}}
+  }
+\\
+& =
+\sum_{i=1}^{N}{ -x_jy_i
+  \frac{ e^{-X\beta}}{1+e^{-X\beta}}
+  } +
+\sum_{i=1}^{N}{ x_j(1-y_i)
+  \frac{1}{1+e^{-X\beta}}
+  }    
+\\
+& =
+-x_j\sum_{i=1}^{N}{ 
+  y_i \times  \left(1-P(\varepsilon_i < X \beta)\right) + 
+  (1-y_i) \times   P(\varepsilon_i < X \beta) 
+  
+  }    
+\\
+\end{align}
+}
+$$
+
+Thus there is no closed form solution, but using an optimization 
