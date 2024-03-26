@@ -1,0 +1,243 @@
+---
+title: "Deriving the poisson distribution from binomial"
+author: "Chris Kelly"
+date: '02-28-24'
+categories: [Binomial, Poisson]
+format:
+  html:
+    code-fold: true
+image: '../images/fundamentals_binom_pois.png'    
+---
+
+::: {.callout-tip}
+### What are we exploring?
+How extending the binomial distribution to an infinite number of trials derives the poisson distribution.
+:::
+
+## Defining a binomial problem
+
+Let's look at a metric for the number of failures of an autonomous driving system per 100,000 km driven.
+
+We could model this using the binomial probability density, where we define each km driven as a trial, and an event being a failure occuring during a km driven:
+
+$$
+\displaylines{
+\begin{align}
+P(x) = & 
+{n \choose x} p^x (1-p)^{n-x}
+\\\\ \text{where } n & \text{ is total miles driven}
+\\ \text{and } x & \text{ is number of failures}
+\end{align}
+}
+$$
+
+## Increasing the number of trials to infinity
+
+What happens if we test billions of miles? This is effectively the same as asking what happens if $n \rightarrow \infty$.
+
+Let's also define $\lambda$, the mean number of successes we expect over $n$ trials (the "rate"). This simply means that $\lambda = np$
+
+$$
+\displaylines{
+\begin{align}
+\lim_{n \rightarrow \infty} & 
+{n \choose x} p^x (1-p)^{n-x}
+\\
+= \lim_{n \rightarrow \infty} & 
+{n \choose x} \left( \frac{\lambda}{n} \right)^x \left( 1-\frac{\lambda}{n} \right)^{(n-x)}
+& \because \lambda = np
+\end{align}
+}
+$$
+
+It is helpful to simplify the expression before examining what happens when $n$ tends to infinity. We can split it into four parts (i, ii, iii and iv): 
+
+$$
+\displaylines{
+\begin{align}
+\lim_{n \rightarrow \infty} & 
+{n \choose x} \left( \frac{\lambda}{n} \right)^x \left( 1-\frac{\lambda}{n} \right)^{(n-x)}
+\\
+= \lim_{n \rightarrow \infty} & 
+\frac{n!}{(n-x)! \times x!} \times \left( \frac{\lambda}{n} \right)^x \times \left( 1-\frac{\lambda}{n} \right)^{n} \times \left( 1-\frac{\lambda}{n} \right)^{-x} 
+\\
+= \lim_{n \rightarrow \infty} & 
+\underbrace{
+  \frac{n!}{(n-x)! \times n^x} 
+}_{\text{i}}
+\times 
+\underbrace{
+  \frac{\lambda^x}{x!}
+}_{\text{ii}}
+\times 
+\underbrace{
+  \left( 1-\frac{\lambda}{n} \right)^{n} 
+}_{\text{iii}}
+\times
+\underbrace{
+   \left( 1-\frac{\lambda}{n} \right)^{-x} 
+}_{\text{iv}}
+\end{align}
+}
+$$
+
+We now explore what happens if we extend $n$ towards infinity for each term.
+
+#### Term i
+
+We can expand out the factorial to simplify it:
+$$
+\displaylines{
+\begin{align}
+\frac{n!}{(n-x)! \times (n^x)} 
+& = 
+\frac{
+  n \times (n-1) \times (n-2) \times \ldots \times 
+  (n-x+1) \times \cancel{(n-x)!}
+}{
+  \cancel{(n-x)!} \times (n^x)
+} 
+\\\\ & =
+\frac{n}{n} \times
+\frac{n-1}{n} \times
+\frac{n-2}{n} \times
+\ldots \times
+\frac{n-x-2}{n} \times
+\frac{n-x-1}{n}
+\\\\ & =
+1 \times
+\left( 1 - \frac{1}{n} \right) \times
+\left( 1 - \frac{2}{n} \right) \times
+\ldots \times
+\left( 1 - \frac{x-2}{n} \right) \times
+\left( 1 - \frac{x-1}{n} \right)
+\\\\ & =
+\prod_{i=1}^{x-1}{\left(1-\frac{i}{n}\right)}
+\end{align}
+}
+$$
+
+As similarly to before $n \rightarrow \infty$, then $\frac{i}{n} \rightarrow 0$.
+
+$$
+\displaylines{
+\begin{align}
+\therefore
+\lim_{n \rightarrow \infty}
+\prod_{i=1}^{x-1}{\left(1-\frac{i}{n}\right)}
+& = 1
+\end{align}
+}
+$$
+
+#### Term ii
+
+$$
+\displaylines{
+\begin{align}
+\lim_{n \rightarrow \infty}
+\frac{\lambda^x}{x!}
+& =
+\frac{\lambda^x}{x!}
+& \because
+n \text{ does not blow up}
+\end{align}
+}
+$$
+
+#### Term iii
+
+This is a tricky one! 
+
+$$
+\lim_{n \rightarrow \infty}{ \left[
+    \left(1 + \frac{\lambda}{n} \right)^{n}
+  \right]} = e^\lambda
+$$
+
+*(We go through this derivation in the footnotes for if you do not know it already)*[^1]
+
+#### Term iv
+
+As $n \rightarrow \infty$, then $\frac{\lambda}{n} \rightarrow 0$, so:
+
+$$
+\lim_{n \rightarrow \infty}\left( 1-\frac{\lambda}{n} \right)^{-x} = (1-0)^{-x} = 1
+$$
+
+## Tying it all together
+
+$$
+\displaylines{
+\begin{align}
+& \lim_{n \rightarrow \infty}
+\left[
+  \frac{n!}{(n-x)! \times n^x}
+\times 
+  \frac{\lambda^x}{x!}
+\times 
+  \left( 1-\frac{\lambda}{n} \right)^{n} 
+\times
+   \left( 1-\frac{\lambda}{n} \right)^{-x}
+\right]
+\\ & = 
+1 \times 
+  \frac{\lambda^x}{x!}
+\times 
+  e^\lambda
+\times
+   1
+\\ & = 
+\frac{\lambda^x e^\lambda}{x!}
+\end{align}
+}
+$$
+
+Which is the poisson pdf! 
+
+Fin.
+
+[^1]:
+  Showing $\lim_{n \rightarrow \infty}{ \left[ \left(1 + \frac{x}{n} \right)^{n} \right]} = e^x$:
+$$
+\displaylines{
+\begin{align}
+\text{Let } f(x) & = \ln{(x)} \\
+\therefore f'(x) & = \frac{1}{x} \\
+\text{and } f'(x) & = 
+\lim_{a \rightarrow 0}{ \left[
+  \frac{f(x+a) - f(x)}{(x+a) - x}
+\right] } \\
+& = \lim_{a \rightarrow 0}{ \left[
+  \frac{\ln{(x+a)} - \ln{(x)}}{a}
+\right] }  \\
+& = \lim_{a \rightarrow 0}{ \left[
+  \frac{1}{a}  \ln{\left(\frac{x+a}{x} \right)} 
+\right] } \\
+& = \lim_{a \rightarrow 0}{ \left[
+  \ln{\left(1 + \frac{a}{x} \right)^{\frac{1}{a}}} 
+\right] } \\
+& = \lim_{b \rightarrow \infty}{ \left[
+  \ln{\left(1 + \frac{1}{bx} \right)^{b}} 
+\right] } 
+& \text{where } b = \frac{1}{a}
+\\
+& = \lim_{n \rightarrow \infty}{ \left[
+  \ln{\left(1 + \frac{x}{n} \right)^{n}} 
+\right]^{1/x^2} } 
+& \text{where } n = bx^2
+\\ 
+& = \frac{1}{x} 
+\\
+\therefore 
+e^{1/x} & = \lim_{n \rightarrow \infty}{ \left[
+  \left(1 + \frac{x}{n} \right)^{n}
+\right]^{1/x^2} }
+\\
+\therefore 
+e^{x} & = \lim_{n \rightarrow \infty}{ \left[
+  \left(1 + \frac{x}{n} \right)^{n}
+\right]}
+\end{align}
+}
+$$

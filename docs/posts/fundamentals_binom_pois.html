@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chris Kelly">
-<meta name="dcterms.date" content="2024-02-25">
+<meta name="dcterms.date" content="2024-02-28">
 
-<title>Chris Kelly Blog - Causal-driven Machine Learning</title>
+<title>Chris Kelly Blog - Deriving the poisson distribution from binomial</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,8 +144,12 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Causal-driven Machine Learning</h1>
-                      </div>
+      <h1 class="title">Deriving the poisson distribution from binomial</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">Binomial</div>
+                <div class="quarto-category">Poisson</div>
+              </div>
+                  </div>
   </div>
     
   
@@ -161,7 +165,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 25, 2024</p>
+        <p class="date">February 28, 2024</p>
       </div>
     </div>
     
@@ -180,64 +184,238 @@ window.Quarto = {
 
 
 
-<section id="introduction" class="level3">
-<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
-<p>Classic ML focuses on “association” (Judea Pearl) - which features correlate with a specific response variable. This is about trying to find the correlations between the features and the response (supervised learning).</p>
-<p>Causal ML focuses on the “intervention” - what happens if we take a certain action, such as putting an individual in the treatment or control group.</p>
-<p>Hence the dataset structures look quite different:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../images/causalml_datastructure.png" class="img-fluid figure-img"></p>
-<figcaption>Dataset structure</figcaption>
-</figure>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<ul>
-<li><span class="math inline">\(W\)</span> is a dummy indicator for whether the observation was in treatment or control</li>
-<li><span class="math inline">\(Y\)</span> is the observation, which for individual <span class="math inline">\(i\)</span> is either <span class="math inline">\(Y_i^0\)</span> or <span class="math inline">\(Y_i^1\)</span> depending on <span class="math inline">\(W\)</span></li>
-</ul>
-<p>Thus - a key question in causal ML is how well we can estimate that counterfactual value, the “potential outcome” resulting from an “alternative action” we do not observe. There is no Clarence the angel to tell us the counterfactual</p>
+<div class="callout-title-container flex-fill">
+What are we exploring?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>How extending the binomial distribution to an infinite number of trials derives the poisson distribution.</p>
+</div>
+</div>
+<section id="defining-a-binomial-problem" class="level2">
+<h2 class="anchored" data-anchor-id="defining-a-binomial-problem">Defining a binomial problem</h2>
+<p>Let’s look at a metric for the number of failures of an autonomous driving system per 100,000 km driven.</p>
+<p>We could model this using the binomial probability density, where we define each km driven as a trial, and an event being a failure occuring during a km driven:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+P(x) = &amp;
+{n \choose x} p^x (1-p)^{n-x}
+\\\\ \text{where } n &amp; \text{ is total miles driven}
+\\ \text{and } x &amp; \text{ is number of failures}
+\end{align}
+}
+\]</span></p>
 </section>
-<section id="some-notes" class="level3">
-<h3 class="anchored" data-anchor-id="some-notes">Some notes</h3>
-<p>The causal effect of receiving treatment for a unit <span class="math inline">\(i\)</span> is thus a comparison of potential outcomes, such as <span class="math inline">\(Y_i^1 − Y_i^0\)</span>, the difference between outcomes when units are treated versus not.</p>
-<p>Note that this is the difference in potential outcomes. It is only after the individual is assigned to treatment or control that we observe one - just one - of these outcomes.</p>
-<p>We can formulate the</p>
+<section id="increasing-the-number-of-trials-to-infinity" class="level2">
+<h2 class="anchored" data-anchor-id="increasing-the-number-of-trials-to-infinity">Increasing the number of trials to infinity</h2>
+<p>What happens if we test billions of miles? This is effectively the same as asking what happens if <span class="math inline">\(n \rightarrow \infty\)</span>.</p>
+<p>Let’s also define <span class="math inline">\(\lambda\)</span>, the mean number of successes we expect over <span class="math inline">\(n\)</span> trials (the “rate”). This simply means that <span class="math inline">\(\lambda = np\)</span></p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\lim_{n \rightarrow \infty} &amp;
+{n \choose x} p^x (1-p)^{n-x}
+\\
+= \lim_{n \rightarrow \infty} &amp;
+{n \choose x} \left( \frac{\lambda}{n} \right)^x \left( 1-\frac{\lambda}{n} \right)^{(n-x)}
+&amp; \because \lambda = np
+\end{align}
+}
+\]</span></p>
+<p>It is helpful to simplify the expression before examining what happens when <span class="math inline">\(n\)</span> tends to infinity. We can split it into four parts (i, ii, iii and iv):</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\lim_{n \rightarrow \infty} &amp;
+{n \choose x} \left( \frac{\lambda}{n} \right)^x \left( 1-\frac{\lambda}{n} \right)^{(n-x)}
+\\
+= \lim_{n \rightarrow \infty} &amp;
+\frac{n!}{(n-x)! \times x!} \times \left( \frac{\lambda}{n} \right)^x \times \left( 1-\frac{\lambda}{n} \right)^{n} \times \left( 1-\frac{\lambda}{n} \right)^{-x}
+\\
+= \lim_{n \rightarrow \infty} &amp;
+\underbrace{
+  \frac{n!}{(n-x)! \times n^x}
+}_{\text{i}}
+\times
+\underbrace{
+  \frac{\lambda^x}{x!}
+}_{\text{ii}}
+\times
+\underbrace{
+  \left( 1-\frac{\lambda}{n} \right)^{n}
+}_{\text{iii}}
+\times
+\underbrace{
+   \left( 1-\frac{\lambda}{n} \right)^{-x}
+}_{\text{iv}}
+\end{align}
+}
+\]</span></p>
+<p>We now explore what happens if we extend <span class="math inline">\(n\)</span> towards infinity for each term.</p>
+<section id="term-i" class="level4">
+<h4 class="anchored" data-anchor-id="term-i">Term i</h4>
+<p>We can expand out the factorial to simplify it: <span class="math display">\[
+\displaylines{
+\begin{align}
+\frac{n!}{(n-x)! \times (n^x)}
+&amp; =
+\frac{
+  n \times (n-1) \times (n-2) \times \ldots \times
+  (n-x+1) \times \cancel{(n-x)!}
+}{
+  \cancel{(n-x)!} \times (n^x)
+}
+\\\\ &amp; =
+\frac{n}{n} \times
+\frac{n-1}{n} \times
+\frac{n-2}{n} \times
+\ldots \times
+\frac{n-x-2}{n} \times
+\frac{n-x-1}{n}
+\\\\ &amp; =
+1 \times
+\left( 1 - \frac{1}{n} \right) \times
+\left( 1 - \frac{2}{n} \right) \times
+\ldots \times
+\left( 1 - \frac{x-2}{n} \right) \times
+\left( 1 - \frac{x-1}{n} \right)
+\\\\ &amp; =
+\prod_{i=1}^{x-1}{\left(1-\frac{i}{n}\right)}
+\end{align}
+}
+\]</span></p>
+<p>As similarly to before <span class="math inline">\(n \rightarrow \infty\)</span>, then <span class="math inline">\(\frac{i}{n} \rightarrow 0\)</span>.</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\therefore
+\lim_{n \rightarrow \infty}
+\prod_{i=1}^{x-1}{\left(1-\frac{i}{n}\right)}
+&amp; = 1
+\end{align}
+}
+\]</span></p>
 </section>
-<section id="randomized-treatment-assignment" class="level3">
-<h3 class="anchored" data-anchor-id="randomized-treatment-assignment">Randomized treatment assignment</h3>
-<p>Randomisation at a large scale allows us to ensure three key assumptions are met:</p>
-<ol type="1">
-<li>Positivity</li>
-<li>Stable Unit Treatment Value Assumption (SUTVA)</li>
-<li>Common Support</li>
+<section id="term-ii" class="level4">
+<h4 class="anchored" data-anchor-id="term-ii">Term ii</h4>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\lim_{n \rightarrow \infty}
+\frac{\lambda^x}{x!}
+&amp; =
+\frac{\lambda^x}{x!}
+&amp; \because
+n \text{ does not blow up}
+\end{align}
+}
+\]</span></p>
+</section>
+<section id="term-iii" class="level4">
+<h4 class="anchored" data-anchor-id="term-iii">Term iii</h4>
+<p>This is a tricky one!</p>
+<p><span class="math display">\[
+\lim_{n \rightarrow \infty}{ \left[
+    \left(1 + \frac{\lambda}{n} \right)^{n}
+  \right]} = e^\lambda
+\]</span></p>
+<p><em>(We go through this derivation in the footnotes for if you do not know it already)</em><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+</section>
+<section id="term-iv" class="level4">
+<h4 class="anchored" data-anchor-id="term-iv">Term iv</h4>
+<p>As <span class="math inline">\(n \rightarrow \infty\)</span>, then <span class="math inline">\(\frac{\lambda}{n} \rightarrow 0\)</span>, so:</p>
+<p><span class="math display">\[
+\lim_{n \rightarrow \infty}\left( 1-\frac{\lambda}{n} \right)^{-x} = (1-0)^{-x} = 1
+\]</span></p>
+</section>
+</section>
+<section id="tying-it-all-together" class="level2">
+<h2 class="anchored" data-anchor-id="tying-it-all-together">Tying it all together</h2>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+&amp; \lim_{n \rightarrow \infty}
+\left[
+  \frac{n!}{(n-x)! \times n^x}
+\times
+  \frac{\lambda^x}{x!}
+\times
+  \left( 1-\frac{\lambda}{n} \right)^{n}
+\times
+   \left( 1-\frac{\lambda}{n} \right)^{-x}
+\right]
+\\ &amp; =
+1 \times
+  \frac{\lambda^x}{x!}
+\times
+  e^\lambda
+\times
+   1
+\\ &amp; =
+\frac{\lambda^x e^\lambda}{x!}
+\end{align}
+}
+\]</span></p>
+<p>Which is the poisson pdf!</p>
+<p>Fin.</p>
+
+
+</section>
+
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>Showing <span class="math inline">\(\lim_{n \rightarrow \infty}{ \left[ \left(1 + \frac{x}{n} \right)^{n} \right]} = e^x\)</span>: <span class="math display">\[
+\displaylines{
+\begin{align}
+\text{Let } f(x) &amp; = \ln{(x)} \\
+\therefore f'(x) &amp; = \frac{1}{x} \\
+\text{and } f'(x) &amp; =
+\lim_{a \rightarrow 0}{ \left[
+  \frac{f(x+a) - f(x)}{(x+a) - x}
+\right] } \\
+&amp; = \lim_{a \rightarrow 0}{ \left[
+  \frac{\ln{(x+a)} - \ln{(x)}}{a}
+\right] }  \\
+&amp; = \lim_{a \rightarrow 0}{ \left[
+  \frac{1}{a}  \ln{\left(\frac{x+a}{x} \right)}
+\right] } \\
+&amp; = \lim_{a \rightarrow 0}{ \left[
+  \ln{\left(1 + \frac{a}{x} \right)^{\frac{1}{a}}}
+\right] } \\
+&amp; = \lim_{b \rightarrow \infty}{ \left[
+  \ln{\left(1 + \frac{1}{bx} \right)^{b}}
+\right] }
+&amp; \text{where } b = \frac{1}{a}
+\\
+&amp; = \lim_{n \rightarrow \infty}{ \left[
+  \ln{\left(1 + \frac{x}{n} \right)^{n}}
+\right]^{1/x^2} }
+&amp; \text{where } n = bx^2
+\\
+&amp; = \frac{1}{x}
+\\
+\therefore
+e^{1/x} &amp; = \lim_{n \rightarrow \infty}{ \left[
+  \left(1 + \frac{x}{n} \right)^{n}
+\right]^{1/x^2} }
+\\
+\therefore
+e^{x} &amp; = \lim_{n \rightarrow \infty}{ \left[
+  \left(1 + \frac{x}{n} \right)^{n}
+\right]}
+\end{align}
+}
+\]</span><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
-<p>In general, we find four critical assumptions behind causal inference:</p>
-<p>https://www.linkedin.com/pulse/critical-causal-inference-assumptions-jason-shafrin</p>
-<ol type="1">
-<li>SUTVA: no network effects (no contagion or spillovers)</li>
-<li>Consistency: the potential outcome matches the actual outcome relevant for that treatment effect</li>
-<li>Ignorability: after conditioning on relevant observed confounders (X), the treatment assignment is independent of outcomes</li>
-<li>Positivity: everyone has equal chance of getting the treatment.</li>
-</ol>
-</section>
-<section id="positivity" class="level3">
-<h3 class="anchored" data-anchor-id="positivity">Positivity</h3>
-<p>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8492528/</p>
-<p>In order to estimate conditional average treatment effects, we need all the combinations of relevant covariates present in the population to be sufficiently represented in both the treatment and control groups.</p>
-<p>If this is not the case, we say there is “nonoverlap”. This may result due to two reasons:</p>
-<ul>
-<li>Structural/non-random allocation of treatment/control: one group could not (or always will) receieve the treatment</li>
-<li>Small sample size: meaning that not enough data was collected to validate</li>
-</ul>
-<p>Random non-positivity is likely for continuous variables, since they take such a large range of values. We usually need to assume that its okay to borrow info from sufficiently similar people to estimate CATE (a.k.a interpolation). Structural is a far bigger issue, which really means those individuals have to be excluded.</p>
-<p>One way of detecting nonoverlap is to build a model that predicts whether an individual received the treatment or not, as a function of its covariates. If the model is highly predictable - i.e.&nbsp;a lot of individuals having predicted probabilities of receiving treatment near 0 or 1, rather than 0.5 - then we get some indication that overlap in those covariate combinations is low.</p>
-<p>This might seem non-intuitive for those coming from an ML background - we want the model to be a bad predictor! In other words - if the features that influence the outcome also influence treatment assignment greatly, the propensity model will pick this up and</p>
-<p>The positivity assumption requires that all treatments of interest be observed in every patient subgroup. Violations of this assumption are indicated by nonoverlap in the data in the sense that patients with certain covariate combinations are not observed to receive a treatment of interest, which may arise from contraindications to treatment or small sample size. In this paper, we emphasize the importance and implications of this often-overlooked assumption. Further, we elaborate on the challenges nonoverlap poses to estimation and inference and discuss previously proposed methods. We distinguish between structural and practical violations and provide insight into which methods are appropriate for each. To demonstrate alternative approaches and relevant considerations (including how overlap is defined and the target population to which results may be generalized) when addressing positivity violations, we employ an electronic health record-derived data set to assess the effects of metformin on colon cancer recurrence among diabetic patients.</p>
-
-
-</section>
-
-</main> <!-- /main -->
+</section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

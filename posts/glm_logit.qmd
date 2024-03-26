@@ -1,22 +1,21 @@
 ---
-title: "Deriving Logistic Regression"
+title: "Logistic Regression"
 author: "Chris Kelly"
-date: '02-21-25'
+date: '02-25-24'
 categories: [Maximum Likelihood, Generalized Linear Models]
 format:
   html:
     code-fold: true
     toc: true
 image: '../images/glm_logistic.png'
-draft: true
 ---
 
 ::: {.callout-tip}
 ### What are we exploring?
-Deriving coefficients to predict the likelihood of a binary outcome using maximum likelihood estimation and the logit link funciton.
+Modelling bernoulli probabilities using maximum likelihood estimation and the logit link function.
 :::
 
-## Latent variable model
+## A latent variable model
 
 Imagine a basketball player is taking free throws.
 
@@ -124,7 +123,7 @@ p(y|X)
 }
 $$
 
-In practice, it is common to minimize the negative log-likelihood, which is shown to be equivalent to maximising the likelihood directly:
+In practice, it is common to minimize the negative log-likelihood, which is shown to be equivalent to maximising the likelihood directly (since the logarithm is a monotonic function):
 
 $$
 \displaylines{
@@ -338,8 +337,7 @@ $$
 }  
 $$
 
-## Rearranging in terms of the outcome
-
+<!-- 
 $$
 \displaylines{
 \begin{align}
@@ -358,17 +356,8 @@ P(y|X) = p = &
   \right] } }
 \end{align}
 }
-$$
-
-$$
-\displaylines{
-\begin{align}
-p & = -\sum_{i=1}^{N}{ y_i\log{ \left[ P(\varepsilon_i < X \beta) \right] } } +
-(1-y_i)\log{ \left[ 1-P(\varepsilon_i < X \beta)\right] } \\
-\therefore e^p = & 1
-\end{align}
-}
-$$
+$$ 
+-->
 
 ## Optimising the coefficients
 
@@ -390,22 +379,26 @@ $$
 \sum_{i=1}^{N}{ (1-y_i)
   \frac{(1-\partial p_i)/\partial \beta_j}{1-p_i}
   }
-\\ \\ & =0
 \end{align}
 }
 $$
 
-This is as far as we can get without modelling $P(\varepsilon_i < X \beta)$. So let's look at substituting $p_i$ into our first moment condition to derive the optimal coefficients:
+This is as far as we can get without modelling $P(\varepsilon_i < X \beta)$. So let's look at substituting $p_i$, $1-p_i$, $\partial p_i/\partial \beta$ and $\partial (1-p_i)/\partial \beta$ into our first moment condition to derive the optimal coefficients:
 
 $$
 \displaylines{
 \begin{align}
-& \text{Let } P(\varepsilon_i < X \beta) = p_i = (1+e^{-X\beta})^{-1} = \frac{1}{1+e^{-X\beta}} \\
-& \therefore 1-p_i = 1 - (1+e^{-X\beta})^{-1} = \frac{1+e^{-X\beta}}{1+e^{-X\beta}} - \frac{1}{1+e^{-X\beta}} = \frac{e^{-X\beta}}{1+e^{-X\beta}}  \\
-& \therefore \frac{\partial p_i}{\partial \beta_j}
-= -1(1+e^{-X\beta})^{-2} \times -x_je^{-X\beta} = \frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2} \\
-& \therefore \frac{\partial (1-p_i)}{\partial \beta_j} 
-= -1(1+e^{-X\beta})^{-2} \times x_j \times e^{-X\beta} = \frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
+p_i & = P(\varepsilon_i < X \beta) = (1+e^{-X\beta})^{-1}
+\\ & = \frac{1}{1+e^{-X\beta}} 
+\\
+\therefore 1-p_i & = 1 - (1+e^{-X\beta})^{-1} = \frac{1+e^{-X\beta}}{1+e^{-X\beta}} - \frac{1}{1+e^{-X\beta}} 
+\\ & = \frac{e^{-X\beta}}{1+e^{-X\beta}}  \\
+\therefore \frac{\partial p_i}{\partial \beta_j}
+& = -1(1+e^{-X\beta})^{-2} \times -x_je^{-X\beta} 
+\\ & = \frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2} 
+\\
+\therefore \frac{\partial (1-p_i)}{\partial \beta_j} & = -1(1+e^{-X\beta})^{-2} \times x_j \times e^{-X\beta} 
+\\ & = \frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
 \end{align}
 }
 $$
@@ -438,13 +431,14 @@ $$
 \\
 & =
 -x_j\sum_{i=1}^{N}{ 
-  y_i \times  \left(1-P(\varepsilon_i < X \beta)\right) + 
-  (1-y_i) \times   P(\varepsilon_i < X \beta) 
-  
+  y_i \times  \left(1-p_i\right) + 
+  (1-y_i) \times p_i
   }    
 \\
 \end{align}
 }
 $$
 
-Thus there is no closed form solution, but using an optimization 
+Thus there is no closed form solution like OLS. However, given the cost function is convex, using an optimization like Newton Raphson will find the optimum coefficients.
+
+Fin.

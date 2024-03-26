@@ -49,7 +49,7 @@ https://www.linkedin.com/pulse/critical-causal-inference-assumptions-jason-shafr
 1. SUTVA: no network effects (no contagion or spillovers)
 2. Consistency: the potential outcome matches the actual outcome relevant for that treatment effect
 3. Ignorability: after conditioning on relevant observed confounders (X), the treatment assignment is independent of outcomes
-4. Positivity: everyone has some chance of getting the treatment.
+4. Positivity: everyone has equal chance of getting the treatment.
 
 
 ### Positivity

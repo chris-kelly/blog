@@ -1,13 +1,14 @@
 ---
 title: "Deriving Logistic Regression Coefficients"
 author: "Chris Kelly"
-date: '02-21-25'
+date: '02-21-24'
 categories: [Maximum Likelihood, Generalized Linear Models]
 format:
   html:
     code-fold: true
     toc: true
 image: '../images/glm_logistic.png'
+draft: true
 ---
 
 ::: {.callout-tip}

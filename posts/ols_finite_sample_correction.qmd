@@ -1,7 +1,7 @@
 ---
 title: "Estimating population variance from a sample"
 author: "Chris Kelly"
-date: '02-21-25'
+date: '02-26-24'
 categories: [Fundamentals, Bias]
 format:
   html:

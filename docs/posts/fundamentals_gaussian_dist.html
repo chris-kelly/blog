@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2024-02-25">
 
-<title>Chris Kelly Blog - Causal-driven Machine Learning</title>
+<title>Chris Kelly Blog - Deriving the normal distribution</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,7 +144,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Causal-driven Machine Learning</h1>
+      <h1 class="title">Deriving the normal distribution</h1>
                       </div>
   </div>
     
@@ -180,62 +180,195 @@ window.Quarto = {
 
 
 
-<section id="introduction" class="level3">
-<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
-<p>Classic ML focuses on “association” (Judea Pearl) - which features correlate with a specific response variable. This is about trying to find the correlations between the features and the response (supervised learning).</p>
-<p>Causal ML focuses on the “intervention” - what happens if we take a certain action, such as putting an individual in the treatment or control group.</p>
-<p>Hence the dataset structures look quite different:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../images/causalml_datastructure.png" class="img-fluid figure-img"></p>
-<figcaption>Dataset structure</figcaption>
-</figure>
-</div>
+<p>Imagine two random variables, <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, are independently and identically generated from a distribution with identical population parameters (mean of zero and finite variance).</p>
+<p>The probability of any two points being found in any region equidistant from the origin should be same (radially symmetric). So the probability density function <span class="math inline">\(\omega\)</span> is a function of the radius <span class="math inline">\(r\)</span>.</p>
+<p><span class="math display">\[
+\omega (r) \times dA
+\]</span></p>
+<p>Moreover, due to the fact that <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are independent, we know that the probability of both co-occuring is the two individual probabilities (pdfs) multiplied together:</p>
+<p><span class="math display">\[
+f(x) \times f(y) \times dA
+\]</span></p>
+<p>Hence we can equate these:</p>
+<p><span class="math display">\[
+\omega (r) = f(x) \times f(y)
+\]</span></p>
+<p>Since <span class="math inline">\(r\)</span> is the hypotenuse of a right-angled triangle, we know from pythagoras that <span class="math inline">\(r = \sqrt{x^2+y^2}\)</span>:</p>
+<p><span class="math display">\[
+\omega (\sqrt{x^2+y^2}) = f(x) \times f(y)
+\]</span></p>
+<p>Now we want to reduce some terms.</p>
+<p>If we let <span class="math inline">\(y=0\)</span>, and plug that into the pdf <span class="math inline">\(f(.)\)</span>, we get a constant <span class="math inline">\(\lambda\)</span>, i.e.&nbsp;<span class="math inline">\(f(0) = \lambda\)</span>. We use this to find that the <span class="math inline">\(\omega\)</span> pdf is the <span class="math inline">\(f(.)\)</span> pdf multiplied by <span class="math inline">\(\lambda\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\text{Let } y &amp; =0 \\
+\therefore f(y) &amp; = f(0) = \lambda \\
+\therefore \underbrace{\omega(\sqrt{x^2+y^2})}_{\omega(x)} &amp; = f(x) \times
+\underbrace{f(y)}_{\lambda} \\
+\therefore \omega(x) &amp; = \lambda f(x)
+\end{align}
+}
+\]</span></p>
+<p>And now we can drop the <span class="math inline">\(\omega\)</span> (and replace with a constant <span class="math inline">\(\lambda\)</span>).</p>
+<p>Let’s now define a new function, <span class="math inline">\(g(x) = f(x)/\lambda\)</span>, to simplify this a bit:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+&amp; f(x) \times f(y) = \lambda f(\sqrt{x^2+y^2}) &amp; &amp; \div \lambda^2
+\\
+\therefore &amp;
+\frac{f(x)}{\lambda} \times
+\frac{f(y)}{\lambda} =  \frac{f(\sqrt{x^2+y^2})}{\lambda} \\
+= &amp; g(x) \times g(y) = g(\sqrt{x^2+y^2})
+\end{align}
+}
+\]</span></p>
+<p>An exponential function with base <span class="math inline">\(b\)</span> fits this criteria (<span class="math inline">\(f(x) = b^x\)</span>), since multiplying each pdf together is the same as raising it to the sum of the powers.</p>
+<p><span class="math display">\[
+b^{x^2} \times b^{y^2} = b^{\sqrt{x^2+y^2}}
+\]</span></p>
+<p>Note that for any base <span class="math inline">\(b\)</span>, we can reformulate it in terms of the natural number <span class="math inline">\(e\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+b^{x^2} &amp; = e^{kx^2} \\
+\therefore \ln{b^{x^2}} &amp; = kx^2 \\
+\therefore x^2 \ln{b} &amp; = kx^2 \\
+\therefore \ln{b} &amp; = k \\
+\end{align}
+}
+\]</span></p>
+<p>So setting <span class="math inline">\(g(x) = e^{kx^2}\)</span> satisfies this:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+e^{kx^2} \times
+e^{ky^2} &amp; =
+e^{k \left(\sqrt{x^2+y^2} \right)^2}
+\\
+e^{kx^2} \times
+e^{ky^2} &amp; =
+e^{kx^2+ky^2}
+\end{align}
+}
+\]</span></p>
+<p>And hence we can determine that:</p>
+<p><span class="math display">\[
+\lambda g(x) = \lambda e^{kx^2} = f(x)
+\]</span></p>
+<p>We also know that <span class="math inline">\(k\)</span> must be negative. The reasoning behind this:</p>
 <ul>
-<li><span class="math inline">\(W\)</span> is a dummy indicator for whether the observation was in treatment or control</li>
-<li><span class="math inline">\(Y\)</span> is the observation, which for individual <span class="math inline">\(i\)</span> is either <span class="math inline">\(Y_i^0\)</span> or <span class="math inline">\(Y_i^1\)</span> depending on <span class="math inline">\(W\)</span></li>
+<li>The probability density must diminish with large values <span class="math inline">\(|x|\)</span> (finite variance)</li>
+<li><span class="math inline">\(x^2\)</span> is surely positive, so <span class="math inline">\(k\)</span> must be negative (so that it goes into the denominator)</li>
 </ul>
-<p>Thus - a key question in causal ML is how well we can estimate that counterfactual value, the “potential outcome” resulting from an “alternative action” we do not observe. There is no Clarence the angel to tell us the counterfactual</p>
-</section>
-<section id="some-notes" class="level3">
-<h3 class="anchored" data-anchor-id="some-notes">Some notes</h3>
-<p>The causal effect of receiving treatment for a unit <span class="math inline">\(i\)</span> is thus a comparison of potential outcomes, such as <span class="math inline">\(Y_i^1 − Y_i^0\)</span>, the difference between outcomes when units are treated versus not.</p>
-<p>Note that this is the difference in potential outcomes. It is only after the individual is assigned to treatment or control that we observe one - just one - of these outcomes.</p>
-<p>We can formulate the</p>
-</section>
-<section id="randomized-treatment-assignment" class="level3">
-<h3 class="anchored" data-anchor-id="randomized-treatment-assignment">Randomized treatment assignment</h3>
-<p>Randomisation at a large scale allows us to ensure three key assumptions are met:</p>
-<ol type="1">
-<li>Positivity</li>
-<li>Stable Unit Treatment Value Assumption (SUTVA)</li>
-<li>Common Support</li>
-</ol>
-<p>In general, we find four critical assumptions behind causal inference:</p>
-<p>https://www.linkedin.com/pulse/critical-causal-inference-assumptions-jason-shafrin</p>
-<ol type="1">
-<li>SUTVA: no network effects (no contagion or spillovers)</li>
-<li>Consistency: the potential outcome matches the actual outcome relevant for that treatment effect</li>
-<li>Ignorability: after conditioning on relevant observed confounders (X), the treatment assignment is independent of outcomes</li>
-<li>Positivity: everyone has equal chance of getting the treatment.</li>
-</ol>
-</section>
-<section id="positivity" class="level3">
-<h3 class="anchored" data-anchor-id="positivity">Positivity</h3>
-<p>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8492528/</p>
-<p>In order to estimate conditional average treatment effects, we need all the combinations of relevant covariates present in the population to be sufficiently represented in both the treatment and control groups.</p>
-<p>If this is not the case, we say there is “nonoverlap”. This may result due to two reasons:</p>
-<ul>
-<li>Structural/non-random allocation of treatment/control: one group could not (or always will) receieve the treatment</li>
-<li>Small sample size: meaning that not enough data was collected to validate</li>
-</ul>
-<p>Random non-positivity is likely for continuous variables, since they take such a large range of values. We usually need to assume that its okay to borrow info from sufficiently similar people to estimate CATE (a.k.a interpolation). Structural is a far bigger issue, which really means those individuals have to be excluded.</p>
-<p>One way of detecting nonoverlap is to build a model that predicts whether an individual received the treatment or not, as a function of its covariates. If the model is highly predictable - i.e.&nbsp;a lot of individuals having predicted probabilities of receiving treatment near 0 or 1, rather than 0.5 - then we get some indication that overlap in those covariate combinations is low.</p>
-<p>This might seem non-intuitive for those coming from an ML background - we want the model to be a bad predictor! In other words - if the features that influence the outcome also influence treatment assignment greatly, the propensity model will pick this up and</p>
-<p>The positivity assumption requires that all treatments of interest be observed in every patient subgroup. Violations of this assumption are indicated by nonoverlap in the data in the sense that patients with certain covariate combinations are not observed to receive a treatment of interest, which may arise from contraindications to treatment or small sample size. In this paper, we emphasize the importance and implications of this often-overlooked assumption. Further, we elaborate on the challenges nonoverlap poses to estimation and inference and discuss previously proposed methods. We distinguish between structural and practical violations and provide insight into which methods are appropriate for each. To demonstrate alternative approaches and relevant considerations (including how overlap is defined and the target population to which results may be generalized) when addressing positivity violations, we employ an electronic health record-derived data set to assess the effects of metformin on colon cancer recurrence among diabetic patients.</p>
+<p>So let’s put in the term <span class="math inline">\(k=-m^2\)</span>, to ensure it is a negative number:</p>
+<p><span class="math display">\[
+\therefore f(x) = \lambda e^{-m^2x^2}
+\]</span></p>
+<p>We also know that the integral between <span class="math inline">\(-\infty\)</span> and <span class="math inline">\(\infty\)</span> must equal one, since this is the full range of values that <span class="math inline">\(x\)</span> could take.</p>
+<p><span class="math display">\[
+\lambda \int_{-\infty}^{\infty}{e^{-m^2x^2}}dx = 1
+\]</span></p>
+<p>Now integrate by parts:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\\
+&amp; \text{Let } u = mx \\
+&amp; \therefore \frac{du}{dx} = m \\
+&amp; \therefore dx = \frac{1}{m}du \\ \\
+&amp; \Rightarrow
+\lambda \int_{-\infty}^{\infty}{e^{-u^2}} \frac{du}{m}
+= \frac{\lambda}{m} \int_{-\infty}^{\infty}{e^{-u^2}} du
+= 1 \\
+&amp; \Rightarrow
+\frac{\lambda}{m} \sqrt{\pi} = 1 &amp; \because !!!
+\\\\
+&amp; \therefore m = \lambda \sqrt{\pi}
+\\\\
+&amp; \therefore f(x) = \lambda e^{-\pi \lambda^2x^2}
+\end{align}
+}
+\]</span></p>
+<p>At <span class="math inline">\(x=0\)</span>, we thus find that the height of the pdf is <span class="math inline">\(\lambda\)</span>. Given the pdf is symmetric around zero, we know that the higher the pdf, the smaller the variance will be - in other words, the variance must be a function of <span class="math inline">\(\lambda\)</span>.</p>
+<p>So now we plug <span class="math inline">\(\lambda e^{-\pi \lambda^2x^2}\)</span> into the standard calculation for the variance of any pdf:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\sigma^2
+&amp; = \int_{-\infty}^{\infty}{(x-\mu)^2 \times f(x) \, dx} \\
+&amp; = \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx}
+\end{align}
+}
+\]</span></p>
+<p>Then integrate by parts, using the form <span class="math inline">\(\int{u \, dv} = uv - \int{v \, du}\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\text{Let } u &amp; = x \\
+\therefore du &amp; = dx  &amp; \because \frac{du}{dx} = 1 \\
+\text{Let } dv &amp; = x e^{-\pi \lambda^2 x^2} dx \\
+\therefore v &amp; = \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+\\ \\
+\Rightarrow
+\sigma^2 &amp; =
+\lambda \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx}
+= \lambda
+\int_{-\infty}^{\infty}{u \, dv}
+\\ &amp; = \lambda \left[ uv -\int_{-\infty}^{\infty}{v \, dv} \right]
+\\
+&amp; = \lambda \left[ x\left(
+  \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+  \right) -
+  \int_{-\infty}^{\infty}{
+    \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+    \, dx}
+  \right]
+\end{align}
+}
+\]</span></p>
+<p>Now as <span class="math inline">\(x \rightarrow \infty\)</span>, <span class="math inline">\(e^{-\pi \lambda^2 x^2}\rightarrow 0\)</span>, it drops out.</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\sigma^2
+&amp; = \lambda \left[ \cancel{ x\left(
+  \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+  \right) } -
+  \int_{-\infty}^{\infty}{
+    \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+    \, dx}
+  \right]
+\\ &amp; = \lambda
+  \int_{-\infty}^{\infty}{
+    \frac{1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+    \, dx}
+\\ &amp; = \frac{1}{2 \pi \lambda^2}
+  \int_{-\infty}^{\infty}{
+    \lambda e^{-\pi \lambda^2 x^2}
+    \, dx}
+\\ &amp; = \frac{1}{2 \pi \lambda^2}
+  \int_{-\infty}^{\infty}{f(x) \, dx}
+\\ &amp; = \frac{1}{2 \pi \lambda^2}    
+\\
+\\
+\therefore \lambda &amp; = \frac{1}{\sigma\sqrt{2\pi}}
+\end{align}
+}
+\]</span></p>
+<p>And now we can plug <span class="math inline">\(\lambda\)</span> back into <span class="math inline">\(f(x)\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+f(x) &amp; = \lambda e^{-\pi \lambda^2x^2}
+\\ &amp; = \frac{1}{\sigma\sqrt{2\pi}} e^{\frac{-x^2}{2\sigma^2}}
+\end{align}
+}
+\]</span></p>
+<p>Which gives us the normal distribution (where <span class="math inline">\(\mu=0\)</span>).</p>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

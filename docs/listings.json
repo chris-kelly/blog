@@ -2,8 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/fundamentals_binom_pois.html",
       "/posts/ols_finite_sample_correction.html",
-      "/posts/glm_logistic.html",
+      "/posts/glm_logit.html",
       "/posts/bayes_regularization.html",
       "/posts/mle_ols_normal.html",
       "/posts/ols_sandwich_estimators.html",

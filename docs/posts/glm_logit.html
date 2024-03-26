@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chris Kelly">
-<meta name="dcterms.date" content="2025-02-21">
+<meta name="dcterms.date" content="2024-02-25">
 
-<title>Chris Kelly Blog - Deriving Logistic Regression</title>
+<title>Chris Kelly Blog - Logistic Regression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -178,7 +178,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Deriving Logistic Regression</h1>
+      <h1 class="title">Logistic Regression</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">Maximum Likelihood</div>
                 <div class="quarto-category">Generalized Linear Models</div>
@@ -199,7 +199,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 21, 2025</p>
+        <p class="date">February 25, 2024</p>
       </div>
     </div>
     
@@ -215,12 +215,11 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#latent-variable-model" id="toc-latent-variable-model" class="nav-link active" data-scroll-target="#latent-variable-model">Latent variable model</a></li>
+  <li><a href="#a-latent-variable-model" id="toc-a-latent-variable-model" class="nav-link active" data-scroll-target="#a-latent-variable-model">A latent variable model</a></li>
   <li><a href="#the-bernoulli-pmf" id="toc-the-bernoulli-pmf" class="nav-link" data-scroll-target="#the-bernoulli-pmf">The Bernoulli PMF</a></li>
   <li><a href="#maximum-likelihood-estimation" id="toc-maximum-likelihood-estimation" class="nav-link" data-scroll-target="#maximum-likelihood-estimation">Maximum Likelihood Estimation</a></li>
   <li><a href="#assuming-errors-come-from-a-logistic-distribution" id="toc-assuming-errors-come-from-a-logistic-distribution" class="nav-link" data-scroll-target="#assuming-errors-come-from-a-logistic-distribution">Assuming errors come from a logistic distribution</a></li>
   <li><a href="#linearity-in-terms-of-log-odds" id="toc-linearity-in-terms-of-log-odds" class="nav-link" data-scroll-target="#linearity-in-terms-of-log-odds">Linearity in terms of log-odds!</a></li>
-  <li><a href="#rearranging-in-terms-of-the-outcome" id="toc-rearranging-in-terms-of-the-outcome" class="nav-link" data-scroll-target="#rearranging-in-terms-of-the-outcome">Rearranging in terms of the outcome</a></li>
   <li><a href="#optimising-the-coefficients" id="toc-optimising-the-coefficients" class="nav-link" data-scroll-target="#optimising-the-coefficients">Optimising the coefficients</a></li>
   </ul>
 </nav>
@@ -242,11 +241,11 @@ What are we exploring?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Deriving coefficients to predict the likelihood of a binary outcome using maximum likelihood estimation and the logit link funciton.</p>
+<p>Modelling bernoulli probabilities using maximum likelihood estimation and the logit link funciton.</p>
 </div>
 </div>
-<section id="latent-variable-model" class="level2">
-<h2 class="anchored" data-anchor-id="latent-variable-model">Latent variable model</h2>
+<section id="a-latent-variable-model" class="level2">
+<h2 class="anchored" data-anchor-id="a-latent-variable-model">A latent variable model</h2>
 <p>Imagine a basketball player is taking free throws.</p>
 <p>For each trial <span class="math inline">\(i\)</span> (a freethrow attempt), we observe the outcome <span class="math inline">\(y_i\)</span> as being 1 if there is a success (i.e.&nbsp;the freethrow is made), or 0 if it is a failure (a miss).</p>
 <p>When the player takes the freethrow, there are exogenous features <span class="math inline">\(X_i\)</span> that influence their likelihood of making it (e.g.&nbsp;whether they are home or away). Also there is some randomness, <span class="math inline">\(\varepsilon_i\)</span> that is unpredictable: a 99% accurate shooter still has a 1% chance of missing.</p>
@@ -338,7 +337,7 @@ p(y|X)
 \end{align}
 }
 \]</span></p>
-<p>In practice, it is common to minimize the negative log-likelihood, which is shown to be equivalent to maximising the likelihood directly:</p>
+<p>In practice, it is common to minimize the negative log-likelihood, which is shown to be equivalent to maximising the likelihood directly (since the logarithm is a monotonic function):</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
@@ -549,37 +548,27 @@ p(y_i|X_i) = p_i &amp; = \frac{1}{1+e^{-X_i\beta}} \\
 \end{align}
 }  
 \]</span></p>
-</section>
-<section id="rearranging-in-terms-of-the-outcome" class="level2">
-<h2 class="anchored" data-anchor-id="rearranging-in-terms-of-the-outcome">Rearranging in terms of the outcome</h2>
-<p><span class="math display">\[
+<!-- 
+$$
 \displaylines{
 \begin{align}
-P(y|X) = p = &amp;
--\sum_{i=1}^{N}{ y_i\log{ \left[
-  P(\varepsilon_i &lt; X \beta)
-  \right] } + (1-y_i)\log{ \left[
-  1-P(\varepsilon_i &lt; X \beta)
+P(y|X) = p = &
+-\sum_{i=1}^{N}{ y_i\log{ \left[ 
+  P(\varepsilon_i < X \beta) 
+  \right] } + (1-y_i)\log{ \left[ 
+  1-P(\varepsilon_i < X \beta)
   \right] } }
-\\
-= &amp;
--\sum_{i=1}^{N}{ y_i\log{ \left[
+\\ 
+= &
+-\sum_{i=1}^{N}{ y_i\log{ \left[ 
   (1+e^{-X_i\beta})
-  \right] } + (1-y_i)\log{ \left[
+  \right] } + (1-y_i)\log{ \left[ 
   1-(1+e^{-X_i\beta})
   \right] } }
 \end{align}
 }
-\]</span></p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-p &amp; = -\sum_{i=1}^{N}{ y_i\log{ \left[ P(\varepsilon_i &lt; X \beta) \right] } } +
-(1-y_i)\log{ \left[ 1-P(\varepsilon_i &lt; X \beta)\right] } \\
-\therefore e^p = &amp; 1
-\end{align}
-}
-\]</span></p>
+$$ 
+-->
 </section>
 <section id="optimising-the-coefficients" class="level2">
 <h2 class="anchored" data-anchor-id="optimising-the-coefficients">Optimising the coefficients</h2>
@@ -600,25 +589,64 @@ p &amp; = -\sum_{i=1}^{N}{ y_i\log{ \left[ P(\varepsilon_i &lt; X \beta) \right]
 \sum_{i=1}^{N}{ (1-y_i)
   \frac{(1-\partial p_i)/\partial \beta_j}{1-p_i}
   }
-\\ \\ &amp; =0
 \end{align}
 }
 \]</span></p>
-<p>This is as far as we can get without modelling <span class="math inline">\(P(\varepsilon_i &lt; X \beta)\)</span>. So let’s look at substituting <span class="math inline">\(p_i\)</span> into our first moment condition to derive the optimal coefficients:</p>
+<p>This is as far as we can get without modelling <span class="math inline">\(P(\varepsilon_i &lt; X \beta)\)</span>. So let’s look at substituting <span class="math inline">\(p_i\)</span>, <span class="math inline">\(1-p_i\)</span>, <span class="math inline">\(\partial p_i/\partial \beta\)</span> and <span class="math inline">\(\partial (1-p_i)/\partial \beta\)</span> into our first moment condition to derive the optimal coefficients:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-&amp; \text{Let } P(\varepsilon_i &lt; X \beta) = p_i = (1+e^{-X\beta})^{-1} = \frac{1}{1+e^{-X\beta}} \\
-&amp; \therefore 1-p_i = 1 - (1+e^{-X\beta})^{-1} = \frac{1+e^{-X\beta}}{1+e^{-X\beta}} - \frac{1}{1+e^{-X\beta}} = \frac{e^{-X\beta}}{1+e^{-X\beta}}  \\
-&amp; \therefore \frac{\partial p_i}{\partial \beta_j}
-= -1(1+e^{-X\beta})^{-2} \times -x_je^{-X\beta} = \frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2} \\
-&amp; \therefore \frac{\partial (1-p_i)}{\partial \beta_j}
-= -1(1+e^{-X\beta})^{-2} \times x_j \times e^{-X\beta} = \frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
+p_i &amp; = P(\varepsilon_i &lt; X \beta) = (1+e^{-X\beta})^{-1}
+\\ &amp; = \frac{1}{1+e^{-X\beta}}
+\\
+\therefore 1-p_i &amp; = 1 - (1+e^{-X\beta})^{-1} = \frac{1+e^{-X\beta}}{1+e^{-X\beta}} - \frac{1}{1+e^{-X\beta}}
+\\ &amp; = \frac{e^{-X\beta}}{1+e^{-X\beta}}  \\
+\therefore \frac{\partial p_i}{\partial \beta_j}
+&amp; = -1(1+e^{-X\beta})^{-2} \times -x_je^{-X\beta}
+\\ &amp; = \frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
+\\
+\therefore \frac{\partial (1-p_i)}{\partial \beta_j} &amp; = -1(1+e^{-X\beta})^{-2} \times x_j \times e^{-X\beta}
+\\ &amp; = \frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}
 \end{align}
 }
 \]</span></p>
-<p>$$ $$</p>
-<p>Thus there is no closed form solution, but using an optimization</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\therefore \frac{\partial}{\partial \beta_j}p(y|\beta,X) &amp; =
+\sum_{i=1}^{N}{ y_i
+  \frac{\partial p_i/\partial \beta_j}{p_i}
+  } +
+\sum_{i=1}^{N}{ (1-y_i)
+  \frac{\partial(1-\partial p_i)/ \beta_j}{1-p_i}
+  } \\
+&amp; =
+\sum_{i=1}^{N}{ y_i
+  \frac{\frac{-x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}}{\frac{1}{1+e^{-X\beta}}}
+  } +
+\sum_{i=1}^{N}{ (1-y_i)
+  \frac{\frac{x_j \times e^{-X\beta}}{(1+e^{-X\beta})^2}}{\frac{e^{-X\beta}}{1+e^{-X\beta}}}
+  }
+\\
+&amp; =
+\sum_{i=1}^{N}{ -x_jy_i
+  \frac{ e^{-X\beta}}{1+e^{-X\beta}}
+  } +
+\sum_{i=1}^{N}{ x_j(1-y_i)
+  \frac{1}{1+e^{-X\beta}}
+  }    
+\\
+&amp; =
+-x_j\sum_{i=1}^{N}{
+  y_i \times  \left(1-p_i\right) +
+  (1-y_i) \times p_i
+  }    
+\\
+\end{align}
+}
+\]</span></p>
+<p>Thus there is no closed form solution like OLS. However, given the cost function is convex, using an optimization like Newton Raphson will find the optimum coefficients.</p>
+<p>Fin.</p>
 
 
 </section>

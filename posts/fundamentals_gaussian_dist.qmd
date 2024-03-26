@@ -1,0 +1,236 @@
+---
+title: "Deriving the normal distribution"
+author: "Chris Kelly"
+date: '02-25-24'
+categories: []
+format:
+  html:
+    code-fold: true
+draft: true
+---
+
+Imagine two random variables, $X$ and $Y$, are independently and identically generated from a distribution with identical population parameters (mean of zero and finite variance).
+
+The probability of any two points being found in any region equidistant from the origin should be same (radially symmetric). So the probability density function $\omega$ is a function of the radius $r$.
+
+$$
+\omega (r) \times dA
+$$
+
+Moreover, due to the fact that $X$ and $Y$ are independent, we know that the probability of both co-occuring is the two individual probabilities (pdfs) multiplied together:
+
+$$
+f(x) \times f(y) \times dA
+$$
+
+Hence we can equate these:
+
+$$
+\omega (r) = f(x) \times f(y)
+$$
+
+Since $r$ is the hypotenuse of a right-angled triangle, we know from pythagoras that $r = \sqrt{x^2+y^2}$:
+
+$$
+\omega (\sqrt{x^2+y^2}) = f(x) \times f(y)
+$$
+
+Now we want to reduce some terms. 
+
+If we let $y=0$, and plug that into the pdf $f(.)$, we get a constant $\lambda$, i.e. $f(0) = \lambda$. We use this to find that the $\omega$ pdf is the $f(.)$ pdf multiplied by $\lambda$:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } y & =0 \\ 
+\therefore f(y) & = f(0) = \lambda \\
+\therefore \underbrace{\omega(\sqrt{x^2+y^2})}_{\omega(x)} & = f(x) \times 
+\underbrace{f(y)}_{\lambda} \\
+\therefore \omega(x) & = \lambda f(x)
+\end{align}
+}
+$$
+
+And now we can drop the $\omega$ (and replace with a constant $\lambda$).
+
+Let's now define a new function, $g(x) = f(x)/\lambda$, to simplify this a bit:
+
+$$
+\displaylines{
+\begin{align}
+& f(x) \times f(y) = \lambda f(\sqrt{x^2+y^2}) & & \div \lambda^2
+\\
+\therefore & 
+\frac{f(x)}{\lambda} \times
+\frac{f(y)}{\lambda} =  \frac{f(\sqrt{x^2+y^2})}{\lambda} \\
+= & g(x) \times g(y) = g(\sqrt{x^2+y^2})
+\end{align}
+}
+$$
+
+An exponential function with base $b$ fits this criteria ($f(x) = b^x$), since multiplying each pdf together is the same as raising it to the sum of the powers.
+
+$$
+b^{x^2} \times b^{y^2} = b^{\sqrt{x^2+y^2}}
+$$
+
+Note that for any base $b$, we can reformulate it in terms of the natural number $e$:
+
+$$
+\displaylines{
+\begin{align}
+b^{x^2} & = e^{kx^2} \\
+\therefore \ln{b^{x^2}} & = kx^2 \\
+\therefore x^2 \ln{b} & = kx^2 \\
+\therefore \ln{b} & = k \\
+\end{align}
+}
+$$
+
+So setting $g(x) = e^{kx^2}$ satisfies this:
+
+$$
+\displaylines{
+\begin{align}
+e^{kx^2} \times 
+e^{ky^2} & = 
+e^{k \left(\sqrt{x^2+y^2} \right)^2} 
+\\
+e^{kx^2} \times 
+e^{ky^2} & = 
+e^{kx^2+ky^2}
+\end{align}
+}
+$$
+
+And hence we can determine that:
+
+$$
+\lambda g(x) = \lambda e^{kx^2} = f(x)
+$$
+
+We also know that $k$ must be negative. The reasoning behind this:
+
+  * The probability density must diminish with large values $|x|$ (finite variance)
+  * $x^2$ is surely positive, so $k$ must be negative (so that it goes into the denominator)
+
+So let's put in the term $k=-m^2$, to ensure it is a negative number:
+
+$$
+\therefore f(x) = \lambda e^{-m^2x^2}
+$$
+
+We also know that the integral between $-\infty$ and $\infty$ must equal one, since this is the full range of values that $x$ could take.
+
+$$
+\lambda \int_{-\infty}^{\infty}{e^{-m^2x^2}}dx = 1
+$$
+
+Now integrate by parts:
+
+$$
+\displaylines{
+\begin{align}
+\\
+& \text{Let } u = mx \\
+& \therefore \frac{du}{dx} = m \\
+& \therefore dx = \frac{1}{m}du \\ \\ 
+& \Rightarrow 
+\lambda \int_{-\infty}^{\infty}{e^{-u^2}} \frac{du}{m}
+= \frac{\lambda}{m} \int_{-\infty}^{\infty}{e^{-u^2}} du
+= 1 \\
+& \Rightarrow 
+\frac{\lambda}{m} \sqrt{\pi} = 1 & \because !!! 
+\\\\
+& \therefore m = \lambda \sqrt{\pi}
+\\\\
+& \therefore f(x) = \lambda e^{-\pi \lambda^2x^2}
+\end{align}
+}
+$$
+
+At $x=0$, we thus find that the height of the pdf is $\lambda$. Given the pdf is symmetric around zero, we know that the higher the pdf, the smaller the variance will be - in other words, the variance must be a function of $\lambda$.
+
+So now we plug $\lambda e^{-\pi \lambda^2x^2}$ into the standard calculation for the variance of any pdf:
+
+$$
+\displaylines{
+\begin{align}
+\sigma^2 
+& = \int_{-\infty}^{\infty}{(x-\mu)^2 \times f(x) \, dx} \\
+& = \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx}
+\end{align}
+}
+$$
+
+Then integrate by parts, using the form $\int{u \, dv} = uv - \int{v \, du}$:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } u & = x \\
+\therefore du & = dx  & \because \frac{du}{dx} = 1 \\
+\text{Let } dv & = x e^{-\pi \lambda^2 x^2} dx \\
+\therefore v & = \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+\\ \\
+\Rightarrow 
+\sigma^2 & = 
+\lambda \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx} 
+= \lambda 
+\int_{-\infty}^{\infty}{u \, dv}
+\\ & = \lambda \left[ uv -\int_{-\infty}^{\infty}{v \, dv} \right]
+\\
+& = \lambda \left[ x\left( 
+  \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+  \right) - 
+  \int_{-\infty}^{\infty}{
+    \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
+    \, dx}
+  \right]
+\end{align}
+}
+$$
+
+Now as $x \rightarrow \infty$, $e^{-\pi \lambda^2 x^2}\rightarrow 0$, it drops out.
+
+$$
+\displaylines{
+\begin{align}
+\sigma^2 
+& = \lambda \left[ \cancel{ x\left( 
+  \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+  \right) } - 
+  \int_{-\infty}^{\infty}{
+    \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
+    \, dx}
+  \right]
+\\ & = \lambda
+  \int_{-\infty}^{\infty}{
+    \frac{1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
+    \, dx}
+\\ & = \frac{1}{2 \pi \lambda^2}
+  \int_{-\infty}^{\infty}{
+    \lambda e^{-\pi \lambda^2 x^2} 
+    \, dx}
+\\ & = \frac{1}{2 \pi \lambda^2}
+  \int_{-\infty}^{\infty}{f(x) \, dx}
+\\ & = \frac{1}{2 \pi \lambda^2}    
+\\
+\\
+\therefore \lambda & = \frac{1}{\sigma\sqrt{2\pi}}
+\end{align}
+}
+$$
+
+And now we can plug $\lambda$ back into $f(x)$:
+
+$$
+\displaylines{
+\begin{align}
+f(x) & = \lambda e^{-\pi \lambda^2x^2}
+\\ & = \frac{1}{\sigma\sqrt{2\pi}} e^{\frac{-x^2}{2\sigma^2}}
+\end{align}
+}
+$$
+
+Which gives us the normal distribution (where $\mu=0$).
