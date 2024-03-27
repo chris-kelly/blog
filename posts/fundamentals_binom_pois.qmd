@@ -151,8 +151,8 @@ This is a tricky one!
 
 $$
 \lim_{n \rightarrow \infty}{ \left[
-    \left(1 + \frac{\lambda}{n} \right)^{n}
-  \right]} = e^\lambda
+    \left(1 - \frac{\lambda}{n} \right)^{n}
+  \right]} = e^{-\lambda}
 $$
 
 *(We go through this derivation in the footnotes for if you do not know it already)*[^1]
@@ -184,11 +184,11 @@ $$
 1 \times 
   \frac{\lambda^x}{x!}
 \times 
-  e^\lambda
+  e^{-\lambda}
 \times
    1
 \\ & = 
-\frac{\lambda^x e^\lambda}{x!}
+\frac{\lambda^x e^{-\lambda}}{x!}
 \end{align}
 }
 $$
