@@ -1,209 +1,497 @@
 ---
 title: "Deriving the normal distribution"
 author: "Chris Kelly"
-date: '02-25-24'
+date: '05-11-24'
 categories: []
 format:
   html:
     code-fold: true
-draft: true
+    toc: true
+    html-math-method: mathjax
+image: '../images/fundamentals_gaussian_dist.png'
 ---
 
-Imagine two random variables, $X$ and $Y$, are independently and identically generated from a distribution with identical population parameters (mean of zero and finite variance).
+::: {.callout-tip}
+### What are we exploring?
+Where does the gaussian distribution come form? We derive if from first principles i.e. proving the Herschel-Maxwell theorem.
+:::
 
-The probability of any two points being found in any region equidistant from the origin should be same (radially symmetric). So the probability density function $\omega$ is a function of the radius $r$.
+## Setting the scene
+
+Imagine we are throwing darts, aiming at a circular target. The closer you get to the centre, the more points you get.
+
+Imagine you miss the centre by 5cm. It doesn't matter whether you were 5cm too high or low, 5cm too far left or right, or a combination of the two (e.g. 3cm too far left, 4cm too far right, which by pythagoras is also $\sqrt{3^2+4^2}=5\text{cm}$ away from the centre) - hitting those regions are all equally likely.
+
+```{python}
+import numpy as np
+import plotly.graph_objects as go
+
+fig = go.Figure()
+
+# Define the points
+points = [(5,0), (0,5), (0,-5), (3,4), (-4,-3)]
+
+# Add the points to the plot
+for point in points:
+    fig.add_trace(
+      go.Scatter(
+        x=[0, point[0]/2], 
+        y=[0, point[1]/2], 
+        mode='lines', 
+        line=dict(color='#636363')
+      )
+    )
+
+# Add arrows to the plot
+for point in points:
+    fig.add_annotation(
+        x=point[0]  ,
+        y=point[1],
+        ax=0,
+        ay=0,
+        xref='x',
+        yref='y',
+        axref='x',
+        ayref='y',
+        showarrow=True,
+        arrowhead=3,
+        arrowsize=1,
+        arrowwidth=2,
+        arrowcolor='#636363'
+    )
+
+# Define the circle
+r = np.sqrt(5**2)
+theta = np.linspace(0, 2*np.pi, 100)
+x = r * np.cos(theta)
+y = r * np.sin(theta)
+
+# Add the circle to the plot
+fig.add_trace(
+  go.Scatter(
+    x=x,
+    y=y, 
+    mode='lines', 
+    line=dict(dash='dot',color='#636363')
+  )
+)
+
+# Update axes
+layout_options = dict(
+  range=[-6, 6],
+  dtick=1, 
+  gridwidth=1,
+)
+fig.update_xaxes(**layout_options)
+fig.update_yaxes(**layout_options)
+fig.update_layout(
+  showlegend=False,
+  title={
+    'text': 'All shots 5cm from the centre are equally likely to happen',
+    'x': 0.5,
+    'xanchor': 'center',
+  },
+  autosize=False,
+  width=600,
+  height=600,
+)
+fig.show()
+```
+
+</br>
+
+Now having said that, the distribution of horizontal distances from the centre are completely independent of the distribution of vertical distances. We are just trying to aim for the middle: getting less or more accurate horizontally doesn't affect how accurate we are vertically.
+
+Let's denote the horizontal and vertical distances from the centre $X$ and $Y$. Now here is the magic - after taking many shots, we would find that **the distribution of vertical distances from the centre of the target would follow a normal distribution**!
+
+We would also find the horizontal distances form the centre of the target would follow a normal distribution too!
+
+```{python}
+
+from math import pi, sqrt, exp
+
+sigma=3
+
+def _normal_pdf(x,mu=0.0,sigma=1.0):
+    result = ( 
+      1/(sigma * sqrt(2*pi))
+    ) * ( exp(
+      -0.5 * ((x-mu)/sigma)**2
+    ) )
+    return result
+
+def normal_pdf(x,mu=0.0,sigma=1.0):
+    result = [_normal_pdf(i,mu,sigma) for i in x]
+    return np.array(result)
+
+# Define the range of values for x and y
+X = np.linspace(-10,10,100)
+zeros = np.zeros(len(X))
+ones = np.ones(len(X))
+P_X = normal_pdf(X,sigma=sigma)
+X2 = np.linspace(-8,8,100)
+Y2 = np.linspace(-6,6,100)
+
+P_X5 = _normal_pdf(5,sigma=sigma)
+P_X05 = np.linspace(0,P_X5,100)
+
+fig = go.Figure()
+
+line_style = dict(color='black')
+
+fig.add_trace(
+  go.Scatter3d(x=X,y=zeros,z=P_X,mode='lines',line=line_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=zeros,y=X,z=P_X,mode='lines',line=line_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=X2,y=Y2,z=P_X,mode='lines',line=line_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=Y2,y=X2,z=P_X,mode='lines',line=line_style)
+)
+
+marker_style = dict(symbol='cross',color='black')
+
+fig.add_trace(
+  go.Scatter3d(x=ones*5,y=zeros,z=zeros, marker=marker_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=zeros,y=ones*5,z=zeros, marker=marker_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=zeros,y=ones*-5,z=zeros, marker=marker_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=ones*3,y=ones*4,z=zeros, marker=marker_style)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=ones*-4,y=ones*-3,z=zeros, marker=marker_style)
+)
+
+line_style2 = dict(color='black',dash='dot')
+
+fig.add_trace(
+  go.Scatter3d(x=ones*5,y=zeros,z=P_X05, mode='lines',line=line_style2)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=zeros,y=ones*5,z=P_X05, mode='lines',line=line_style2)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=zeros,y=ones*-5,z=P_X05, mode='lines',line=line_style2)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=ones*3,y=ones*4,z=P_X05, mode='lines',line=line_style2)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=ones*-4,y=ones*-3,z=P_X05, mode='lines',line=line_style2)
+)
+
+fig.add_trace(
+  go.Scatter3d(x=x,y=y,z=ones*P_X5, mode='lines',line=line_style2)
+)
+
+camera = dict(
+    up=dict(x=0, y=0, z=1),
+    center=dict(x=0, y=0, z=0),
+    eye=dict(x=0.4, y=-0.5, z=0.9)
+)
+
+fig.update_layout(showlegend=False, scene_camera=camera)
+
+fig.show()
+```
 
 $$
-\omega (r) \times dA
+P_X(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{x^2}{2\sigma^2}}
+\text{;  }
+P_Y(y) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{y^2}{2\sigma^2}}
 $$
 
-Moreover, due to the fact that $X$ and $Y$ are independent, we know that the probability of both co-occuring is the two individual probabilities (pdfs) multiplied together:
+Seems like very, very few assumptions needed to know that the horizontal and vertical distances will follow a normal distribution? That's true! But it works. This is the Herschel-Maxwell theorem.
 
-$$
-f(x) \times f(y) \times dA
-$$
+:::{.callout-tip title="Herschel-Maxwell theorem"}
+Given two random variables, $X$ and $Y$, with a joint distribution function of $P_{X,Y}(dX,dY)$:
 
-Hence we can equate these:
+1. $P_{X,Y}$ is invariant to real rotations
+2. $X, Y$ are independent
 
-$$
-\omega (r) = f(x) \times f(y)
-$$
+Then both $X$ and $Y$ are normally distributed.
+:::
 
-Since $r$ is the hypotenuse of a right-angled triangle, we know from pythagoras that $r = \sqrt{x^2+y^2}$:
+And this is the theorem that we will prove in this post.
 
-$$
-\omega (\sqrt{x^2+y^2}) = f(x) \times f(y)
-$$
+## First step - combining the two assumptions
 
-Now we want to reduce some terms. 
+The horizontal and vertical distances from the centre are two random variables, $X$ and $Y$, that are independently and identically generated from a distribution with identical population parameters (mean of zero and finite, constant variance).
 
-If we let $y=0$, and plug that into the pdf $f(.)$, we get a constant $\lambda$, i.e. $f(0) = \lambda$. We use this to find that the $\omega$ pdf is the $f(.)$ pdf multiplied by $\lambda$:
+:::{.column-margin}
+We do not expect a bias in aiming too high or too low. Hence the expected values of $X$ and $Y$ (their means) are zero: $\mathbb{E}[X]=0\text{; }\mathbb{E}[Y]=0$ 
+
+Also, we want to hit closer to the centre. Hence the probability density must diminish with large values of $|x|$, as it is more likely we get closer - so the variance of these distances is finite. Also, by making the variance constant, we assume that we do not get better over time. $\mathbb{V}[X]=c_X\text{; }\mathbb{V}[Y]=c_Y$
+:::
+
+Let's now derive the normal distribution from first principles. We rewrite the Herschel-Maxwell theorem above as our starting point:
+
+1. The probability of hitting a point on the target is radially symmetric
+2. The horizontal and vertical distances from the centre are independent (unrelated)
+
+What does this really mean? Well (1) means there is "radial symmetry". In other words, the likelihood of a shot ending in some region is only based on how close it is to the centre: it doesn't matter how far the distance is along the horizontal or vertical axis ($X$ or $Y$), just the combined distance (i.e. the radius from the centre).
 
 $$
 \displaylines{
-\begin{align}
-\text{Let } y & =0 \\ 
-\therefore f(y) & = f(0) = \lambda \\
-\therefore \underbrace{\omega(\sqrt{x^2+y^2})}_{\omega(x)} & = f(x) \times 
-\underbrace{f(y)}_{\lambda} \\
-\therefore \omega(x) & = \lambda f(x)
-\end{align}
+\begin{gather}
+P_{X,Y}(X = x, Y = y) = P_{X,Y}(X = x', Y = y') \\
+\iff x^2 + y^2 = x'^2 + y'^2
+\end{gather}
 }
 $$
 
-And now we can drop the $\omega$ (and replace with a constant $\lambda$).
+Concretely - the joint probability between $X$ and $Y$ for two shots landing in any region equidistant from the origin is the same. It depends only on the distance from the centre, not the direction from the centre. So the probability density function can be simplified to $\omega$, as a function of the radius. And since the radius is the hypotenuse of a right-angled triangle, we know from pythagoras that $r = \sqrt{x^2+y^2}$:
 
-Let's now define a new function, $g(x) = f(x)/\lambda$, to simplify this a bit:
+$$
+P_{X,Y}(X = x,Y = y) = \omega (\sqrt{x^2+y^2})
+$$
+
+The second bullet point (2) - is that there is no correlation between whether you shoot too high/low and whether you shoot too far left/right. This assumption of independence is a crucial, and commonly used assumption in statistics.
+
+$$
+P_{X,Y}(X=x,Y=y) = P_X(X=x) \times P_Y(Y=y)
+$$
+
+And hence we can combine the two:
+
+$$
+ \omega (\sqrt{x^2+y^2}) = P_X(x) \times P_Y(y)
+$$
+
+## Simplifying to a single pdf
+
+Now you might be thinking at this point - why start with two distributions? It would be easier to derive the normal distribution from just one variable, $X$. However, initially providing a second independent variable $Y$ (which we now remove) provides a shortcut to derive the normal distribution for $X$, so it is a useful step.
+
+Since $Y$ is i.i.d, then the probability density $g(Y=0)$ is constant regardless of $X$ (i.e. $P_Y(0) = \gamma$ where $\gamma$ is some constant). We can similarly denote the constant $P_X(0) = \lambda$.
+
+Thus, for any distance $z$:
 
 $$
 \displaylines{
 \begin{align}
-& f(x) \times f(y) = \lambda f(\sqrt{x^2+y^2}) & & \div \lambda^2
+\omega(\sqrt{x^2+y^2})
+& = P_X(x) \times P_Y(y) 
 \\
-\therefore & 
-\frac{f(x)}{\lambda} \times
-\frac{f(y)}{\lambda} =  \frac{f(\sqrt{x^2+y^2})}{\lambda} \\
-= & g(x) \times g(y) = g(\sqrt{x^2+y^2})
-\end{align}
-}
-$$
-
-An exponential function with base $b$ fits this criteria ($f(x) = b^x$), since multiplying each pdf together is the same as raising it to the sum of the powers.
-
-$$
-b^{x^2} \times b^{y^2} = b^{\sqrt{x^2+y^2}}
-$$
-
-Note that for any base $b$, we can reformulate it in terms of the natural number $e$:
-
-$$
-\displaylines{
-\begin{align}
-b^{x^2} & = e^{kx^2} \\
-\therefore \ln{b^{x^2}} & = kx^2 \\
-\therefore x^2 \ln{b} & = kx^2 \\
-\therefore \ln{b} & = k \\
-\end{align}
-}
-$$
-
-So setting $g(x) = e^{kx^2}$ satisfies this:
-
-$$
-\displaylines{
-\begin{align}
-e^{kx^2} \times 
-e^{ky^2} & = 
-e^{k \left(\sqrt{x^2+y^2} \right)^2} 
+\therefore \omega(\sqrt{x^2+0^2})
+& = P_X(x) \times P_Y(0)
 \\
-e^{kx^2} \times 
-e^{ky^2} & = 
-e^{kx^2+ky^2}
-\end{align}
-}
-$$
-
-And hence we can determine that:
-
-$$
-\lambda g(x) = \lambda e^{kx^2} = f(x)
-$$
-
-We also know that $k$ must be negative. The reasoning behind this:
-
-  * The probability density must diminish with large values $|x|$ (finite variance)
-  * $x^2$ is surely positive, so $k$ must be negative (so that it goes into the denominator)
-
-So let's put in the term $k=-m^2$, to ensure it is a negative number:
-
-$$
-\therefore f(x) = \lambda e^{-m^2x^2}
-$$
-
-We also know that the integral between $-\infty$ and $\infty$ must equal one, since this is the full range of values that $x$ could take.
-
-$$
-\lambda \int_{-\infty}^{\infty}{e^{-m^2x^2}}dx = 1
-$$
-
-Now integrate by parts:
-
-$$
-\displaylines{
-\begin{align}
+\equiv \omega(x) & = P_X(x) \times \gamma
 \\
-& \text{Let } u = mx \\
-& \therefore \frac{du}{dx} = m \\
-& \therefore dx = \frac{1}{m}du \\ \\ 
-& \Rightarrow 
-\lambda \int_{-\infty}^{\infty}{e^{-u^2}} \frac{du}{m}
-= \frac{\lambda}{m} \int_{-\infty}^{\infty}{e^{-u^2}} du
-= 1 \\
-& \Rightarrow 
-\frac{\lambda}{m} \sqrt{\pi} = 1 & \because !!! 
-\\\\
-& \therefore m = \lambda \sqrt{\pi}
-\\\\
-& \therefore f(x) = \lambda e^{-\pi \lambda^2x^2}
+\therefore \omega(\sqrt{0^2+y^2})
+& = P_X(0) \times P_Y(y)
+\\
+\equiv \omega(y) & = \lambda \times P_Y(y)
+\\
+\\ 
+\Rightarrow \omega(z) & = \gamma P_X(z) \\
+\Rightarrow P_Y(z) 
+& = \frac{\omega(z)}{\lambda} 
+= \frac{\gamma}{\lambda}P_X(z)
 \end{align}
 }
 $$
 
-At $x=0$, we thus find that the height of the pdf is $\lambda$. Given the pdf is symmetric around zero, we know that the higher the pdf, the smaller the variance will be - in other words, the variance must be a function of $\lambda$.
-
-So now we plug $\lambda e^{-\pi \lambda^2x^2}$ into the standard calculation for the variance of any pdf:
-
+In other words - we can represent the joint pdf of $X$ and $Y$ solely in terms of $P_X(z)$:
 $$
 \displaylines{
 \begin{align}
-\sigma^2 
-& = \int_{-\infty}^{\infty}{(x-\mu)^2 \times f(x) \, dx} \\
-& = \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx}
+\omega (\sqrt{x^2+y^2}) & = P_X(x) \times P_Y(y) \\
+\equiv 
+\gamma P_X(\sqrt{x^2+y^2}) & = P_X(x) \times 
+\frac{\gamma}{\lambda}P_X(y)
 \end{align}
 }
 $$
 
-Then integrate by parts, using the form $\int{u \, dv} = uv - \int{v \, du}$:
+And we can simplify this further, using a helper function $h(z)$:
+$$
+\displaylines{
+\begin{align}
+\gamma P_X(\sqrt{x^2+y^2}) & = P_X(x) \times 
+\frac{\gamma}{\lambda}P_X(y) \\
+\Rightarrow P_X(\sqrt{x^2+y^2}) & = P_X(x) \times 
+ \frac{P_X(y)}{\lambda} & \div \gamma \\
+\Rightarrow \frac{P_X(\sqrt{x^2+y^2})}{\lambda} & = \frac{P_X(x)}{\lambda} \times 
+ \frac{P_X(y)}{\lambda} & \div \lambda \\
+\equiv h(x^2+y^2) & = h(x^2) \times h(y^2) & \text{where } h(z) = \frac{P_X(\sqrt{z})}{\lambda} \\
+\end{align}
+}
+$$
+
+We now have everything in terms of one function, $h(z)$. We now look to find a form for $h(z)$ that satisfies this criteria.
+
+## Satisfying the equality using exponentials
+
+An exponential function is a good candidate to ensure that multiplying each pdf together is the same as raising it to the sum of their powers:
+
+:::{.column-margin}
+Note that for any base $b$, we can reformulate it in terms of the natural number $e$[^1], i.e. setting $h(z^2) = e^{kz^2}$
+:::
 
 $$
 \displaylines{
 \begin{align}
-\text{Let } u & = x \\
-\therefore du & = dx  & \because \frac{du}{dx} = 1 \\
-\text{Let } dv & = x e^{-\pi \lambda^2 x^2} dx \\
-\therefore v & = \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+b^{(x^2+y^2)} & = b^{x^2} \times b^{y^2}
+\\ \equiv 
+e^{kx^2+ky^2} & = e^{kx^2} \times e^{ky^2}
+& \text{where } k = \ln{[b]}
+\\
+\therefore h(z) & = e^{kx^2}
+\end{align}
+}
+$$
+
+And thus:
+$$
+P_X(x) = \lambda h(x^2) = \lambda e^{kx^2}
+$$
+
+We now have a pdf that is an exponential form - we are getting closer!
+
+## Ensuring finite variance
+
+So far we have that:
+$$
+P_X(x) = \lambda e^{kx^2}
+$$
+
+We can determine that $k$ **must** be a negative value. The reasoning behind this:
+
+* The variance is finite, so the probability density must diminish with large values of $|x|$. Thus, $kx^2 < 0$
+* $x^2$ is positive for all real $x$, so $k$ has to be negative to ensure $kx^2 < 0$ 
+
+So going forward, let's substitute $k=-\left(m^2\right)$, to ensure it is a negative number for any real value of $m$.
+
+$$
+P_X(x) = \lambda e^{kx^2} = \lambda e^{-m^2x^2}
+$$
+
+Furthermore - we know that the integral between $-\infty$ and $+\infty$ must equal one, since this is the full range of values that $x$ could take, and the probabilities must sum to one.
+
+$$
+\lambda \int_{-\infty}^{\infty}{e^{-m^2x^2} \, dx} = 1
+$$
+
+And we can use both of these deductions to find a value for $m$:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } u & = mx \\
+\Rightarrow dx & = \frac{du}{m} \text{ } & \because \frac{du}{dx} = m 
 \\ \\
-\Rightarrow 
-\sigma^2 & = 
-\lambda \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx} 
-= \lambda 
-\int_{-\infty}^{\infty}{u \, dv}
-\\ & = \lambda \left[ uv -\int_{-\infty}^{\infty}{v \, dv} \right]
+\therefore 
+\lambda \int_{-\infty}^{+\infty}{e^{-m^2x^2} \,dx}
+& = \lambda \int_{-\infty}^{+\infty}{e^{-u^2} \,\frac{du}{m}} \\
+& = \frac{\lambda}{m} \int_{-\infty}^{+\infty}{e^{-u^2} \,du}
 \\
-& = \lambda \left[ x\left( 
-  \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
-  \right) - 
-  \int_{-\infty}^{\infty}{
-    \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
-    \, dx}
-  \right]
+& = \frac{\lambda}{m} \left[ -\frac{1}{2u} \times e^{-u^2} \right]_{-\infty}^{+\infty}
+\\
+& = \frac{\lambda}{m} \sqrt{\pi} 
+& \because \int_{-\infty}^{\infty}{e^{-z^2}}{dz} = \sqrt{\pi}
+\\
+& = 1
+\\ \\
+\therefore m & = \lambda \sqrt{\pi}
 \end{align}
 }
 $$
 
-Now as $x \rightarrow \infty$, $e^{-\pi \lambda^2 x^2}\rightarrow 0$, it drops out.
+:::{.column-margin}
+The integral $\int_{-\infty}^{\infty}{e^{-z^2}}{dz} = \sqrt{\pi}$ is a special case of the gaussian integral. [This video is a great explanation](https://www.youtube.com/watch?v=l27xKSNad2Y) if you are interested in its derivation.
+:::
+And thus:
+
+$$
+\displaylines{
+\begin{align}
+P_X(x) = \lambda e^{-m^2x^2} = \lambda e^{-\pi \lambda^2x^2}
+\end{align}
+}
+$$
+
+## Reformulating to include a standard deviation term
+
+So we are closer to deriving our standard normal probability density function, but we have a $\lambda$ constant instead of the constant variance $\sigma^2$. It might not be surprising then that it turns out this variance is a function of $\lambda$.
+
+To help see this, consider the point $x=0$, where we find that the height of the pdf is $\lambda$ (i.e. $P_X(0) = \lambda e^{-\pi \lambda^20^2} = \lambda$). So the higher the value of $\lambda$, the larger the probability of getting closer to the centre (since the cdf must equal one), and hence the smaller the variance. In other words - the variance has to be a function of $\lambda$.
+
+To understand the relationship between $\lambda$ and $\sigma^2$, let's plug $P_X(x) = \lambda e^{-\pi \lambda^2x^2}$ into the standard calculation for the variance of any pdf:
 
 $$
 \displaylines{
 \begin{align}
 \sigma^2 
-& = \lambda \left[ \cancel{ x\left( 
+& = \int_{-\infty}^{\infty}{(x-\mu)^2 \times P_X(x) \, dx} \\
+& = \int_{-\infty}^{\infty}{(x-\mu)^2 \times \lambda e^{-\pi \lambda^2x^2} \, dx} \\
+& = \lambda \int_{-\infty}^{\infty}{x^2 \times e^{-\pi \lambda^2x^2} \, dx} & \because \mu = 0 \\
+\end{align}
+}
+$$
+
+<br>
+
+Then we can integrate by parts, i.e. using the form $\int{u \, dv} = uv - \int{v \, du}$:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } u & = x 
+\text{ and } dv = x e^{-\pi \lambda^2 (x^2)} dx \\
+\Rightarrow du & = dx  
+& \because \frac{du}{dx} = 1 \\
+\Rightarrow v & = -\frac{1}{2\pi \lambda^2} e^{-\pi \lambda^2 x^2}
+\\ \\
+\Rightarrow
+\sigma^2 & = 
+\lambda \int_{-\infty}^{+\infty}{x \times \lambda e^{-\pi \lambda^2(x^2)} \, dx} 
+= \lambda 
+\int_{-\infty}^{+\infty}{u \, dv}
+\\ & = \lambda \left( uv -\int_{-\infty}^{+\infty}{v \, dv} \right)
+\\
+& = \lambda \left( \left[ x\left( 
   \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
-  \right) } - 
+  \right) \right]_{-\infty}^{+\infty} - 
+  \int_{-\infty}^{+\infty}{
+    \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
+    \, dx}
+  \right)
+\end{align}
+}
+$$
+
+Now as both $x \rightarrow \infty$ and $x \rightarrow -\infty$, $e^{-\pi \lambda^2 x^2}\rightarrow 0$, so the first term drops out entirely.
+
+$$
+\displaylines{
+\begin{align}
+\sigma^2
+& = \lambda \left( \cancel{ \left[ x\left( 
+  \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2}
+  \right) \right]_{-\infty}^{+\infty} } - 
   \int_{-\infty}^{\infty}{
     \frac{-1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
     \, dx}
-  \right]
+  \right)
 \\ & = \lambda
   \int_{-\infty}^{\infty}{
     \frac{1}{2 \pi \lambda^2} e^{-\pi \lambda^2 x^2} 
@@ -213,24 +501,39 @@ $$
     \lambda e^{-\pi \lambda^2 x^2} 
     \, dx}
 \\ & = \frac{1}{2 \pi \lambda^2}
-  \int_{-\infty}^{\infty}{f(x) \, dx}
-\\ & = \frac{1}{2 \pi \lambda^2}    
+  \int_{-\infty}^{\infty}{P_X(x) \, dx}
+\\ & = \frac{1}{2 \pi \lambda^2}
+& \because \text{pdfs must sum to 1}
 \\
 \\
-\therefore \lambda & = \frac{1}{\sigma\sqrt{2\pi}}
+\therefore \lambda & = \frac{1}{\sqrt{2\pi\sigma^2}}
 \end{align}
 }
 $$
 
-And now we can plug $\lambda$ back into $f(x)$:
+And now we can plug $\lambda$ back into $P_X(x)$:
 
 $$
 \displaylines{
 \begin{align}
-f(x) & = \lambda e^{-\pi \lambda^2x^2}
-\\ & = \frac{1}{\sigma\sqrt{2\pi}} e^{\frac{-x^2}{2\sigma^2}}
+P_X(x) = \lambda e^{-\pi \lambda^2x^2} = \frac{1}{\sqrt{2\pi\sigma^2}} e^{\frac{-x^2}{2\sigma^2}}
 \end{align}
 }
 $$
 
 Which gives us the normal distribution (where $\mu=0$).
+
+Fin.[^2]
+
+[^1]:
+  For any base $b$, we can reformulate it in terms of the natural number $e$
+  $$
+  \displaylines{
+  \begin{align}
+  b^{x^2} & = e^{kx^2} \\
+  \therefore \ln{b^{x^2}} & = kx^2 \\
+  \therefore x^2 \ln{b} & = kx^2 \\
+  \therefore \ln{b} & = k \\
+  \end{align}
+  }
+  $$

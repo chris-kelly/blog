@@ -173,7 +173,7 @@ E[s^2] & =
 }
 $$
 
-Then  we can see that we need to make a correction - *Bessel's correction* - to the statistic!
+Then  we can see that we need to make a correction of $n/(n-1)$, aka *Bessel's correction*, to the statistic!
 
 $$
 \displaylines{
@@ -201,7 +201,10 @@ Fin.
   & = E\big[ (X+Y)^2 \big] - \big( E[X+Y] \big)^2 \\
   & = E\big[ X^2+2XY+Y^2 \big] - \big( E[X]+E[Y] \big)^2 \\
   & = E\big[ X^2 \big] + 2E\big[ XY \big] + E\big[Y^2 \big] - \bigg(E[X]^2 + 2E[X]E[Y] + E[Y]^2 \bigg)  \\
-  & = \bigg( E\big[ X^2 \big] - E[X]^2 \bigg) + \bigg( E\big[Y^2 \big]- E[Y]^2 \bigg) \\
+  & = \bigg( E\big[ X^2 \big] - E[X]^2 \bigg) + \bigg( E\big[Y^2 \big]- E[Y]^2 \bigg) + 
+  \bigg( E\big[XY]- E[X]E[Y] \bigg) \\
+  & = \text{Var}\big[ X \big] + \text{Var}\big[ Y \big] + \cancel{\text{Cov}\big[ X,Y \big]} 
+  & \because X \text{ and } Y \text{ are independent}\\
   & = \text{Var}\big[ X \big] + \text{Var}\big[ Y \big]
   \end{align}
   }
@@ -214,10 +217,10 @@ Fin.
   \displaylines{
   \begin{align}
   \text{Var}\big[ aX \big] 
-  & = E\big[ (aX)^2 \big] - \big( E[aX] \big)^2
-  = E\big[ a^2X^2 \big] - \big( a E[X] \big)^2 \\
-  & = a^2 E\big[ X^2 \big] - a^2 \big(E[X]\big)^2
-  = a^2 \bigg( E\big[ X^2 \big] - \big(E[X]\big)^2 \bigg) \\
+  & = E\big[ (aX)^2 \big] - \big( E[aX] \big)^2 \\
+  & = E\big[ a^2X^2 \big] - \big( a E[X] \big)^2 \\
+  & = a^2 E\big[ X^2 \big] - a^2 \big(E[X]\big)^2 \\
+  & = a^2 \bigg( E\big[ X^2 \big] - \big(E[X]\big)^2 \bigg) \\
   & = a^2\text{Var}\big[ X \big] 
   \end{align}
   }

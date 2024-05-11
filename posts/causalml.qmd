@@ -30,7 +30,7 @@ Thus - a key question in causal ML is how well we can estimate that counterfactu
 The causal effect of receiving treatment for a unit $i$ is thus a comparison of potential outcomes, such as $Y_i^1 − Y_i^0$, the difference between outcomes when units are
 treated versus not.
 
-Note that this is the difference in potential outcomes. It is only after the individual is assigned to treatment or control that we observe one - just one - of these outcomes. 
+Note that this is the difference in potential outcomes. It is only after the individual is assigned to treatment or control that we observe one - just one - of these outcomes.
 
 We can formulate the 
 
@@ -46,10 +46,11 @@ In general, we find four critical assumptions behind causal inference:
 
 https://www.linkedin.com/pulse/critical-causal-inference-assumptions-jason-shafrin
 
+
 1. SUTVA: no network effects (no contagion or spillovers)
 2. Consistency: the potential outcome matches the actual outcome relevant for that treatment effect
 3. Ignorability: after conditioning on relevant observed confounders (X), the treatment assignment is independent of outcomes
-4. Positivity: everyone has equal chance of getting the treatment.
+4. Positivity: everyone has equal chance of getting the treatment (thus common support)
 
 
 ### Positivity

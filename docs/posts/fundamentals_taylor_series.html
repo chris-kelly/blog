@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chris Kelly">
-<meta name="dcterms.date" content="2024-02-21">
+<meta name="dcterms.date" content="2024-02-25">
 
-<title>Chris Kelly Blog - GLM: exponential dispersion families</title>
+<title>Chris Kelly Blog - Taylor series</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -102,7 +102,7 @@ window.Quarto = {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
@@ -144,7 +144,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">GLM: exponential dispersion families</h1>
+      <h1 class="title">Taylor series</h1>
                       </div>
   </div>
     
@@ -161,7 +161,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 21, 2024</p>
+        <p class="date">February 25, 2024</p>
       </div>
     </div>
     
@@ -172,360 +172,33 @@ window.Quarto = {
   </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#bernoulli" id="toc-bernoulli" class="nav-link active" data-scroll-target="#bernoulli">Bernoulli</a></li>
-  <li><a href="#poisson" id="toc-poisson" class="nav-link" data-scroll-target="#poisson">Poisson</a></li>
-  <li><a href="#gaussian" id="toc-gaussian" class="nav-link" data-scroll-target="#gaussian">Gaussian</a></li>
-  </ul>
-</nav>
-    </div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
-<p>It is cumbersome to need to write unique code for each type of regression. Instead, it can be shown that many common distributions can be reformulated into the “Exponential Dispersion Family of Distributions”. This generic representation makes it easier to re-use the same code to run a regression, rather than hand calculate each pdf in different ways.</p>
-<p>Concretely, it means many probability distribution functions (pdf) can be represented in the following way:</p>
-<p><span class="math display">\[
-f(y;\theta,\phi) = \exp{ \left[ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right] }
-\]</span></p>
-<p>This means we only need to use one formula to estimate each family via maximum likelihood estimation!</p>
+<p>The taylor series is specified as follows:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-L(\theta)
-&amp; = \prod_{i=1}^n{
-  f(y_i;\theta_i,\phi)
-}
-\\ &amp; = \prod_{i=1}^n{
-  \exp{ \left\{
-    \frac{y \theta - b(\theta)}{a(\phi)}
-    + c(y,\phi)
-  \right\} }
-}
-\\ \therefore \mathcal{L}(\theta)
-&amp; = \ln \left[ \prod_{i=1}^n{
-  \exp{ \left\{
-    \frac{y_i \theta_i - b(\theta_i)}{a(\phi)}
-    + c(y_i,\phi)
-  \right\} }
-} \right]
-\\ &amp; = \sum_{i=1}^n{ \left\{
-  \frac{y_i \theta_i - b(\theta_i)}{a(\phi)}
-  + c(y_i,\phi)
-\right\} }
-\\ &amp; =
-\frac{1}{a(\phi)}
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } +
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\end{align}
-}
-\]</span></p>
-<p>And now we can look at what happens when we minimize the cost function with respect to <span class="math inline">\(\beta\)</span>:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[ \mathcal{L}(\theta) \right]
-&amp; = \arg \min_\beta \left[
-\frac{1}{a(\phi)}
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } +
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right]
-\\ &amp; \equiv \arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
-\end{align}
-}
-\]</span></p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>We assume that only <span class="math inline">\(\theta\)</span> changes with respect to the choice of <span class="math inline">\(\beta\)</span>.</p>
-</div></div><p>How can we think of this intuitively?</p>
-<ul>
-<li><span class="math inline">\(\theta\)</span> is our link function. For example, for logistic regression, <span class="math inline">\(\theta = X_i^\intercal\beta = \ln{\left[\frac{p}{1-p}\right]}\)</span></li>
-<li><span class="math inline">\(a(\phi)\)</span> is</li>
-</ul>
-<section id="bernoulli" class="level3 page-columns page-full">
-<h3 class="anchored" data-anchor-id="bernoulli">Bernoulli</h3>
-<p>Let’s take the bernoulli pdf with success probability <span class="math inline">\(p\)</span>, and raise it to have an exponential form:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-f(y;\theta,\phi)
-&amp; = p^y(1-p)^{1-y} \\
-&amp; = \exp{ \left\{\ln{\left[p^y (1-p)^{(1-y)}\right]} \right\}} \\
-&amp; = \exp{ \left\{
-  \ln{\left[p^y\right]} + \ln{\left[(1-p)^{(1-y)}\right]}
-  \right\}} \\
-&amp; = \exp{ \left\{ y \ln{[p]} + (1-y)\ln{[1-p]} \right\}} \\
-&amp; = \exp{ \left\{ y \ln{
-  \left[\frac{p}{1-p} \right]} + \ln{[1-p]} \right\}} \\
-&amp; = \exp{ \left\{ \frac{y
-\underbrace{ \ln{
-  \left[\frac{p}{1-p} \right]
-} }_{\theta}
-  + \underbrace{ \ln{[1-p]} }_{b(\theta)}
-  }{
-    \underbrace{1}_{a(\phi)}
-  }
-  + \underbrace{0}_{c(y,\phi)}
-\right\}}
-\\ &amp; = \exp{ \left[ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right] }
-\end{align}
-}
-\]</span></p>
-<p>Thus: * We thus find the link function, <span class="math inline">\(\theta=\ln{\left[\frac{p}{1-p} \right]} = X_i^\intercal\beta\)</span> * And <span class="math inline">\(b(\theta) = \ln{[1-p]} = \ln{[1+\exp\{X_i^{\intercal}\beta\}]}\)</span><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>See footnotes for deriving <span class="math inline">\(\ln{[1-p]} = \ln{[1+\exp\{X_i^{\intercal}\beta\}]}\)</span>.</p>
-</div></div><p>So now if we look to minimize <span class="math inline">\(\beta\)</span>, we find we are simply minimizing the sum of squares:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
+f(x)
+&amp; = f(a) + \frac{f'(a)}{1!}(x-a) + \frac{f''(a)}{2!}(x-a)^2 + ... \\
 &amp; =
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - \ln[1-p]
-  \bigg\} }
-\right]
-\\ &amp; =
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i X_i^{\intercal}\beta -
-      \ln{[1+\exp\{X_i^{\intercal}\beta\}]}
-  \bigg\} }
-\right]
-\end{align}
-}
-\]</span></p>
-<p>Which we can show is equivalent to the usual cost function for logistic regression:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-&amp; -\sum_{i=1}^{N}{ \bigg\{
-  y_i\ln{ [ p_i ] } +
-  (1-y_i)\ln{ [ 1-p_i ] }
-\bigg\} }
-\\ = &amp;
--\sum_{i=1}^{N}{ \bigg\{
-  y_i \bigg(
-    \ln{[ p_i ]} - \ln{ [ 1-p_i ] }
-  \bigg) +
-  \ln[1-p_i]
-  \bigg\}
-}
-\\ = &amp;
--\sum_{i=1}^{N}{ \bigg\{
-  y_i \bigg(
-    \ln{ \left[ \frac{p_i}{1-p_i} \right] }
-  \bigg) +
-  \ln[1-p_i]
-  \bigg\}
-}
-\\ = &amp;
--\sum_{i=1}^{N}{ \bigg\{
-  y_i \theta - b(\theta)
-  \bigg\}
-}
-\end{align}
-}
-\]</span></p>
-</section>
-<section id="poisson" class="level3">
-<h3 class="anchored" data-anchor-id="poisson">Poisson</h3>
-<p>Let’s have a look at poisson, with mean rate of <span class="math inline">\(\lambda\)</span>:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-f(y;\theta,\phi)
+\frac{d^0f(a)}{1!}\times(x-a)^0
++ \frac{d^1f(a)}{1!}\times(x-a)^1
++ \frac{d^2f(a)}{1!}\times(x-a)^2 + ... \\
 &amp; =
-\frac{\lambda^ye^{-\lambda}}{y!}
-\\ &amp; = \exp{ \left\{
-\ln{ \left[ \frac{\lambda^y \times e^{-\lambda}}{y!} \right]}
-\right\}}
-\\ &amp; = \exp{ \left\{
-\ln{ \left[ \lambda^y \right]}
-+ \ln{ \left[ e^{-\lambda} \right] }
-- \ln{ \left[ y! \right] }
-\right\}}
-\\ &amp; = \exp{ \left\{
-y \ln{ \left[ \lambda \right]}
--\lambda
-- \ln{ \left[ y! \right] }
-\right\}}
-\\ &amp; = \exp{ \left\{
-\frac{y
-  \underbrace{\ln{ \left[ \lambda \right]}}_{\theta}
-  - \underbrace{\lambda}_{b(\theta)}
-}{
-  \underbrace{1}_{a(\phi)}
-}
-- \underbrace{\ln{ \left[ y! \right] }}_{c(y,\phi)}
-\right\}}
-\\ &amp; = \exp{ \left[ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right] }
-\end{align}
-}
-\]</span></p>
-<p>Thus: <span class="math inline">\(b(\theta) = \lambda = \exp\big\{X_i^{\intercal}\beta\big\}\)</span>.</p>
-<p>So now if we look to minimize <span class="math inline">\(\beta\)</span>, we find..</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
-&amp; =
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - \lambda
-  \bigg\} }
-\right]
-\\ &amp; =
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i X_i^{\intercal}\beta - \exp\big\{X_i^{\intercal}\beta\big\}
-  \bigg\} }
-\right]
-\end{align}
-}
-\]</span></p>
-</section>
-<section id="gaussian" class="level3">
-<h3 class="anchored" data-anchor-id="gaussian">Gaussian</h3>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-f(y;\theta,\phi)
-&amp; = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y-\mu)^2}{2\sigma^2} \right\} }
-\\ &amp; =
-\exp{\left\{
-\ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}}
-\exp{ \left\{ -\frac{(y-\mu)^2}{2\sigma^2} \right\} }
-\right]}
-\right\}}
-\\ &amp; =
-\exp{\left\{
-\ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} \right]}
-- \frac{(y-\mu)^2}{2\sigma^2}
-\right\}}
-\\ &amp; =
-\exp{\left\{
-\cancel{\ln{ \left[ 1 \right]}}
-+ \ln{ \left[ 2 \pi \sigma^2 \right]}^{-1/2}
-- \frac{y^2+\mu^2-2y\mu}{2\sigma^2}
-\right\}}
-\\ &amp; =
-\exp{\left\{
-- \frac{1}{2}\ln{ \left[ 2 \pi \sigma^2 \right]}
-- \frac{y^2}{2\sigma^2}
-- \frac{\frac{\mu^2}{2}}{\sigma^2}
-+ \frac{\cancel{2}y\mu}{\cancel{2}\sigma^2}
-\right\}}
-\\ &amp; =
-\exp{\left\{
-  \frac{
-    y \underbrace{\mu}_{\theta} -
-    \underbrace{\frac{\mu^2}{2}}_{b(\theta)}
-  }{
-    \underbrace{\sigma^2}_{a(\phi)}
-  }
--
-\underbrace{
-  \frac{1}{2}
-  \left(
-    \frac{y^2}{\sigma^2} +
-    \ln{ \left[ 2 \pi \sigma^2 \right]}
-  \right)
-}_{c(y,\phi)}
-\right\}}
-\end{align}
-}
-\]</span></p>
-<p>Thus, <span class="math inline">\(b(\theta) = \frac{\mu^2}{2} = \frac{(X_i^{\intercal}\beta)^2}{2}\)</span>.</p>
-<p>So now if we look to minimize <span class="math inline">\(\beta\)</span>, we find we are simply minimizing the sum of squares:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
-&amp; =
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - \frac{\mu^2}{2}
-  \bigg\} }
-\right]
-\\ &amp; =
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i X_i^{\intercal}\beta - \frac{(X_i^{\intercal}\beta)^2}{2}
-  \bigg\} }
-\right]
-\\ &amp; =
-\arg \min_\beta \left[ \frac{1}{2}
-  \sum_{i=1}^n{ \bigg\{
-      (y_i -X_i^{\intercal}\beta)^2
-  \bigg\} }
-\right]
-\\ &amp; \equiv
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \varepsilon_i^2}
-\right]
+\sum_{i=0}^{\infty}\frac{d^{i}}{i!}\bigg(f(a)\bigg) \times (x-a)^i
 \end{align}
 }
 \]</span></p>
 
 
-</section>
 
-
-<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
-
-<ol>
-<li id="fn1"><p>Showing how <span class="math inline">\(\ln[1-p] = -\ln[1+\exp{\{\theta\}}]\)</span> <span class="math display">\[
-  \displaylines{
-  \begin{align}
-  \theta &amp; = \ln{\left[\frac{p}{1-p} \right]}
-  \\ \therefore e^{\theta} &amp; = \frac{p}{1-p}
-  \\ \therefore e^{\theta}-pe^{\theta} &amp; = p
-  \\ \therefore e^{\theta} &amp; = p(1+e^\theta)
-  \\ \therefore p &amp; = \frac{e^{\theta}}{1+e^\theta}
-  \\ \therefore \ln[1-p]
-  &amp; = \ln\left[1-\frac{e^{\theta}}{1+e^\theta} \right]
-  \\ &amp; = \ln\left[\frac{1+e^\theta}{1+e^\theta}-\frac{e^{\theta}}{1+e^\theta} \right]
-  \\ &amp; = \ln\left[\frac{1}{1+e^\theta} \right]
-  \\ &amp; = \ln\left[1+e^\theta \right]^{-1}
-  \\ &amp; = -\ln\left[1+e^\theta \right]
-  \end{align}
-  }
-  \]</span><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-</ol>
-</section></div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

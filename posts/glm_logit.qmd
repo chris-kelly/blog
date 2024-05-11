@@ -131,30 +131,37 @@ $$
 & \max_\beta{p(y|X)} \\
 = & 
 \max_\beta{\left\{ 
-  \prod_{i=1}^{N}{ p_i^{y_i} }
-  \times
-  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
+  \prod_{i=1}^{N}{ \bigg(
+    p_i^{y_i} \times (1-p_i)^{1-y_i}
+  \bigg)}
   \right\}}
-\\ \\ \Rightarrow & 
+\\ \\ \equiv & 
 \min_\beta{\left\{ -\log{ \left[
-  \prod_{i=1}^{N}{ p_i^{y_i} }
-  \times
-  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
+  \prod_{i=1}^{N}{ \bigg(
+    p_i^{y_i}  \times (1-p_i)^{1-y_i}
+  \bigg) }
   \right] } \right\}}
 \\ \\ = & 
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -\log{ \left[ p_i^{y_i} \right] } } +
-  \sum_{i=1}^{N}{ -\log{ \left[ (1-p_i)^{1-y_i}\right] } }
+  -\sum_{i=1}^{N}{ \bigg(
+    \log{ \left[ p_i^{y_i} \right] } } +
+    \log{ \left[ (1-p_i)^{1-y_i}\right] }
+    \bigg)
   \right\}}  
 \\ \\ = & 
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -y_i\log{ \left[ p_i \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p_i\right] } }
+  -\sum_{i=1}^{N}{ \bigg(
+    y_i\log{ \left[ p_i \right] } 
+    (1-y_i)\log{ \left[ 1-p_i\right] } 
+  \bigg) }
   \right\}}
 \\ \\ = & 
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -y_i\log{ \left[ P(\varepsilon_i < X \beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-P(\varepsilon_i < X \beta)\right] } }
+  -\sum_{i=1}^{N}{ \bigg(
+    y_i \log{ [ P(\varepsilon_i < X \beta) ] } + 
+    (1-y_i) \log{ [ 
+      1-P(\varepsilon_i < X \beta)] }
+    } \bigg)
   \right\}}    
 \end{align}
 }

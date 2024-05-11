@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/fundamentals_gaussian_dist.html",
       "/posts/fundamentals_binom_pois.html",
       "/posts/ols_finite_sample_correction.html",
       "/posts/glm_logit.html",

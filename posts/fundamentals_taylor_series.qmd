@@ -1,0 +1,29 @@
+---
+title: "Taylor series"
+author: "Chris Kelly"
+date: '02-25-24'
+categories: []
+format:
+  html:
+    code-fold: true
+draft: true
+---
+
+
+
+The taylor series is specified as follows:
+
+$$
+\displaylines{
+\begin{align}
+f(x) 
+& = f(a) + \frac{f'(a)}{1!}(x-a) + \frac{f''(a)}{2!}(x-a)^2 + ... \\
+& = 
+\frac{d^0f(a)}{1!}\times(x-a)^0
++ \frac{d^1f(a)}{1!}\times(x-a)^1
++ \frac{d^2f(a)}{1!}\times(x-a)^2 + ... \\
+& = 
+\sum_{i=0}^{\infty}\frac{d^{i}}{i!}\bigg(f(a)\bigg) \times (x-a)^i
+\end{align}
+}
+$$
