@@ -2,7 +2,7 @@
 title: "Deriving the normal distribution"
 author: "Chris Kelly"
 date: '05-11-24'
-categories: []
+categories: [Gaussian, Fundamentals]
 format:
   html:
     code-fold: true
