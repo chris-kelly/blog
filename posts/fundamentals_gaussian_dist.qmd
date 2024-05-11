@@ -137,7 +137,7 @@ P_X05 = np.linspace(0,P_X5,100)
 
 fig = go.Figure()
 
-line_style = dict(color='black')
+line_style = dict(color='black',dash='dot')
 
 fig.add_trace(
   go.Scatter3d(x=X,y=zeros,z=P_X,mode='lines',line=line_style)
@@ -177,39 +177,42 @@ fig.add_trace(
   go.Scatter3d(x=ones*-4,y=ones*-3,z=zeros, marker=marker_style)
 )
 
-line_style2 = dict(color='black',dash='dot')
-
 fig.add_trace(
-  go.Scatter3d(x=ones*5,y=zeros,z=P_X05, mode='lines',line=line_style2)
+  go.Scatter3d(x=ones*5,y=zeros,z=P_X05, mode='lines',line=line_style)
 )
 
 fig.add_trace(
-  go.Scatter3d(x=zeros,y=ones*5,z=P_X05, mode='lines',line=line_style2)
+  go.Scatter3d(x=zeros,y=ones*5,z=P_X05, mode='lines',line=line_style)
 )
 
 fig.add_trace(
-  go.Scatter3d(x=zeros,y=ones*-5,z=P_X05, mode='lines',line=line_style2)
+  go.Scatter3d(x=zeros,y=ones*-5,z=P_X05, mode='lines',line=line_style)
 )
 
 fig.add_trace(
-  go.Scatter3d(x=ones*3,y=ones*4,z=P_X05, mode='lines',line=line_style2)
+  go.Scatter3d(x=ones*3,y=ones*4,z=P_X05, mode='lines',line=line_style)
 )
 
 fig.add_trace(
-  go.Scatter3d(x=ones*-4,y=ones*-3,z=P_X05, mode='lines',line=line_style2)
+  go.Scatter3d(x=ones*-4,y=ones*-3,z=P_X05, mode='lines',line=line_style)
 )
 
 fig.add_trace(
-  go.Scatter3d(x=x,y=y,z=ones*P_X5, mode='lines',line=line_style2)
+  go.Scatter3d(x=x,y=y,z=ones*P_X5, mode='lines',line=line_style)
 )
 
 camera = dict(
     up=dict(x=0, y=0, z=1),
     center=dict(x=0, y=0, z=0),
-    eye=dict(x=0.4, y=-0.5, z=0.9)
+    eye=dict(x=0.5, y=-1.2, z=1)
 )
 
-fig.update_layout(showlegend=False, scene_camera=camera)
+fig.update_layout(
+  showlegend=False, scene_camera=camera, 
+  scene=dict(xaxis=dict(nticks=20),yaxis=dict(nticks=20)),
+  width=600,
+  height=600,
+)
 
 fig.show()
 ```
@@ -523,7 +526,7 @@ $$
 
 Which gives us the normal distribution (where $\mu=0$).
 
-Fin.[^2]
+Fin.
 
 [^1]:
   For any base $b$, we can reformulate it in terms of the natural number $e$
