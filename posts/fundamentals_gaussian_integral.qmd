@@ -1,0 +1,240 @@
+---
+title: "The gaussian integral"
+author: "Chris Kelly"
+date: '05-13-24'
+categories: [Gaussian, Fundamentals]
+format:
+  html:
+    code-fold: true
+    toc: true
+    html-math-method: mathjax
+    other-links:
+      - text: Deriving the Gaussian Distribution
+        href: fundamentals_gaussian_dist.html
+image: '../images/fundamentals_gaussian_integral.png'
+---
+
+::: {.callout-tip}
+### What are we exploring?
+Why does the area under the gaussian integral $\int_{-\infty}^{+\infty}{e^{-x^2}\,dx}=\sqrt{\pi}$?
+:::
+
+## Radial symmetry
+
+We want to estimate the area under the curve of the gaussian distribution, between negative and positive infinity.
+
+First, lets define another gaussian distribution, called $I^2$, and in terms of $r$:
+
+$$
+\displaylines{
+\begin{align}
+I^2 & = \int_{-\infty}^{+\infty}{e^{-r^2}\,dr}
+\end{align}
+}
+$$
+
+Why $r$? Well because we are going to take advantage of the fact that the gaussian distribution is radially symmetric. This means that the probability density only depends on the distance from the centre, not the direction. So if we think of $r$ as the radius of the circle, we can reformulate $f(r) = -r^2$ as $f(x,y) = -(x^2+y^2)$ (using pythagoras).
+
+We can thus show that $I^2$ is just the square of the integral we are after:
+
+$$
+\displaylines{
+\begin{align}
+I^2 = & \int_{-\infty}^{+\infty}{e^{-(r^2)}\,dr} \\
+= & \int_{-\infty}^{\infty}{\int_{-\infty}^{\infty}{e^{-(x^2+y^2)}\,dy\,dx}} \\
+= & \int_{-\infty}^{\infty}{\int_{-\infty}^{\infty}{e^{-x^2} \times e^{-y^2}\,dy\,dx}} \\
+= & \int_{-\infty}^{\infty}{\left(\int_{-\infty}^{\infty}{e^{-y^2}\,dy}\right) e^{-x^2}\,dx} \\
+= & \left(\int_{-\infty}^{\infty}{e^{-x^2}\,dx}\right)\times\left(\int_{-\infty}^{\infty}{e^{-y^2}\,dy}\right) \\
+\equiv & \left(\int_{-\infty}^{\infty}{e^{-x^2}\,dx}\right)\times\left(\int_{-\infty}^{\infty}{e^{-x^2}\,dx}\right) \\
+= & I \times I \\
+\end{align}
+}
+$$
+
+So if we can solve $\int_{-\infty}^{\infty}{\int_{-\infty}^{\infty}{e^{-(x^2+y^2)}\,dy\,dx}}$, then we just need to find its square root to get the answer to the original question.
+
+## Calculating the volume under the 2d gaussian distribution
+
+So let's visualise this: $I^2$ is a 2d gaussian distribution along the x and y axes:
+
+```{python}
+import numpy as np
+import plotly.graph_objects as go
+from math import pi, sqrt, exp
+
+bounds = [-2,2,100]
+
+# Generate x and y values
+x = np.linspace(*bounds)
+y = np.linspace(*bounds)
+zeros = np.zeros(len(x))
+xx, yy = np.meshgrid(x, y)
+# calculate gausian values
+z = np.exp(-(xx**2))
+zz = np.exp(-(xx**2+yy**2))
+
+# Create the surface plot
+fig = go.Figure()
+fig.add_trace(
+  go.Surface(
+    x=xx, y=yy, z=zz, 
+    opacity=0.3,
+    colorscale=[(0, 'gray'), (1, 'gray')],
+    showscale=False,
+    contours = dict(
+        x= {"show": True, "size": 0.5},
+        y= {"show": True, "size": 0.5},
+        # z= {"show": True, "start": 0, "end": 1, "size": 0.025},
+    )
+  )
+)
+
+fig.update_layout(
+    scene = {
+      "aspectratio": {"x": 1, "y": 1, "z": 0.8},
+      "xaxis": {"showgrid": True, "showbackground": True},
+      "yaxis": {"showgrid": True, "showbackground": True},
+      "yaxis": {"showgrid": True, "showbackground": True},
+    },
+    scene_camera_eye=dict(x=1.25, y=1.25, z=0.8),
+    showlegend=False,
+)
+
+fig.show()
+```
+
+<br>
+How might we go about estimating the volume? What we are looking for are shapes that have the same radial symmetry as the 2d gaussian distribution. 
+
+A tube (a hollow cylinder) would be a perfect candidate for this. The visual below shows how we might approximate the volume under the surface using a series of tubes:
+
+```{python}
+def create_tube(
+        radius_outside = 0.3,
+        radius_inside = 0,
+        height = 0.9,
+        intervals = 200,
+    ):
+
+    # points around circumference of the cylinder, using number of intervals specified (e.g. 30)
+    theta_discr = np.linspace(0, 2*np.pi, intervals) # generate values from 0 to 2*pi
+    x, y = np.cos(theta_discr), np.sin(theta_discr) # generate x and y values using sin and cos
+
+    # generate top and bottom rings for the tube
+    xi, xo = x * radius_inside, x * radius_outside
+    yi, yo = y * radius_inside, y * radius_outside
+    tube_x = [i for l in zip(xi, xi, xo, xo) for i in l]
+    tube_y = [i for l in zip(yi, yi, yo, yo) for i in l]
+    tube_z = np.tile([0,height,height,0],int(len(tube_x)/4))
+
+    return dict(x=tube_x, y=tube_y, z=tube_z)
+
+fig.add_trace(
+  go.Scatter3d(**create_tube(0.3,0.0,0.9), mode='lines', line=dict(color="rgba(57,106,170,0.3)",width=2), name = "Tube 1"), 
+  )
+
+fig.add_trace(
+  go.Scatter3d(**create_tube(0.6,0.3,0.7), mode='lines', line=dict(color="rgba(218,124,48,0.3)",width=2), name = "Tube 2"),
+  )  
+
+fig.add_trace(
+  go.Scatter3d(**create_tube(0.8,0.7,0.5), mode='lines', line=dict(color="rgba(62,150,81,0.5)",width=2), name = "Tube 3"),
+  )
+
+fig.add_trace(
+  go.Scatter3d(**create_tube(1.1,0.8,0.3), mode='lines', line=dict(color="rgba(204,37,41,0.3)",width=3), name = "Tube 4"),
+  )  
+fig.add_trace(
+  go.Scatter3d(**create_tube(1.5,1.1,0.1), mode='lines', line=dict(color="rgba(40,102,200,0.5)",width=3), name = "Tube 5"),
+  )    
+
+fig.add_trace(
+  go.Surface(
+    x=xx, y=yy, z=zz, 
+    opacity=0.1,
+    colorscale=[(0, 'gray'), (1, 'gray')],
+    showscale=False,
+    contours = dict(
+        x= {"show": True, "size": 0.5},
+        y= {"show": True, "size": 0.5},
+        # z= {"show": True, "start": 0, "end": 1, "size": 0.025},
+    )
+  )
+)  
+
+fig.update_layout(
+    showlegend=True, 
+    scene = dict(
+        aspectratio=dict(x=1, y=1,z=1),
+        aspectmode="manual"
+        )
+)  
+
+fig.show()
+```
+
+<br>
+Now we can make the estimation more accurate by increasing the number of tubes: thus decreasing the height and thickness of each tube. In fact, we would want an infinite number of tubes, with radii increasing from 0 to infinity, and thus each one having an infinitesimally small width.
+
+A formula for working out the volume of each tube would thus approximate to the following:
+
+$$
+\displaylines{
+\begin{align}
+\text{volume} & = \text{circumference} \times \text{height} \times \text{thickness} \\
+& = 2\pi r \times e^{-r^2} \times \delta r
+\end{align}
+}
+$$
+
+:::{.column-margin}
+We don't need to worry that the circumference on the outside being slightly larger than the circumference on the inside. Since we are eventually estimating an infinite number of tubes, the thickness of each tube will be infinitesimally small, and thus the difference in circumference will be infinitesimally small too.
+:::
+
+Since we want to perform an infinite sum of these tube volumes, we are really just looking for the integral across all tube radii from zero to infinity:
+
+$$
+\displaylines{
+\begin{align}
+\therefore I^2 = \int_{-\infty}^{\infty}{\int_{-\infty}^{\infty}{e^{-(x^2+y^2)}\,dy\,dx}}
+\equiv \int_{0}^{\infty}{2\pi r \times e^{-r^2}\, dr}
+\end{align}
+}
+$$
+
+## Solving the integral
+
+Now we can solve this by substitution:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } u & = r^2 \\
+\Rightarrow du & = 2rdr & \because \frac{du}{dr} = 2r &  \\ \\
+\Rightarrow & \int_{0}^{\infty}{2\pi r \times e^{-r^2}\, dr} \\
+= & \int_{0}^{\infty}{\pi e^{-u}\, du} \\
+= & \pi \bigg[-e^{-u} \bigg]_{0}^{\infty} \\
+= & \pi \bigg[-(0-1)\bigg] \\
+= & \pi
+\end{align}
+}
+$$
+
+Thus:
+
+$$
+\displaylines{
+\begin{align}
+& I^2 = \pi \\
+\Rightarrow \text{ } & I = \sqrt{\pi}
+\end{align}
+}
+$$
+
+And so:
+
+$$
+\int_{-\infty}^{+\infty}{e^{-x^2}\,dx}=\sqrt{\pi}
+$$
+
+Fin.
