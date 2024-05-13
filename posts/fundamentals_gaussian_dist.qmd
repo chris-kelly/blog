@@ -427,7 +427,7 @@ $$
 $$
 
 :::{.column-margin}
-The integral $\int_{-\infty}^{\infty}{e^{-z^2}}{dz} = \sqrt{\pi}$ is a special case of the gaussian integral. [This video is a great explanation](https://www.youtube.com/watch?v=l27xKSNad2Y) if you are interested in its derivation.
+The integral $\int_{-\infty}^{\infty}{e^{-z^2}}{dz} = \sqrt{\pi}$ is a special case: of the gaussian integral. [See this page](fundamentals_gaussian_integral.html) if you are interested in its derivation.
 :::
 And thus:
 
