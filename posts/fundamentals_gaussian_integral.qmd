@@ -33,9 +33,11 @@ I^2 & = \int_{-\infty}^{+\infty}{e^{-r^2}\,dr}
 }
 $$
 
-Why $r$? Well because we are going to take advantage of the fact that the gaussian distribution is radially symmetric. This means that the probability density only depends on the distance from the centre, not the direction. So if we think of $r$ as the radius of the circle, we can reformulate $f(r) = -r^2$ as $f(x,y) = -(x^2+y^2)$ (using pythagoras).
+Why $r$? Well because we are going to take advantage of the fact that the gaussian distribution is radially symmetric. This means that the probability density only depends on the distance from the centre, not the direction.
 
-We can thus show that $I^2$ is just the square of the integral we are after:
+So really, $I^2$ is a 2d gaussian distribution. And if we think of $r$ as the radius of the circle, we can reformulate $f(r) = -r^2$ as $f(x,y) = -(x^2+y^2)$ (using pythagoras). The height of the pdf, $z$, is then $e^{-(r^2)} = e^{-(x^2+y^2)}$.
+
+We can thus show that $I^2$ is simply the square of the integral we are after:
 
 $$
 \displaylines{

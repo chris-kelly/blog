@@ -35,13 +35,23 @@ fig = go.Figure()
 points = [(5,0), (0,5), (0,-5), (3,4), (-4,-3)]
 
 # Add the points to the plot
+fig.add_trace(
+  go.Scatter(
+    x=[p[0] for p in points], 
+    y=[p[1] for p in points], 
+    mode='markers', 
+    marker = dict(symbol='cross',color='black', size=20)
+  )
+)
+
+# Add lines to the plot
 for point in points:
     fig.add_trace(
       go.Scatter(
         x=[0, point[0]/2], 
         y=[0, point[1]/2], 
         mode='lines', 
-        line=dict(color='#636363')
+        line=dict(color='#636363'),
       )
     )
 
@@ -262,10 +272,12 @@ What does this really mean? Well (1) means there is "radial symmetry". In other 
 
 $$
 \displaylines{
-\begin{gather}
-P_{X,Y}(X = x, Y = y) = P_{X,Y}(X = x', Y = y') \\
-\iff x^2 + y^2 = x'^2 + y'^2
-\end{gather}
+\begin{align}
+\text{Let } & x^2 + y^2 = x'^2 + y'^2 \\
+\text{Where } & x \neq x', y \neq y'\\
+\text{Then: } \\
+& P_{X,Y}(X = x, Y = y) = P_{X,Y}(X = x', Y = y') \\
+\end{align}
 }
 $$
 
@@ -291,7 +303,7 @@ $$
 
 Now you might be thinking at this point - why start with two distributions? It would be easier to derive the normal distribution from just one variable, $X$. However, initially providing a second independent variable $Y$ (which we now remove) provides a shortcut to derive the normal distribution for $X$, so it is a useful step.
 
-Since $Y$ is i.i.d, then the probability density $g(Y=0)$ is constant regardless of $X$ (i.e. $P_Y(0) = \gamma$ where $\gamma$ is some constant). We can similarly denote the constant $P_X(0) = \lambda$.
+Since $Y$ is i.i.d, then the probability density $P_Y(Y=0)$ is constant regardless of $X$ (i.e. $P_Y(Y=0) = \gamma$ where $\gamma$ is some constant). We can similarly denote the constant $P_X(0) = \lambda$.
 
 Thus, for any distance $z$:
 
