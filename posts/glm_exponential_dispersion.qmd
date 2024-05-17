@@ -1,24 +1,24 @@
 ---
-title: "GLM: exponential dispersion families"
+title: "Generalized Linear Models from scratch"
 author: "Chris Kelly"
-date: '02-21-24'
+date: '05-15-24'
 categories: []
 format:
   html:
     code-fold: false
     toc: true
-draft: true
+image: '../images/glm_exponential_dispersion.png'
 ---
 
 ## Intro: random and systematic components are connected via link functions
 
 There many types of generalized linear regression models: such as linear regression, logistic regression, poisson regression etc. Every one of these models is made up of a "random component" and a "systematic component". Each also has a "link function" that combines the random and systematic parts.
 
-Let's run through an example for a poisson regression:
+Let's take the example of a poisson regression:
 $$
 \displaylines{
-\underbrace{\ln{(\mu_i)}}_{\text{link function}} = \underbrace{X_i^{\intercal}\beta}_{\text{systematic}} \\
-\underbrace{y_i \sim Pois(\mu_i)}_{\text{random}}
+\underbrace{y_i \sim Pois(\mu_i)}_{\text{random}} \\
+\underbrace{\ln{(\mu_i)}}_{\text{link function}} = \underbrace{X_i^{\intercal}\beta}_{\text{systematic}}
 }
 $$
 
@@ -40,13 +40,13 @@ But how do we find a good estimation for $\mathbb{E}[y_i|X_i]=\mu_i$? Concretely
 
 #### Systematic component and link function
 
-In most cases, the systematic component $\eta(X)$ is just a linear transformation of $X$, usually just the result of multiplying each value by some good fitted coefficients $\beta$.
+In most cases, the systematic component $\eta(X)$ is usually just a linear transformation of $X$, most often the result of multiplying each value by some good fitted coefficients $\beta$.
 
 $$
-\eta(X) = X^{\intercal}\beta
+\eta(X_i) = X_i^{\intercal}\beta
 $$
 
-The link function is more unique to each distribution: we use it so that we can map the systematic component to the parameter of the random component. For example, in poisson regression, we use a log link function, which just the systematic component predicts the natural log of the mean rate of the count. 
+The link function is a way of choosing how to map the systematic component to the natural parameter of the random component. For example, in poisson regression, we use a log link function, which means the systematic component predicts the natural log of the mean rate of the count. 
 
 $$
 \ln{(\mu_i)} = \eta(X) = X^{\intercal}\beta
@@ -66,38 +66,74 @@ First let's define some generic notation for generalized linear models:
 
 $$
 \displaylines{
-\underbrace{g{(\mu_i)}}_{\text{link function}} = \underbrace{\eta(X)}_{\text{systematic}} \\
-\underbrace{y_i \sim f_{\theta_i}(\mu_i)}_{\text{random}}
+\underbrace{g{(\xi_i)}}_{\text{link function}} = \underbrace{\eta(X_i)}_{\text{systematic}} \\
+\underbrace{y_i \sim f_y(\xi_i,\phi_i)}_{\text{random}}
 }
 $$
 
-Here are some examples of them applied to the poisson, bernoulli and gaussian regressions:
+$\xi_i$ is a shape parameter, governing the shape of the distribution (e.g. in poisson, the expected value is the mean $\xi_i=\mu_i$). 
 
-Term | Count | Binary | Normal
----|---|---|---
-Link function | log-link | logit-link | identity-link
-$g(\mu)$ | $\ln{(\mu_i)}$ | $\ln{\left[\frac{\mu_i}{1-\mu_i}\right]}$ | $\mu$
-Probability Density Function | Poisson: $y_i \sim Pois(\mu_i)$ | Bernoulli: $y_i \sim Bern(\mu_i)$ | Gaussian $y_i \sim N(\mu_i,\sigma^2)$ 
-$f_{\theta_i}(\mu_i)$ |  $y_i \sim \frac{\mu_i^{y} \times e^{-\mu_i}}{y!}$ | $y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}$ | $y_i \sim \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}\left(\frac{y_i-\mu_i}{\sigma^2}\right)^2}$
+$\phi$ is a dispersion parameter, although it is not always necessary (e.g. gaussian has the standard deviation $\phi = \sigma$, but in poisson the variance is equated to the expected rate so not required).
 
-And all of these can be represented using the same generic formula!
+Here are some examples of the common forms of poisson, bernoulli and gaussian probability distribution functions $y \sim f_{\theta_i}(\mu_i)$, along with some choices for link functions $g(\mu)$ to use in regression:
+
+Type | Probability Density Function: | Link Function for Regression:
+---|---|---
+Count | $y_i \sim Pois(\mu_i)$<br>$y_i \sim \frac{\mu_i^{y} \times e^{-\mu_i}}{y!}$ | $g(\mu) = \ln{[\mu_i]}$<br>(log-link)
+Binary | $y_i \sim Bern(\mu_i)$<br>$y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}$ | $g(\mu) = \ln{\left[\frac{\mu_i}{1-\mu_i}\right]}$<br>(logit-link)
+Binary | $y_i \sim Bern(\mu_i)$<br>$y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}$ | $g(\mu) = \Phi^{-1}[\mu_i]$<br>(probit-link)
+Normal | $y_i \sim N(\mu_i,\sigma^2)$<br>$y_i \sim \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}\left(\frac{y_i-\mu_i}{\sigma^2}\right)^2}$ | $g(\mu) = \mu$<br>(identity-link)
+
+Now all of these probability density functions can be reformulated as being of the exponential family form!
 
 $$
-f(y;\theta,\phi) = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} }
+\displaylines{
+\begin{align}
+f(y;\xi,\phi) 
+& = 
+\exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } & \tag{1.1}
+\end{align}
+}
 $$
 
+Which we will do now:
+
+$$
+\displaylines{
+\begin{align}
+f(y;\xi,\phi) 
+& = 
+\exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } & \tag{1.1}
+\\
+\equiv f(y; \theta_i, \phi)
+& = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} } & \tag{1.2}
+\\
+\\
+& \iff T(y) = y; g(\xi) = r(\xi) = \theta
+\end{align}
+}
+$$
+
+Now when reformulating the probability density functions into the exponential family form, a good choice for the link function $g(.)$ often "reveals itself": i.e. the "canonical" choice of $g(\xi_i) = r(\xi_i)$.
+
+If the chosen link function is this canonical one, then we can further simplify the non-canonical form $(1.1)$ to its more common canonical form $(1.2), iff:
+
+1. $T(y) = y$ i.e. it happens to be the identity function.
+1. $g(\xi) = r(\xi)$ i.e. $r(\xi)$ is identical to the chosen link function $g(\xi)$. If we are using a linear predictor too, so $r(\xi_i)=\theta_i = \eta(X_i) = X_i^{\intercal}\beta$, then we actually find $b(\xi) = b(\theta_i)$ too, hence simplifying to $(1.2)$.
+
+Now it is actually true that both these conditions are met for poisson, logistic and gaussian regression! However isn't true for probit, because the choice of link function is not "canonical", i.e. $r(\mu_i) \neq \Phi^{-1}[\mu_i]$. We will go through this later though.
 
 ### Intuition behind the exponential form
 
-There's a lot of terms in the formula above, which we will now try to give intuition behind. But don't worry if it seems hard to get your head around: we are going to show how to reformulate each of the poisson, binomial and gaussian distributions into an exponential dispersion family form after this, to provide further intuition:
+There's a lot of terms in the formula above. We will try to give some intuition behind $(1.2)$, but don't worry if this still seems hard to get your head around: we are going to show how to reformulate each of the poisson, binomial and gaussian distributions into an exponential dispersion family form after this, to provide further intuition:
 
 Parameter / Function | intuition
----|:-------
-$\theta$ is the "natural parameter" | A transformation of $\eta(X)$. As we are using the canonical link, just think of $\theta = \eta(X) = X^{\intercal}\beta$ from here on.
-$\phi$ is the "dispersion parameter", | A measure of the expected dispersion of the residuals. E.g. for gaussian regression, $\phi=\sigma$, the standard deviation of the residuals.
-$a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \phi^2$. It isn't needed for one parameter distributions, like the poisson, where we assume the variance is a function of the mean.
-$c(.)$ an adjustment function | A function that adjusts the pdf so that it sums to one. Again not needed for the exponential form of the poisson distribution, which already sums to one, but useful for the gaussian.
-$b(.)$ is the integral of the "activation function" | This is a bit tricky at first. We find its first differential $b'(\theta)$ is a linear function mapping $g'(\theta)$ to $\mu$ (i.e. the inverse of the link function, which maps $\theta = g(\mu)$). For example, poisson regression has log-link function: $g(\mu) = \ln{(\mu)}$. So the natural inverse is the logistic function: $b'(\theta) = g'(\mu)= \exp{(\theta)}$. The integral of this happens to be the same in this case: $b(\theta) = \int{\exp{\{\theta\}}} = \exp{\{\theta\}}$
+---|:--------
+$\theta$ is the "natural parameter" | This is a parameter influencing the shape of the distribution. It is clearly related to location, but sometimes the dispersion too. For example, in bernoulli, the mean (expected) $p_i = \mu_i$, so $\theta_i = g(\mu_i)=\ln{\left(\frac{\mu_i}{1-\mu_i}\right)}=\ln{\left(\frac{p_i}{1-p_i}\right)}$. However, since $\mathbb{V}[y]=p_i(1-p_i)$, it also governs the dispersion of the bernoulli too. 
+$\phi$ is the "dispersion parameter", | A parameter for the expected dispersion of $y_i$ around $\mu_i$. For example, gaussian regression has $\phi=\sigma$, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance $\mathbb{V}[y_i] = \lambda_i$ (i.e. already determind by $\theta_i$).
+$a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$. Again this isn't needed for one parameter distributions.
+$c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.
+$b(.)$ is the integral of the inverse-link function | It helps to look at $b'(\theta)$ first. Whereas the link function maps $\mu \rightarrow \theta$, i.e. $g(\mu) = \theta$, the inverse of the link function maps the other way $\theta \rightarrow \mu$ i.e. $b'(\theta)=g^{-1}(\theta)=\mu$. You might also recognise this as the "activation function" in the outer layer of neural networks. Then, the integral $b(\theta) = \int{b'(\theta)\,d\theta}$ by definition. <br> For example, poisson regression has log-link function: $g(\mu) = \ln{(\mu)} = \theta$. So the inverse-link function is the exponential: $b'(\theta) = g'(\mu)= \exp{(\theta)}$. It just so happens the integral is the same in this case: $b(\theta) = \int{\exp{\{\theta\}}} = \exp{\{\theta\}}$
 
 ### Poisson
 
@@ -122,7 +158,17 @@ y_i \ln{ \left[ \mu_i \right]}
 -\mu_i
 - \ln{ \left[ y_i! \right] }
 \right\}}
-\\ & = \exp{ \left\{ 
+\\ & \equiv \exp{ \left\{ 
+\frac{
+  \underbrace{y_i}_{T(y)}
+  \underbrace{\ln{ \left[ \mu_i \right]}}_{r(\xi_i)}
+  - \underbrace{\mu_i}_{b(\xi_i)}
+}{
+  \underbrace{1}_{a(\phi)}
+} 
+- \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
+\right\}}
+\\ & \equiv \exp{ \left\{ 
 \frac{y_i 
   \underbrace{\ln{ \left[ \mu_i \right]}}_{\theta_i}
   - \underbrace{\mu_i}_{b(\theta_i)}
@@ -138,14 +184,13 @@ $$
 
 So we find that:
 
-* $\theta_i$ is just our link function: $\theta_i = g(\mu_i) = \ln{[\mu_i]}$
-  * This maps directly to our systematic component, i.e. $\theta_i = g(\mu_i) = \ln{[\mu_i]} = X_i^\intercal\beta$
+* Since we are using the log-link, our choice of link function is canonical: $r(\xi_i) = \ln{[\mu_i]} = g(\mu_i)$. So we can simplify to $\theta_i$!
 * $b(\theta_i) = \mu_i = \exp\{\theta_i\}$.
-  * Note that the differential of this with respect to $\theta_i$ is still the exponential function, $\frac{\partial b(\theta_i)}{\partial \theta_i}=\exp\{{\theta_i}\}$. This differential is the inverse of the log-link function!
-* Again, we can ignore $a(\phi)$. This term usually helps normalize the pdf by its dispersion, but the bernoulli distribution only has one parameter: the variance is determined by the probability of success, $V[y_i] = \mu_i^{y_i}(1-\mu_i)^{1-y_i}$. So again, we do not need to normalise it.
-* Since the exponential form of the poisson distribution does not actually sum to one, we need to adjust it using $c(y_i,\phi)=\ln{ \left[ y_i! \right] }$.
+  * Note that the differential of this with respect to $\theta_i$ is still the exponential function, $\frac{\partial b(\theta_i)}{\partial \theta_i}=\exp\{{\theta_i}\}$. So the differential is the inverse of the log-link function!
+* We can ignore $a(\phi)$. This term usually helps normalize the pdf by its dispersion, but the poisson distribution only has one parameter: the variance is identical to the mean, $\mathbb{V}[y_i] = \mu_i$. So no normalisation is needed.
+* Since the exponential form of the poisson distribution actually sums to more than one, we need to adjust it using $c(y_i,\phi)=\ln{ \left[ y_i! \right] }$.
 
-### Bernoulli
+### Bernoulli (Logit vs probit)
 
 Let's take the bernoulli pdf with expected success probability $p_i=\mu_i$, and reformulate it to the exponential dispersion family form:
 
@@ -161,6 +206,18 @@ f(y;\theta,\phi)
 & = \exp{ \left\{ y_i \ln{[\mu_i]} + (1-y_i)\ln{[1-\mu_i]} \right\}} \\
 & = \exp{ \left\{ y_i \ln{
   \left[\frac{\mu_i}{1-\mu_i} \right]} + \ln{[1-\mu_i]} \right\}} \\
+& = \exp{ \left\{ \frac{
+  \underbrace{y_i}_{T(y)}
+\underbrace{ \ln{
+  \left[\frac{\mu_i}{1-\mu_i} \right]
+} }_{r(\xi_i)}
+  + \underbrace{ \ln{[1-\mu_i]} }_{b(\xi_i)}
+  }{
+    \underbrace{1}_{a(\phi)}
+  } 
+  + \underbrace{0}_{c(y_i,\phi)}
+\right\}} 
+\\
 & = \exp{ \left\{ \frac{y_i 
 \underbrace{ \ln{
   \left[\frac{\mu_i}{1-\mu_i} \right]
@@ -178,12 +235,12 @@ $$
 
 So we find that:
 
-* $\theta_i$ is just our link function: $\theta_i = g(\mu_i) = \ln{\left[\frac{\mu_i}{1-\mu_i} \right]}$
-  * This maps directly to our systematic component, i.e. $\theta_i = g(\mu_i) = \ln{\left[\frac{\mu_i}{1-\mu_i} \right]} = X_i^\intercal\beta$
+* Now when using the logit-link, our choice of link function is canonical: $r(\xi_i) = \ln{\left[\frac{\mu_i}{1-\mu_i} \right]} = g(\mu_i)$. So we can simplify to $\theta_i$ when using logistic regression!
+  * However, this isn't the case for probit, since $r(\xi_i) = \ln{\left[\frac{\mu_i}{1-\mu_i} \right]} \neq g(\mu_i) = \Phi^{-1}[\mu_i]$. So to conduct probit regression, we need to use the non-canonical form.
 * $b(\theta_i) = \ln{[1-\mu_i]} = \ln{[1+\exp\{\theta_i\}]}$[^1].
   * Note that the differential of this with respect to $\theta$ is just the logistic function, $\frac{\partial b(\theta_i)}{\partial\theta_i}=\frac{\exp\{\theta_i\}}{1+\exp\{\theta_i\}}$. This differential is the inverse of the logit link function.
-* We can ignore $a(\phi)$. This term usually helps normalize the pdf by its dispersion, but the poisson distribution only has one parameter: the variance is identical to the mean. so we do not need to normalise it.
-* We can also ignore $c(y_i,\phi)$. This term usually adjusts the pdf so that it sums to one: but since the exponential form of the bernoulli distribution already sums to one, we do not need to adjust it.
+* We can ignore $a(\phi)$. This term usually helps normalize the pdf by its dispersion, but the bernoulli distribution only has one parameter: the variance is $\mathbb{V}[y_i] = \mu_i \times (1-\mu_i)$
+* We can also ignore $c(y_i,\phi)$. Since the exponential form of the bernoulli distribution already sums to one, we do not need to adjust it.
 
 :::{.column-margin}
 See footnotes for deriving $\ln{[1-p]} = \ln{[1+\exp\{X_i^{\intercal}\beta\}]}$.
@@ -244,12 +301,11 @@ $$
 
 So we find that:
 
-* $\theta_i$ is just our link function, which is also just the identity: $\theta_i = g(\mu_i) = \mu_i$
-  * This maps directly to our systematic component, i.e. $\theta_i = g(\mu_i) = \mu_i = X_i^\intercal\beta$
-* $b(\theta_i) = \frac{\mu_i^2}{2} \equiv \frac{\theta_i^2}{2}$. You might recognise this squared term as part of the usual cost function for least squares regression!
+* Since we are using the identity-link, our choice of link function is canonical: $r(\xi_i) = \xi_i = g(\xi_i)$. So we can simplify to $\theta_i$!
+* $b(\theta_i) = \frac{\mu_i^2}{2}$. You might recognise this squared term as part of the usual cost function for least squares regression!
   * Note that the differential of this with respect to $\theta_i$ is the identity, $\frac{\partial b(\theta_i)}{\partial \theta_i}=\theta_i$. It is the inverse of the link function (again the identity).
 * Finally, we have a use for $a(\phi)$. The gaussian distribution has two parameters, a second relating to its variance, so we need to normalize our cost function by this measure of the dispersion of our data.
-* And again, we have a use $c(y_i,\phi)$. Without this correction, the exponential form of the gaussian distribution does not sum to one, so we need to add an adjustment.
+* And again, we have a use $c(y_i,\phi)$. Without this correction, the exponential form of the gaussian distribution sums to more than one.
 
 ## Solving for any exponential family using maximum likelihood estimation
 
@@ -258,7 +314,7 @@ So now we have shown we can reformulate poisson, binomial and normal regressions
 So let's define our generic cost function in negative log-likelihood form:
 
 :::{.column-margin}
-Maximising the the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Further, taking the negative ensures we are looking to minimize the cost:
+Maximising the the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Also, taking the negative ensures we are looking to minimize the cost.
 :::
 $$
 \displaylines{
@@ -332,7 +388,7 @@ $$
   \bigg\} } 
 \\ & \because c() \text{ is constant with respect to } \beta
 \\
-& =\underbrace{\frac{1}{a(\phi)}}_{\text{Also irrelevant}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
+& =\underbrace{\frac{1}{a(\phi)}}_{\text{Constant}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
 \end{align}
 }
 $$
@@ -381,7 +437,9 @@ $$
 
 Let's now start to write out some python to create this ourselves.
 
-## Writing a generic base class
+## Coding it up from scratch
+
+### Base class for canonical exponential dispersion family
 
 Let's start creating a generic base class then that we can use for any distribution that can be represented by the canonical exponential dispersion family:
 ```{python}
@@ -479,6 +537,8 @@ class base_canonical_exponential_dispersion_family():
       
 ```
 
+### Base class for canonical exponential dispersion family
+
 And now we have our base class, we can utilise it for specific classes of the poisson, bernoulli and gaussian distributions:
 
 ```{python}
@@ -575,554 +635,27 @@ class poisson_family(base_canonical_exponential_dispersion_family):
       super().__init__(y,X,b,db,d2b,dispersion,a,c)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Systematic component
-
-The "systematic" component is a function of $X$ (since $X$ is not a random variable, it is considered systematic).
-
-For generalized linear models, we are always modeling a transformation of X by a linear function through $\beta$, so we can simply write for every canonical form:
-$$
-\eta(X) = X^{\intercal}\beta
-$$
-
-#### Random component
-
-The "random" component models the distribution of $Y$ conditional on $X$.
-
-For example, logistic regression uses a bernoulli distribution:
-
-* $Y|X \sim \text{Bern}(p)$.
-* Since $p = E[Y|X] = \mu$, the error is $p$ if $y=0$, or $1-p$ if $y=1$.
-* So we can write the distribution in terms of its errors as $Y|X = \mu^y \times (1-\mu)^{(1-y)}$
-
-#### Link function
-
-The "link function" $g(.)$ connects the random and systematic components. It provides a connection between $\mu = \mathbb{E}[Y|X]$ and $\eta(X)$:
-
-$$
-g(\mu) = \eta(X)
-$$
-
-For example, in logistic regression:
-
-$$
-g(\mu) = \ln{\left[\frac{\mu}{1-\mu}\right]} = X^{\intercal}\beta = \eta(X)
-$$
-
-#### The natural parameter
-
-A so-called "natural parameter" $\theta$ is one that governs the shape of $Y|X$. However, there is a default choice of link function, called the "canonical link", which simply sets $\theta = \eta$.
-
-So it can help to think of $\theta$ going forwards as:
-
-$$
-\theta = \eta(X) = g(\mu) = X^{\intercal}\beta
-$$
-
-## The Exponential Dispersion Family of Distributions
-
-Many probability distribution functions (pdf) can be represented as an exponential family density:
-
-$$
-f(y;\theta,\phi) = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} }
-$$
-
-
-:::{.column-margin}
-Take this for granted for now - we will show how this is the case for the bernoulli, poisson and gaussian distributions later.
-:::
-
-If we can formulate our regressions in this way, this means we only need to use one formula to estimate each family via maximum likelihood estimation!
-
-$$
-\displaylines{
-\begin{align}
-L(\theta) 
-& = \prod_{i=1}^n{
-  f(y_i;\theta_i,\phi)
-}
-\\ & = \prod_{i=1}^n{
-  \exp{ \left\{
-    \frac{y \theta - b(\theta)}{a(\phi)} 
-    + c(y,\phi) 
-  \right\} }
-}
-\\ \therefore \mathcal{L}(\theta) 
-& = -\ln \left\{ \prod_{i=1}^n{
-  \exp{ \left\{ 
-    \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} 
-    + c(y_i,\phi) 
-  \right\} }
-} \right\}
-\\ & = -\sum_{i=1}^n{ \left\{
-  \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} 
-  + c(y_i,\phi)
-\right\} }
-\\ & = -\left(
-\frac{1}{a(\phi)} 
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } + 
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}} \right)
-\end{align}
-}
-$$
-
-And we also find a generic formula to minimize the cost function with respect to $\beta$. This is sometimes called the "score function" (the first derivative of the log likelihood with respect to $\beta$):
-
-$$
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[ \mathcal{L}(\theta) \right]
-& = \arg \min_\beta \left[ -\left(
-\frac{1}{a(\phi)} 
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } + 
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right)\right]
-\\ 
-& = \arg \min_\beta \left[ -\left(
-\frac{1}{a(\phi)} 
-\sum_{i=1}^n{ \bigg\{
-    y_i X_i^{\intercal}\beta - b(X_i^{\intercal}\beta)
-\bigg\} } + 
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right)\right] 
-& \because \theta = \eta(X) \text{ in the canonical case}
-\\
-\\
-\therefore \frac{\partial \mathcal{L}(\theta)}{\partial\beta_i} 
-& = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
-      y_i X_i  - \frac{\partial b(\theta)}{\partial \theta} X_i
-  \bigg\} } 
-& \because c() \text{ is constant with respect to } \beta
-\\
-& =\underbrace{\frac{1}{a(\phi)}}_{\text{Drops out}} \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
-\end{align}
-}
-$$
-
-$$
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[ \mathcal{L}(\theta) \right]
-& = \arg \min_\beta \left[ -\left(
-\frac{1}{a(\phi)} 
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } + 
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right)\right]
-\\ & \equiv \arg \min_\beta \left[
-  -\sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right] & \because a() \text{ and } c() \text{ are constant with respect to } \beta
-\\ & \equiv \arg \min_\beta \left[
-  -\sum_{i=1}^n{ \bigg\{
-      y_i X^{\intercal}\beta - b(X^{\intercal}\beta)
-  \bigg\} }
-\right] & \text{(} \theta = \eta(X) \text{ in the canonical case)}
-\\
-\\
-\therefore \frac{\partial \mathcal{L}(\theta)}{\partial\beta_i} 
-& = -\sum_{i=1}^n{ \bigg\{
-      y_i \frac{\partial \theta_i}{\partial \beta_i}  - \frac{\partial b(\theta)}{\partial \theta}\frac{\partial \theta}{\beta_i} 
-  \bigg\} } 
-\\
-& = -\sum_{i=1}^n{ \bigg\{
-      y_i X_i - \frac{\partial b(\theta)}{\partial \theta}X_i
-  \bigg\} }  
-\end{align}
-}
-$$
-
-:::{.column-margin}
-Only $\theta$ changes with respect to the choice of $\beta$. So $a(\phi)$ and $c(y_i,\phi)$, which are not a function of $\theta$, drop out.
-:::
-
-$\theta$ and $\phi$ are parameters, whereas $a$, $b$ and $c$ are functions. Below are some intuitions for these terms (but if it still seems confusing now, hold on! It can be helpful to look at how it is applied to the examples of the bernoulli, poisson and gaussian distributions later):
-
-Parameter / Function | intuition
----|:-------
-$\theta$ is the "natural parameter" | A transformation of $\eta(X)$. As we are using the canonical link, just think of $\theta = \eta(X) = X^{\intercal}\beta$ from here on.
-$b(.)$ is the integral of the "activation function" | A linear function mapping $\theta$ to $\mu$ (the inverse of the link function). E.g. Poisson uses a log link function: $g(\mu) = \ln{\{\mu\}}$. So the natural inverse is the logistic function: $b(\theta) = \exp{\{\theta\}}$
-$\phi$ is the "dispersion parameter", | A measure of the expected dispersion of the residuals. E.g. for gaussian regression, $\phi=\sigma$, the standard deviation of the residuals. 
-$a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \phi^2$.
-$c(.)$ an adjustment function | A function that adjusts the pdf so that it sums to one.
-
-::: {.column-margin}
-It might help to notice that the function $b(.)$ is simply the inverse of the activation function in the output layer of a neural network.
-:::
-
-
-### Writing a generic base class
-
-Let's start creating a generic base class then that we can use for any distribution that can be represented by the canonical exponential dispersion family:
-```{python}
-
-class base_canonical_exponential_dispersion_family():
-
-    def __init__(self,y,X,b,phi,a,c):
-      """
-      y:    Dependent variable. A 1d vector of numeric values 
-      X:    Independent variables. A 2d matrix of numeric values 
-      b:    Activation function. A function mapping η(X) to µ (inverse of link function)
-            E.g. for poisson regression, g(µ) = ln(µ) = η(X) = θ. So b(θ) = exp(θ).
-      db:   First derivative of activation function with respect to theta.
-            E.g. for bernoulli regression,b(θ) =  db(θ) = exp(θ).
-      phi:  The "dispersion parameter", φ. A measure of the dispersion of the distribution. 
-            E.g. for gaussian regression, φ is the standard deviation of the residuals.
-      a:    A function of φ. Normalizes the pdf using the dispersion parameter. 
-            E.g. for gaussian regression, it is the variance of the residuals, a(φ) = φ^2.
-      c:    A function of y and φ. Adjusts the likelihood so that the pdf sums to 1.
-      """
-
-      self.y = np.array(y).reshape(-1,1)
-      self.X = np.array(X).reshape(y.shape[0],-1)
-      self.b = b
-      self.phi = phi
-      self.a = a
-      self.c = c
-
-    def canonical_theta(X, beta):
-      """ In the canonical form, theta is simply θ = η(X)= X'β """
-      return X.dot(beta)
-
-    def negative_log_likelihood(self, beta):
-        """ Negative log likelihood i.e. the current cost
-        """
-        y, X = self.y, self.X
-        
-        theta = self.canonical_theta(self.X, beta)
-        phi = self.phi
-
-        a, b, c = self.a, self.b, self.c
-        
-        log_likelihood = ( y * _theta - b(_theta) ) / a(phi) + c(y,phi)
-        J = -1 * log_likelihood
-        
-        return J
-
-    def score_function(self, theta=None, phi=None):
-        """ First derivative of the cost function with respect to theta """
-        y, X, a, b = self.y, self.X, self.a, self.b
-        if theta is None:
-            theta = self.canonical_theta();
-        if phi is None:
-            phi = self.phi;
-        dJ = ( X.T/a(phi) ).dot( db( theta ) - y )
-        return dJ
-```
-
-### Bernoulli
-
-Let's take the bernoulli pdf with success probability $p$, and reformulate it to the exponential dispersion family form:
-
-$$
-\displaylines{
-\begin{align}
-f(y;\theta,\phi)
-& = p^y(1-p)^{1-y} \\
-& = \exp{ \left\{\ln{\left[p^y (1-p)^{(1-y)}\right]} \right\}} \\
-& = \exp{ \left\{
-  \ln{\left[p^y\right]} + \ln{\left[(1-p)^{(1-y)}\right]} 
-  \right\}} \\
-& = \exp{ \left\{ y \ln{[p]} + (1-y)\ln{[1-p]} \right\}} \\
-& = \exp{ \left\{ y \ln{
-  \left[\frac{p}{1-p} \right]} + \ln{[1-p]} \right\}} \\
-& = \exp{ \left\{ \frac{y 
-\underbrace{ \ln{
-  \left[\frac{p}{1-p} \right]
-} }_{\theta}
-  + \underbrace{ \ln{[1-p]} }_{b(\theta)}
-  }{
-    \underbrace{1}_{a(\phi)}
-  } 
-  + \underbrace{0}_{c(y,\phi)}
-\right\}} 
-\\ & = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} }
-\end{align}
-}
-$$
-
-Thus:
-
-* We thus find the link function, $\theta=\ln{\left[\frac{p}{1-p} \right]} = X_i^\intercal\beta$
-* And $b(\theta) = \ln{[1-p]} = \ln{[1+\exp\{X_i^{\intercal}\beta\}]}$[^1].
-
-:::{.column-margin}
-See footnotes for deriving $\ln{[1-p]} = \ln{[1+\exp\{X_i^{\intercal}\beta\}]}$.
-:::
-
-So now if we look to minimize $\beta$, we find we are simply minimizing the sum of squares:
-
-$$
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
-& = 
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - \ln[1-p]
-  \bigg\} }
-\right]
-\\ & = 
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i X_i^{\intercal}\beta - 
-      \ln{[1+\exp\{X_i^{\intercal}\beta\}]}
-  \bigg\} }
-\right]
-\end{align}
-}
-$$
-
-Which we can show is equivalent to the usual cost function for logistic regression:
-
-$$
-\displaylines{
-\begin{align}
-& -\sum_{i=1}^{N}{ \bigg\{
-  y_i\ln{ [ p_i ] } +
-  (1-y_i)\ln{ [ 1-p_i ] } 
-\bigg\} }
-\\ = &
--\sum_{i=1}^{N}{ \bigg\{
-  y_i \bigg( 
-    \ln{[ p_i ]} - \ln{ [ 1-p_i ] }
-  \bigg) + 
-  \ln[1-p_i]
-  \bigg\}
-} 
-\\ = &
--\sum_{i=1}^{N}{ \bigg\{
-  y_i \bigg( 
-    \ln{ \left[ \frac{p_i}{1-p_i} \right] }
-  \bigg) + 
-  \ln[1-p_i]
-  \bigg\}
-} 
-\\ = &
--\sum_{i=1}^{N}{ \bigg\{
-  y_i \theta - b(\theta) 
-  \bigg\}
-} 
-\end{align}
-}
-$$
-
-### Poisson
-
-Let's have a look at poisson, with mean rate of $\lambda$:
-
-$$
-\displaylines{
-\begin{align}
-f(y;\theta,\phi) 
-& = 
-\frac{\lambda^ye^{-\lambda}}{y!}
-\\ & = \exp{ \left\{ 
-\ln{ \left[ \frac{\lambda^y \times e^{-\lambda}}{y!} \right]}
-\right\}}
-\\ & = \exp{ \left\{ 
-\ln{ \left[ \lambda^y \right]}
-+ \ln{ \left[ e^{-\lambda} \right] }
-- \ln{ \left[ y! \right] }
-\right\}}
-\\ & = \exp{ \left\{ 
-y \ln{ \left[ \lambda \right]}
--\lambda
-- \ln{ \left[ y! \right] }
-\right\}}
-\\ & = \exp{ \left\{ 
-\frac{y 
-  \underbrace{\ln{ \left[ \lambda \right]}}_{\theta}
-  - \underbrace{\lambda}_{b(\theta)}
-}{
-  \underbrace{1}_{a(\phi)}
-} 
-- \underbrace{\ln{ \left[ y! \right] }}_{c(y,\phi)}
-\right\}}
-\\ & = \exp{ \left[ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right] }
-\end{align}
-}
-$$
-
-Thus:
-$b(\theta) = \lambda = \exp\big\{X_i^{\intercal}\beta\big\}$.
-
-So now if we look to minimize $\beta$, we find..
-
-$$
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
-& = 
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - \lambda
-  \bigg\} }
-\right]
-\\ & = 
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i X_i^{\intercal}\beta - \exp\big\{X_i^{\intercal}\beta\big\} 
-  \bigg\} }
-\right]
-\end{align}
-}
-$$
-
-
-
-### Gaussian
-
-$$
-\displaylines{
-\begin{align}
-f(y;\theta,\phi) 
-& = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y-\mu)^2}{2\sigma^2} \right\} }
-\\ & =
-\exp{\left\{
-\ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} 
-\exp{ \left\{ -\frac{(y-\mu)^2}{2\sigma^2} \right\} }
-\right]}
-\right\}}
-\\ & =
-\exp{\left\{
-\ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} \right]}
-- \frac{(y-\mu)^2}{2\sigma^2}
-\right\}}
-\\ & =
-\exp{\left\{
-\cancel{\ln{ \left[ 1 \right]}}
-+ \ln{ \left[ 2 \pi \sigma^2 \right]}^{-1/2}
-- \frac{y^2+\mu^2-2y\mu}{2\sigma^2}
-\right\}}
-\\ & =
-\exp{\left\{
-- \frac{1}{2}\ln{ \left[ 2 \pi \sigma^2 \right]}
-- \frac{y^2}{2\sigma^2}
-- \frac{\frac{\mu^2}{2}}{\sigma^2}
-+ \frac{\cancel{2}y\mu}{\cancel{2}\sigma^2}
-\right\}}
-\\ & =
-\exp{\left\{
-  \frac{
-    y \underbrace{\mu}_{\theta} - 
-    \underbrace{\frac{\mu^2}{2}}_{b(\theta)}
-  }{
-    \underbrace{\sigma^2}_{a(\phi)}
-  }
-- 
-\underbrace{
-  \frac{1}{2}
-  \left( 
-    \frac{y^2}{\sigma^2} + 
-    \ln{ \left[ 2 \pi \sigma^2 \right]}
-  \right)
-}_{c(y,\phi)}
-\right\}}
-\end{align}
-}
-$$
-
-Thus, $b(\theta) = \frac{\mu^2}{2} = \frac{(X_i^{\intercal}\beta)^2}{2}$.
-
-So now if we look to minimize $\beta$, we find we are simply minimizing the sum of squares:
-
-$$
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - b(\theta_i)
-  \bigg\} }
-\right]
-& = 
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i \theta_i - \frac{\mu^2}{2}
-  \bigg\} }
-\right]
-\\ & = 
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \bigg\{
-      y_i X_i^{\intercal}\beta - \frac{(X_i^{\intercal}\beta)^2}{2}
-  \bigg\} }
-\right]
-\\ & = 
-\arg \min_\beta \left[ \frac{1}{2}
-  \sum_{i=1}^n{ \bigg\{
-      (y_i -X_i^{\intercal}\beta)^2
-  \bigg\} }
-\right]
-\\ & \equiv
-\arg \min_\beta \left[
-  \sum_{i=1}^n{ \varepsilon_i^2}
-\right]
-\end{align}
-}
-$$
-
 [^1]:
-  Showing how $\ln[1-p] = -\ln[1+\exp{\{\theta\}}]$
-  $$
-  \displaylines{
-  \begin{align} 
-  \theta & = \ln{\left[\frac{p}{1-p} \right]}
-  \\ \therefore e^{\theta} & = \frac{p}{1-p}
-  \\ \therefore e^{\theta}-pe^{\theta} & = p
-  \\ \therefore e^{\theta} & = p(1+e^\theta)
-  \\ \therefore p & = \frac{e^{\theta}}{1+e^\theta}
-  \\ \therefore \ln[1-p] 
-  & = \ln\left[1-\frac{e^{\theta}}{1+e^\theta} \right]
-  \\ & = \ln\left[\frac{1+e^\theta}{1+e^\theta}-\frac{e^{\theta}}{1+e^\theta} \right]
-  \\ & = \ln\left[\frac{1}{1+e^\theta} \right]
-  \\ & = \ln\left[1+e^\theta \right]^{-1}
-  \\ & = -\ln\left[1+e^\theta \right]
-  \end{align}
-  }
-  $$
+  Showing how $\ln[1-p] = -\ln[1+e^{\theta}]$
+$$
+\displaylines{
+\begin{align} 
+\theta & = \ln{\left[\frac{p}{1-p} \right]}
+\\ \text{ (1) Put } p \text{ in terms of } \theta \text{:}
+\\ \therefore e^{\theta} & = \frac{p}{1-p} & \text{raise by }e
+\\ \therefore e^{\theta}-pe^{\theta} & = p & \times (1-p)
+\\ \therefore e^{\theta} & = p(1+e^\theta) & + pe^\theta
+\\ \therefore p & = \frac{e^{\theta}}{1+e^\theta} & \div (1+e^\theta)
+\\\\ 
+\\ \text{ (2) Substitute in } p = \frac{e^{\theta}}{1+e^\theta}
+\\
+\Rightarrow \ln[1-p] 
+& = \ln\left[1-\frac{e^{\theta}}{1+e^\theta} \right]
+\\ & \equiv \ln\left[\frac{1+e^\theta}{1+e^\theta}-\frac{e^{\theta}}{1+e^\theta} \right]
+\\ & = \ln\left[\frac{1}{1+e^\theta} \right]
+\\ & \equiv \ln\left[(1+e^\theta \right)^{-1}]
+\\ & \equiv -\ln\left[1+e^\theta \right]
+\end{align}
+}
+$$
+

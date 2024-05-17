@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/glm_exponential_dispersion.html",
       "/posts/fundamentals_gaussian_integral.html",
       "/posts/fundamentals_gaussian_dist.html",
       "/posts/fundamentals_binom_pois.html",
