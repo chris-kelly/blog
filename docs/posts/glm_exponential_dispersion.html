@@ -211,15 +211,15 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#intro-random-and-systematic-components-are-connected-via-link-functions" id="toc-intro-random-and-systematic-components-are-connected-via-link-functions" class="nav-link active" data-scroll-target="#intro-random-and-systematic-components-are-connected-via-link-functions">Intro: random and systematic components are connected via link functions</a></li>
-  <li><a href="#exponential-dispersion-family-of-distributions" id="toc-exponential-dispersion-family-of-distributions" class="nav-link" data-scroll-target="#exponential-dispersion-family-of-distributions">Exponential Dispersion Family of Distributions</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#exponential-dispersion-family-of-distributions" id="toc-exponential-dispersion-family-of-distributions" class="nav-link" data-scroll-target="#exponential-dispersion-family-of-distributions">Exponential Dispersion Family of Distributions</a></li>
+  <li><a href="#solving-for-any-exponential-family-using-maximum-likelihood-estimation" id="toc-solving-for-any-exponential-family-using-maximum-likelihood-estimation" class="nav-link" data-scroll-target="#solving-for-any-exponential-family-using-maximum-likelihood-estimation">Solving for any exponential family using maximum likelihood estimation</a>
   <ul class="collapse">
-  <li><a href="#intuition-behind-the-exponential-form" id="toc-intuition-behind-the-exponential-form" class="nav-link" data-scroll-target="#intuition-behind-the-exponential-form">Intuition behind the exponential form</a></li>
   <li><a href="#poisson" id="toc-poisson" class="nav-link" data-scroll-target="#poisson">Poisson</a></li>
   <li><a href="#bernoulli-logit-vs-probit" id="toc-bernoulli-logit-vs-probit" class="nav-link" data-scroll-target="#bernoulli-logit-vs-probit">Bernoulli (Logit vs probit)</a></li>
   <li><a href="#gaussian" id="toc-gaussian" class="nav-link" data-scroll-target="#gaussian">Gaussian</a></li>
+  <li><a href="#intuition-behind-the-exponential-form" id="toc-intuition-behind-the-exponential-form" class="nav-link" data-scroll-target="#intuition-behind-the-exponential-form">Intuition behind the exponential form</a></li>
   </ul></li>
-  <li><a href="#solving-for-any-exponential-family-using-maximum-likelihood-estimation" id="toc-solving-for-any-exponential-family-using-maximum-likelihood-estimation" class="nav-link" data-scroll-target="#solving-for-any-exponential-family-using-maximum-likelihood-estimation">Solving for any exponential family using maximum likelihood estimation</a></li>
   <li><a href="#coding-it-up-from-scratch" id="toc-coding-it-up-from-scratch" class="nav-link" data-scroll-target="#coding-it-up-from-scratch">Coding it up from scratch</a>
   <ul class="collapse">
   <li><a href="#base-class-for-canonical-exponential-dispersion-family" id="toc-base-class-for-canonical-exponential-dispersion-family" class="nav-link" data-scroll-target="#base-class-for-canonical-exponential-dispersion-family">Base class for canonical exponential dispersion family</a></li>
@@ -235,24 +235,24 @@ window.Quarto = {
 
 
 
-<section id="intro-random-and-systematic-components-are-connected-via-link-functions" class="level2">
-<h2 class="anchored" data-anchor-id="intro-random-and-systematic-components-are-connected-via-link-functions">Intro: random and systematic components are connected via link functions</h2>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>There many types of generalized linear regression models: such as linear regression, logistic regression, poisson regression etc. Every one of these models is made up of a “random component” and a “systematic component”. Each also has a “link function” that combines the random and systematic parts.</p>
 <p>Let’s take the example of a poisson regression: <span class="math display">\[
 \displaylines{
-\underbrace{y_i \sim Pois(\mu_i)}_{\text{random}} \\
-\underbrace{\ln{(\mu_i)}}_{\text{link function}} = \underbrace{X_i^{\intercal}\beta}_{\text{systematic}}
+\underbrace{y_i \sim Pois(\lambda_i)}_{\text{random}} \\
+\underbrace{\ln{(\lambda_i)}}_{\text{link function}} = \underbrace{X_i^{\intercal}\beta}_{\text{systematic}}
 }
 \]</span></p>
 <section id="random-component" class="level4">
 <h4 class="anchored" data-anchor-id="random-component">Random component</h4>
 <p>The random component determines how we want to model the distribution of <span class="math inline">\(y\)</span>. For example, if <span class="math inline">\(y_i\)</span> is a count outcome, then it could be well suited to a poisson distribution:</p>
 <p><span class="math display">\[
-y_i \sim Pois(\mu_i)
+y_i \sim Pois(\lambda_i)
 \]</span></p>
-<p>The mean rate of the count is <span class="math inline">\(\mu_i\)</span> - so we expect <span class="math inline">\(y_i\)</span> to be around <span class="math inline">\(\mu_i\)</span> on average. However, for any individual observation <span class="math inline">\(i\)</span>, the actual observed <span class="math inline">\(y_i\)</span> will vary above and below the mean rate <span class="math inline">\(\mu_i\)</span>. In fact, by using poisson we assume the variance of <span class="math inline">\(y_i\)</span> increases as the mean rate <span class="math inline">\(\mu_i\)</span> increases too. And this is why it is called the “random component”: since <span class="math inline">\(y\)</span> varies randomly around the mean, following the poisson distribution, it is a random variable.</p>
+<p>The mean rate of the count is <span class="math inline">\(\lambda_i\)</span> - so we expect <span class="math inline">\(y_i\)</span> to be around <span class="math inline">\(\lambda_i\)</span>. However, for any individual observation <span class="math inline">\(i\)</span>, the actual observed <span class="math inline">\(y_i\)</span> will vary above and below the mean rate <span class="math inline">\(\lambda_i\)</span>. In fact, by using poisson we assume the variance of <span class="math inline">\(y_i\)</span> increases as the mean rate <span class="math inline">\(\lambda_i\)</span> increases too. And this is why it is called the “random component”: since <span class="math inline">\(y\)</span> varies randomly around the mean, following the poisson distribution, it is a random variable.</p>
 <p>!!!! GRAPH OF POISSON !!!!</p>
-<p>But how do we find a good estimation for <span class="math inline">\(\mathbb{E}[y_i|X_i]=\mu_i\)</span>? Concretely, how do we best map our independent variables <span class="math inline">\(X_i\)</span> to <span class="math inline">\(\mu_i\)</span>? This is down to our systematic component and link function.</p>
+<p>But how do we find a good estimation for <span class="math inline">\(\mathbb{E}[y_i|X_i]=\lambda_i\)</span>? Concretely, how do we best map our independent variables <span class="math inline">\(X_i\)</span> to <span class="math inline">\(\lambda_i\)</span>? This is down to our systematic component and link function.</p>
 </section>
 <section id="systematic-component-and-link-function" class="level4">
 <h4 class="anchored" data-anchor-id="systematic-component-and-link-function">Systematic component and link function</h4>
@@ -262,14 +262,14 @@ y_i \sim Pois(\mu_i)
 \]</span></p>
 <p>The link function is a way of choosing how to map the systematic component to the natural parameter of the random component. For example, in poisson regression, we use a log link function, which means the systematic component predicts the natural log of the mean rate of the count.</p>
 <p><span class="math display">\[
-\ln{(\mu_i)} = \eta(X) = X^{\intercal}\beta
+\ln{(\lambda_i)} = \eta(X) = X^{\intercal}\beta
 \]</span></p>
-<p>Okay, so now we want to find the best values for <span class="math inline">\(\beta\)</span>. These coefficients will transform our features <span class="math inline">\(X\)</span> to make the best predictions for <span class="math inline">\(\ln{(\mu_i)}\)</span>, given we want to predict <span class="math inline">\(y\)</span> as accurately as possible (but permit larger residuals when <span class="math inline">\(\mu_i\)</span> is larger, following the poisson distribution).</p>
+<p>Okay, so now we want to find the best values for <span class="math inline">\(\beta\)</span>. These coefficients will transform our features <span class="math inline">\(X\)</span> to make the best predictions for <span class="math inline">\(\ln{(\lambda_i)}\)</span>, given we want to predict <span class="math inline">\(y\)</span> as accurately as possible (but permit larger residuals when <span class="math inline">\(\lambda_i\)</span> is larger, following the poisson distribution).</p>
 <p>To achieve this: we can try some initial coefficients, calculate the cost function and its first derivative, update the coefficients, and continue to minimize the cost function through gradient descent.</p>
 <p>But how cumbersome that would be to do for every type of distribution we want to model! Wouldn’t it be nice if we can derive a generic representation for the cost function and its first derivative, so that we can re-use the same code for every type of regression?</p>
 </section>
 </section>
-<section id="exponential-dispersion-family-of-distributions" class="level2 page-columns page-full">
+<section id="exponential-dispersion-family-of-distributions" class="level2">
 <h2 class="anchored" data-anchor-id="exponential-dispersion-family-of-distributions">Exponential Dispersion Family of Distributions</h2>
 <p>It can be shown that many common distributions can be reformulated into the “Exponential Dispersion Family of Distributions”. This generic representation makes it easier to re-use the same code to run a regression, rather than hand calculate each pdf in different ways.</p>
 <p>First let’s define some generic notation for generalized linear models:</p>
@@ -279,8 +279,8 @@ y_i \sim Pois(\mu_i)
 \underbrace{y_i \sim f_y(\xi_i,\phi_i)}_{\text{random}}
 }
 \]</span></p>
-<p><span class="math inline">\(\xi_i\)</span> is a shape parameter, governing the shape of the distribution (e.g.&nbsp;in poisson, the expected value is the mean <span class="math inline">\(\xi_i=\mu_i\)</span>).</p>
-<p><span class="math inline">\(\phi\)</span> is a dispersion parameter, although it is not always necessary (e.g.&nbsp;gaussian has the standard deviation <span class="math inline">\(\phi = \sigma\)</span>, but in poisson the variance is equated to the expected rate so not required).</p>
+<p><span class="math inline">\(\xi_i\)</span> is a shape parameter, governing the shape of the distribution (e.g.&nbsp;in poisson, the expected value is the mean <span class="math inline">\(\xi_i=\lambda_i\)</span>). In fact for many distributions, <span class="math inline">\(\xi_i\)</span> is the expected value of <span class="math inline">\(y_i\)</span>, so <span class="math inline">\(\xi_i = \mu_i\)</span>.</p>
+<p><span class="math inline">\(\phi\)</span> is a dispersion parameter, governing the spread of the data (e.g.&nbsp;gaussian has the standard deviation <span class="math inline">\(\phi = \sigma\)</span>). It is not always necessary if this is determined by the shape parameter though(e.g.&nbsp;in poisson the variance is already equated to the expected rate <span class="math inline">\(\lambda_i\)</span>).</p>
 <p>Here are some examples of the common forms of poisson, bernoulli and gaussian probability distribution functions <span class="math inline">\(y \sim f_{\theta_i}(\mu_i)\)</span>, along with some choices for link functions <span class="math inline">\(g(\mu)\)</span> to use in regression:</p>
 <table class="table">
 <colgroup>
@@ -297,37 +297,28 @@ y_i \sim Pois(\mu_i)
 </thead>
 <tbody>
 <tr class="odd">
-<td>Count</td>
+<td>Count<br><span class="math inline">\(\xi_i = \mu_i \equiv \lambda_i\)</span></td>
 <td><span class="math inline">\(y_i \sim Pois(\mu_i)\)</span><br><span class="math inline">\(y_i \sim \frac{\mu_i^{y} \times e^{-\mu_i}}{y!}\)</span></td>
 <td><span class="math inline">\(g(\mu) = \ln{[\mu_i]}\)</span><br>(log-link)</td>
 </tr>
 <tr class="even">
-<td>Binary</td>
+<td>Binary<br><span class="math inline">\(\xi_i = \mu_i \equiv p_i\)</span></td>
 <td><span class="math inline">\(y_i \sim Bern(\mu_i)\)</span><br><span class="math inline">\(y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}\)</span></td>
 <td><span class="math inline">\(g(\mu) = \ln{\left[\frac{\mu_i}{1-\mu_i}\right]}\)</span><br>(logit-link)</td>
 </tr>
 <tr class="odd">
-<td>Binary</td>
+<td>Binary<br><span class="math inline">\(\xi_i = \mu_i \equiv p_i\)</span></td>
 <td><span class="math inline">\(y_i \sim Bern(\mu_i)\)</span><br><span class="math inline">\(y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}\)</span></td>
 <td><span class="math inline">\(g(\mu) = \Phi^{-1}[\mu_i]\)</span><br>(probit-link)</td>
 </tr>
 <tr class="even">
-<td>Normal</td>
+<td>Normal<br><span class="math inline">\(\xi_i = \mu_i\)</span></td>
 <td><span class="math inline">\(y_i \sim N(\mu_i,\sigma^2)\)</span><br><span class="math inline">\(y_i \sim \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}\left(\frac{y_i-\mu_i}{\sigma^2}\right)^2}\)</span></td>
 <td><span class="math inline">\(g(\mu) = \mu\)</span><br>(identity-link)</td>
 </tr>
 </tbody>
 </table>
-<p>Now all of these probability density functions can be reformulated as being of the exponential family form!</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-f(y;\xi,\phi)
-&amp; =
-\exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } &amp; \tag{1.1}
-\end{align}
-}
-\]</span></p>
+<p>Now all of these probability density functions can be rewritten into a the exponential family form! Which we show now:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
@@ -335,24 +326,120 @@ f(y;\xi,\phi)
 &amp; =
 \exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } &amp; \tag{1.1}
 \\
+Pois(y;\xi,\phi) = \frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!}
+&amp; \equiv \exp{ \left\{
+\frac{
+  \underbrace{y_i}_{T(y_i)}
+  \underbrace{\ln{ \left[ \xi_i \right]}}_{r(\xi_i)}
+  - \underbrace{\mu_i}_{b(\xi_i)}
+}{
+  \underbrace{1}_{a(\phi)}
+}
+- \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
+\right\}} \tag{1.2}
+\\
+Bern(y;\xi,\phi) = \xi_i^{y_i}(1-\xi_i)^{1-y_i}
+&amp; \equiv \exp{ \left\{ \frac{
+  \underbrace{y_i}_{T(y)}
+\underbrace{ \ln{
+  \left[\frac{\xi_i}{1-\xi_i} \right]
+} }_{r(\xi_i)}
+  + \underbrace{ \ln{[1-\xi_i]} }_{b(\xi_i)}
+  }{
+    \underbrace{1}_{a(\phi)}
+  }
+  + \underbrace{0}_{c(y_i,\phi)}
+\right\}} \tag{1.3}
+\\
+N(y;\xi,\phi) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y_i-\xi_i)^2}{2\sigma^2} \right\} }
+&amp; \equiv \exp{\left\{
+  \frac{
+    \underbrace{y_i}_{T(y_i)} \underbrace{\xi_i}_{r(\xi_i)} -
+    \underbrace{\frac{\mu_i^2}{2}}_{b(\xi_i)}
+  }{
+    \underbrace{\sigma^2}_{a(\phi)}
+  }
+-
+\underbrace{
+  \frac{1}{2}
+  \left(
+    \frac{y_i^2}{\sigma^2} +
+    \ln{ \left[ 2 \pi \sigma^2 \right]}
+  \right)
+}_{c(y_i,\phi)}
+\right\}} \tag{1.4}
+\end{align}
+}
+\]</span></p>
+<!-- In fact, when we put these pdfs into the exponential family form, we uncover the following:
+
+Term | Poisson | Logistic | Probit | Gaussian
+--|--|--|--|---
+$T(y_i)$ | $T(y_i)=y_i$ | $T(y_i)=y_i$ | $T(y_i)=y_i$ | $T(y_i)=y_i$
+$r(\xi_i)$ | $r(\xi_i)=\ln[\xi_i]$ | $\displaylines{r(\xi_i)= \\ \ln[\frac{\xi_i}{1-\xi_i}]}$ | $\displaylines{r(\xi_i)= \\ \ln[\frac{\xi_i}{1-\xi_i}]}$ | $r(\xi_i)=\xi_i$
+$b(\xi_i)$ | $b(\xi_i)=\xi_i$ | $\displaylines{b(\xi_i)= \\ \ln[1+e^{\xi_i}]}$ | $\displaylines{b(\xi_i)= \\ \ln[1+e^{\xi_i}]}$ | $\displaylines{b(\xi_i)= \\ \frac{\xi_i^2}{2}}$
+$a(\phi)$ | $a(\phi)=1$ | $a(\phi)=1$ | $a(\phi)=1$ | $a(\phi)=\sigma^2$
+$c(y_i,\phi)$ | $c(y_i,\phi) = \ln[y!]$ | $c(y_i,\phi) = 0$ | $c(y_i,\phi) = 0$ | $\displaylines{c(y_i,\phi) = \\ \frac{1}{2}\left( \frac{y_i^2}{\sigma^2} + \ln{ \left[ 2 \pi \sigma^2 \right]}\right)}$ -->
+<!-- $\phi$ | $\phi=1$ | $\phi=1$ | $\phi=1$ | $\phi=\sigma$ -->
+<!-- $\xi_i$ | $\xi_i=\lambda_i\equiv\mu_i$ | $\xi_i=p_i\equiv\mu_i$ | $\xi_i=p_i\equiv\mu_i$ | $\xi_i=\mu_i$ -->
+<p>That’s a lot of terms! (e.g.&nbsp;<span class="math inline">\(r(\xi_i)\)</span>, <span class="math inline">\(a(\phi)\)</span> etc). But now we have reformulated the bernoulli, poisson and gaussian distributions into this form, we can start to develop some intuition as to what each of these terms mean:</p>
+<section id="the-canonical-link-function" class="level4">
+<h4 class="anchored" data-anchor-id="the-canonical-link-function">The “canonical” link function</h4>
+<p>Firstly, you may have noticed that <span class="math inline">\(r(\xi_i)\)</span> looks very familiar… in fact, it is the link functions we commonly use for that regression! For example in logistic regression, we use the logit link function <span class="math inline">\(g(\xi_i) = \ln{\left[\frac{\xi_i}{1-\xi_i}\right]} = \eta(X)\)</span>. So for any exponential distribution, <span class="math inline">\(r(\xi_i)\)</span> is the default choice for link function, the so-called “canonical link function”.</p>
+<p>In fact, if the canonical link function is used, and no transformation means <span class="math inline">\(T(y_i) = y_i\)</span>, then we can simplify the notation, where <span class="math inline">\(\theta_i = g(\xi_i)\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+f(y;\xi,\phi)
+&amp; = \exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} }
+\\ \\
 \equiv f(y; \theta_i, \phi)
-&amp; = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} } &amp; \tag{1.2}
+&amp; = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} } &amp; \tag{2.1}
 \\
 \\
-&amp; \iff T(y) = y; g(\xi) = r(\xi) = \theta
+&amp; \iff T(y) = y; \text{ } g(\xi) = r(\xi) = \theta
 \end{align}
 }
 \]</span></p>
-<p>Now when reformulating the probability density functions into the exponential family form, a good choice for the link function <span class="math inline">\(g(.)\)</span> often “reveals itself”: i.e.&nbsp;the “canonical” choice of <span class="math inline">\(g(\xi_i) = r(\xi_i)\)</span>.</p>
-<p>If the chosen link function is this canonical one, then we can further simplify the non-canonical form <span class="math inline">\((1.1)\)</span> to its more common canonical form $(1.2), iff:</p>
-<ol type="1">
-<li><span class="math inline">\(T(y) = y\)</span> i.e.&nbsp;it happens to be the identity function.</li>
-<li><span class="math inline">\(g(\xi) = r(\xi)\)</span> i.e.&nbsp;<span class="math inline">\(r(\xi)\)</span> is identical to the chosen link function <span class="math inline">\(g(\xi)\)</span>. If we are using a linear predictor too, so <span class="math inline">\(r(\xi_i)=\theta_i = \eta(X_i) = X_i^{\intercal}\beta\)</span>, then we actually find <span class="math inline">\(b(\xi) = b(\theta_i)\)</span> too, hence simplifying to <span class="math inline">\((1.2)\)</span>.</li>
-</ol>
-<p>Now it is actually true that both these conditions are met for poisson, logistic and gaussian regression! However isn’t true for probit, because the choice of link function is not “canonical”, i.e.&nbsp;<span class="math inline">\(r(\mu_i) \neq \Phi^{-1}[\mu_i]\)</span>. We will go through this later though.</p>
-<section id="intuition-behind-the-exponential-form" class="level3">
-<h3 class="anchored" data-anchor-id="intuition-behind-the-exponential-form">Intuition behind the exponential form</h3>
-<p>There’s a lot of terms in the formula above. We will try to give some intuition behind <span class="math inline">\((1.2)\)</span>, but don’t worry if this still seems hard to get your head around: we are going to show how to reformulate each of the poisson, binomial and gaussian distributions into an exponential dispersion family form after this, to provide further intuition:</p>
+<p>The odd one out is the probit link function - as this is not the canonical link function. While the canonical link function for bernoulli is logit, the probit link is the inverse cumulative distribution function of the standard normal <span class="math inline">\(g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)\)</span>. So because it is not canonical, it’s a bit more complicated to deal with (which we explore later).</p>
+</section>
+<section id="the-integral-of-the-inverse-canonical-link-function" class="level4">
+<h4 class="anchored" data-anchor-id="the-integral-of-the-inverse-canonical-link-function">The integral of the inverse canonical link function</h4>
+<p><span class="math inline">\(b(\xi_i)\)</span> seems slightly odd at first: it is the integral of the inverse of the canonical link function. It’s easier to see this by running through each example:</p>
+<ul>
+<li>Poisson:
+<ul>
+<li>The canonical link is log: <span class="math inline">\(r(\xi_i) = \ln[\xi_i] = \eta(X)\)</span>.</li>
+<li>So the inverse-link is exponential: <span class="math inline">\(\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}\)</span>.</li>
+<li>So <span class="math inline">\(r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}\)</span>.</li>
+<li>So the integral is: <span class="math inline">\(b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=e^{\xi_i}\)</span>.</li>
+</ul></li>
+<li>Gaussian:
+<ul>
+<li>The canonical link is the identity: <span class="math inline">\(r(\xi_i) = \\xi_i = \eta(X)\)</span>.</li>
+<li>So the inverse-link is the identity: <span class="math inline">\(\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)\)</span>.</li>
+<li>So <span class="math inline">\(r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i\)</span>.</li>
+<li>So the integral is: <span class="math inline">\(b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}= \frac{\xi_i^2}{2}\)</span>.</li>
+</ul></li>
+<li>Bernoulli:
+<ul>
+<li>The canonical link is logit: <span class="math inline">\(r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)\)</span>.</li>
+<li>So the inverse-link is logistic: <span class="math inline">\(\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}\)</span>.</li>
+<li>So <span class="math inline">\(r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}\)</span>.</li>
+<li>So the integral is: <span class="math inline">\(b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}\)</span>.</li>
+</ul></li>
+</ul>
+<p>Another way to think about this is to notice that <span class="math inline">\(b'(\xi_i)\)</span> is the “activation function” in the outer layer of a neural network. I.e. is the function that maps the output of the network to the final prediction.</p>
+<!-- Term | Poisson | Gaussian | Bernoulli 
+--|--|--|--
+canonical link <br> $r(\xi_i)$ | $r(\xi_i) = \ln[\xi_i] = \eta(X)$ | $r(\xi_i) = \xi_i = \eta(X)$ | $r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)$
+inverse-link <br> $r^{-1}(\eta(X))$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}$
+$\therefore b'(\xi_i) = r^{-1}(\xi_i)$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$
+$\therefore b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}$ | $b(\xi_i) = e^{\eta(X)}$ | $b(\xi_i) = \frac{\xi_i^2}{2}$ | $b(\xi_i) = \frac{e^{\eta(X)}}{1+e^{\eta(X)}}$ -->
+</section>
+<section id="other-terms" class="level4">
+<h4 class="anchored" data-anchor-id="other-terms">Other terms</h4>
+<p>The other terms are less interesting! But here is a quick summary for completeness:</p>
 <table class="table">
 <colgroup>
 <col style="width: 25%">
@@ -366,12 +453,12 @@ f(y;\xi,\phi)
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">\(\theta\)</span> is the “natural parameter”</td>
-<td style="text-align: left;">This is a parameter influencing the shape of the distribution. It is clearly related to location, but sometimes the dispersion too. For example, in bernoulli, the mean (expected) <span class="math inline">\(p_i = \mu_i\)</span>, so <span class="math inline">\(\theta_i = g(\mu_i)=\ln{\left(\frac{\mu_i}{1-\mu_i}\right)}=\ln{\left(\frac{p_i}{1-p_i}\right)}\)</span>. However, since <span class="math inline">\(\mathbb{V}[y]=p_i(1-p_i)\)</span>, it also governs the dispersion of the bernoulli too.</td>
+<td><span class="math inline">\(T(y)\)</span> is a transformation of <span class="math inline">\(y\)</span></td>
+<td style="text-align: left;">It is the identity for all the distributions we are looking at, so can be ignored for now.</td>
 </tr>
 <tr class="even">
 <td><span class="math inline">\(\phi\)</span> is the “dispersion parameter”,</td>
-<td style="text-align: left;">A parameter for the expected dispersion of <span class="math inline">\(y_i\)</span> around <span class="math inline">\(\mu_i\)</span>. For example, gaussian regression has <span class="math inline">\(\phi=\sigma\)</span>, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance <span class="math inline">\(\mathbb{V}[y_i] = \lambda_i\)</span> (i.e.&nbsp;already determind by <span class="math inline">\(\theta_i\)</span>).</td>
+<td style="text-align: left;">A parameter for the expected dispersion of <span class="math inline">\(y_i\)</span> around <span class="math inline">\(\mu_i\)</span>. For example, gaussian regression has <span class="math inline">\(\phi=\sigma\)</span>, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance <span class="math inline">\(\mathbb{V}[y_i] = \lambda_i\)</span> (i.e.&nbsp;already determined by <span class="math inline">\(\xi_i\)</span>).</td>
 </tr>
 <tr class="odd">
 <td><span class="math inline">\(a(.)\)</span> is a normalizing function</td>
@@ -381,20 +468,134 @@ f(y;\xi,\phi)
 <td><span class="math inline">\(c(.)\)</span> an adjustment function</td>
 <td style="text-align: left;">A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn’t included.</td>
 </tr>
-<tr class="odd">
-<td><span class="math inline">\(b(.)\)</span> is the integral of the inverse-link function</td>
-<td style="text-align: left;">It helps to look at <span class="math inline">\(b'(\theta)\)</span> first. Whereas the link function maps <span class="math inline">\(\mu \rightarrow \theta\)</span>, i.e.&nbsp;<span class="math inline">\(g(\mu) = \theta\)</span>, the inverse of the link function maps the other way <span class="math inline">\(\theta \rightarrow \mu\)</span> i.e.&nbsp;<span class="math inline">\(b'(\theta)=g^{-1}(\theta)=\mu\)</span>. You might also recognise this as the “activation function” in the outer layer of neural networks. Then, the integral <span class="math inline">\(b(\theta) = \int{b'(\theta)\,d\theta}\)</span> by definition. <br> For example, poisson regression has log-link function: <span class="math inline">\(g(\mu) = \ln{(\mu)} = \theta\)</span>. So the inverse-link function is the exponential: <span class="math inline">\(b'(\theta) = g'(\mu)= \exp{(\theta)}\)</span>. It just so happens the integral is the same in this case: <span class="math inline">\(b(\theta) = \int{\exp{\{\theta\}}} = \exp{\{\theta\}}\)</span></td>
-</tr>
 </tbody>
 </table>
 </section>
-<section id="poisson" class="level3">
-<h3 class="anchored" data-anchor-id="poisson">Poisson</h3>
-<p>Now let’s have a look at poisson, with mean rate of <span class="math inline">\(\lambda_i = \mu_i\)</span>:</p>
+</section>
+<section id="solving-for-any-exponential-family-using-maximum-likelihood-estimation" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="solving-for-any-exponential-family-using-maximum-likelihood-estimation">Solving for any exponential family using maximum likelihood estimation</h2>
+<p>So far we have reformulated poisson, binomial and normal regressions into the exponential family form. So now we want to derive our “one-use formula” to estimate the best coefficients for any GLM via maximum likelihood estimation!</p>
+<p>Let’s define our generic cost function in negative log-likelihood form assuming the canonical link function is used (so in terms of <span class="math inline">\(\theta_i\)</span>):</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Maximising the the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Also, taking the negative ensures we are looking to minimize the cost.</p>
+</div></div><p><span class="math display">\[
+\displaylines{
+\begin{align}
+L(\theta)
+&amp; = \prod_{i=1}^n{
+  f(y_i;\theta_i,\phi)
+}
+\\ &amp; = \prod_{i=1}^n{
+  \exp{ \left\{
+    \frac{y \theta - b(\theta)}{a(\phi)}
+    + c(y,\phi)
+  \right\} }
+}
+\\ \therefore \mathcal{L}(\theta)
+&amp; = -\ln \left\{ \prod_{i=1}^n{
+  \exp{ \left\{
+    \frac{y_i \theta_i - b(\theta_i)}{a(\phi)}
+    + c(y_i,\phi)
+  \right\} }
+} \right\}
+\\ &amp; = -\sum_{i=1}^n{ \left\{
+  \frac{y_i \theta_i - b(\theta_i)}{a(\phi)}
+  + c(y_i,\phi)
+\right\} }
+\\ &amp; = -\left(
+\frac{1}{a(\phi)}
+\sum_{i=1}^n{ \bigg\{
+    y_i \theta_i - b(\theta_i)
+\bigg\} } +
+\sum_{i=1}^n{ \bigg\{
+  c(y_i,\phi)
+\bigg\}} \right)
+\end{align}
+}
+\]</span></p>
+<p>Next we want to minimize this generic cost function with respect to <span class="math inline">\(\beta\)</span>. Common methods include “Newton-Raphson”, “Fisher-Scoring”, “Iteratively-reweighted Least Squares” or “Gradient Descent”.</p>
+<p>To execute any of these, we need to derive the the “score” (or “informant”): the first derivative of the negative log likelihood with respect to <span class="math inline">\(\beta\)</span>:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-f(y;\theta,\phi)
+\arg \min_\beta \left[ \mathcal{L}(\theta) \right]
+&amp; = \arg \min_\beta \left[ -\left(
+\frac{1}{a(\phi)}
+\sum_{i=1}^n{ \bigg\{
+    y_i \theta_i - b(\theta_i)
+\bigg\} } +
+\sum_{i=1}^n{ \bigg\{
+  c(y_i,\phi)
+\bigg\}}
+\right)\right]
+\\
+&amp; = \arg \min_\beta \left[ -\left(
+\frac{1}{a(\phi)}
+\sum_{i=1}^n{ \bigg\{
+    y_i X_i^{\intercal}\beta - b(X_i^{\intercal}\beta)
+\bigg\} } +
+\sum_{i=1}^n{ \bigg\{
+  c(y_i,\phi)
+\bigg\}}
+\right)\right]
+\\ &amp; \because \theta = \eta(X) \text{ in the canonical case}
+\\
+\\
+\therefore \frac{\partial \mathcal{L}(\theta)}{\partial\beta_i}
+&amp; = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
+      y_i X_i  - \frac{\partial b(\theta)}{\partial \theta} X_i
+  \bigg\} }
+\\ &amp; \because c() \text{ is constant with respect to } \beta
+\\
+&amp; =\underbrace{\frac{1}{a(\phi)}}_{\text{Constant}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
+\end{align}
+}
+\]</span></p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Only <span class="math inline">\(\theta\)</span> changes with respect to the choice of <span class="math inline">\(\beta\)</span>. So <span class="math inline">\(a(\phi)\)</span> and <span class="math inline">\(c(y_i,\phi)\)</span>, which are not a function of <span class="math inline">\(\theta\)</span>, drop out.</p>
+</div></div><p>So hopefully this now gives a bit more intuition behind why <span class="math inline">\(b(\theta)\)</span> is the integral of the inverse canonical link. Since <span class="math inline">\(b'(\theta)\)</span> is the activation function, we can see that the score function is just the difference between the predicted value and the actual value, multiplied by the feature. This is the same as the gradient of the cost function used for gradient descent!</p>
+<p>This also uncovers an interesting property of GLMs - that the average prediction <span class="math inline">\(b'(\theta)\)</span> must be equal to the average value of Y too:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\frac{\partial \mathcal{L}(\theta)}{\partial\beta_i}
+&amp; = 0 \text{ (cost is minimized at stationary point)}
+\\
+&amp; = \cancel{\frac{1}{a(\phi)}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) \cancel{X_i} \bigg\} }
+\\
+\therefore
+\sum_{i=1}^n{ y_i } &amp; = \sum_{i=1}^n{ b'(\theta) }
+\\ &amp; \div N
+\\ \\
+\Rightarrow \bar{y} &amp; = \mathbb{E}[y] = b'(\theta)
+\end{align}
+}
+\]</span></p>
+<p>Finally, we need to derive the Hessian matrix, which is the second derivative of the cost function with respect to <span class="math inline">\(\beta\)</span>. This is required for second order optimization methods, like Newton’s method, which can converge faster than gradient descent:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\frac{\partial^2 \mathcal{L}(\theta)}{\partial\beta_i^2}
+&amp; = \frac{\partial}{\partial\beta_i}\left(
+  \frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
+\right)
+\\
+&amp; = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
+      \frac{\partial b'(\theta)}{\partial \theta} X_i^2
+  \bigg\} }
+\end{align}
+}
+\]</span></p>
+<p>Let’s now start to write out some python to create this ourselves.</p>
+<section id="poisson" class="level3">
+<h3 class="anchored" data-anchor-id="poisson">Poisson</h3>
+<p>Now let’s have a look at poisson, with mean rate of <span class="math inline">\(\lambda_i = \mu_i = \xi_i\)</span>:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+f_y(\xi_i,\phi)
 &amp; =
 \frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!}
 \\ &amp; = \exp{ \left\{
@@ -412,7 +613,7 @@ y_i \ln{ \left[ \mu_i \right]}
 \right\}}
 \\ &amp; \equiv \exp{ \left\{
 \frac{
-  \underbrace{y_i}_{T(y)}
+  \underbrace{y_i}_{T(y_i)}
   \underbrace{\ln{ \left[ \mu_i \right]}}_{r(\xi_i)}
   - \underbrace{\mu_i}_{b(\xi_i)}
 }{
@@ -420,21 +621,15 @@ y_i \ln{ \left[ \mu_i \right]}
 }
 - \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
 \right\}}
-\\ &amp; \equiv \exp{ \left\{
-\frac{y_i
-  \underbrace{\ln{ \left[ \mu_i \right]}}_{\theta_i}
-  - \underbrace{\mu_i}_{b(\theta_i)}
-}{
-  \underbrace{1}_{a(\phi)}
-}
-- \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
-\right\}}
-\\ &amp; = \exp{ \left\{ \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} + c(y_i,\phi) \right\} }
+\\ &amp; = \exp{ \left\{ \frac{T(y_i) r(\xi_i) - b(\xi_i)}{a(\phi)} + c(y_i,\phi) \right\} } &amp; \tag{1.2}
 \end{align}
 }
 \]</span></p>
-<p>So we find that:</p>
+<p>So when reformulating the poisson distribution as an exponential dispersion family, we find:</p>
 <ul>
+<li><span class="math inline">\(T(.) = I(.)\)</span> i.e.&nbsp;it is simply the identity, so <span class="math inline">\(T(y) = y\)</span></li>
+<li><span class="math inline">\(r(\xi_i) = \ln{[\mu_i]}\)</span></li>
+<li></li>
 <li>Since we are using the log-link, our choice of link function is canonical: <span class="math inline">\(r(\xi_i) = \ln{[\mu_i]} = g(\mu_i)\)</span>. So we can simplify to <span class="math inline">\(\theta_i\)</span>!</li>
 <li><span class="math inline">\(b(\theta_i) = \mu_i = \exp\{\theta_i\}\)</span>.
 <ul>
@@ -564,132 +759,74 @@ f(y;\theta,\phi)
 <li>Finally, we have a use for <span class="math inline">\(a(\phi)\)</span>. The gaussian distribution has two parameters, a second relating to its variance, so we need to normalize our cost function by this measure of the dispersion of our data.</li>
 <li>And again, we have a use <span class="math inline">\(c(y_i,\phi)\)</span>. Without this correction, the exponential form of the gaussian distribution sums to more than one.</li>
 </ul>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+f(y;\xi,\phi)
+&amp; =
+\exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } &amp; \tag{1.1}
+\\
+\equiv f(y; \theta_i, \phi)
+&amp; = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} } &amp; \tag{1.2}
+\\
+\\
+&amp; \iff T(y) = y; g(\xi) = r(\xi) = \theta
+\end{align}
+}
+\]</span></p>
+<p>Now when reformulating the probability density functions into the exponential family form, a good choice for the link function <span class="math inline">\(g(.)\)</span> often “reveals itself”: i.e.&nbsp;the “canonical” choice of <span class="math inline">\(g(\xi_i) = r(\xi_i)\)</span>.</p>
+<p>If the chosen link function is this canonical one, then we can further simplify the non-canonical form <span class="math inline">\((1.1)\)</span> to its more common canonical form $(1.2), iff:</p>
+<ol type="1">
+<li><span class="math inline">\(T(y) = y\)</span> i.e.&nbsp;it happens to be the identity function.</li>
+<li><span class="math inline">\(g(\xi) = r(\xi)\)</span> i.e.&nbsp;<span class="math inline">\(r(\xi)\)</span> is identical to the chosen link function <span class="math inline">\(g(\xi)\)</span>. If we are using a linear predictor too, so <span class="math inline">\(r(\xi_i)=\theta_i = \eta(X_i) = X_i^{\intercal}\beta\)</span>, then we actually find <span class="math inline">\(b(\xi) = b(\theta_i)\)</span> too, hence simplifying to <span class="math inline">\((1.2)\)</span>.</li>
+</ol>
+<p>Now it is actually true that both these conditions are met for poisson, logistic and gaussian regression! However isn’t true for probit, because the choice of link function is not “canonical”, i.e.&nbsp;<span class="math inline">\(r(\mu_i) \neq \Phi^{-1}[\mu_i]\)</span>. We will go through this later though.</p>
 </section>
+<section id="intuition-behind-the-exponential-form" class="level3">
+<h3 class="anchored" data-anchor-id="intuition-behind-the-exponential-form">Intuition behind the exponential form</h3>
+<p>There’s a lot of terms in the formula above. We will try to give some intuition behind <span class="math inline">\((1.2)\)</span>, but don’t worry if this still seems hard to get your head around: we are going to show how to reformulate each of the poisson, binomial and gaussian distributions into an exponential dispersion family form after this, to provide further intuition:</p>
+<table class="table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 75%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter / Function</th>
+<th style="text-align: left;">intuition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\theta\)</span> is the “natural parameter”</td>
+<td style="text-align: left;">This is a parameter influencing the shape of the distribution. It is clearly related to location, but sometimes the dispersion too. For example, in bernoulli, the mean (expected) <span class="math inline">\(p_i = \mu_i\)</span>, so <span class="math inline">\(\theta_i = g(\mu_i)=\ln{\left(\frac{\mu_i}{1-\mu_i}\right)}=\ln{\left(\frac{p_i}{1-p_i}\right)}\)</span>. However, since <span class="math inline">\(\mathbb{V}[y]=p_i(1-p_i)\)</span>, it also governs the dispersion of the bernoulli too.</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\phi\)</span> is the “dispersion parameter”,</td>
+<td style="text-align: left;">A parameter for the expected dispersion of <span class="math inline">\(y_i\)</span> around <span class="math inline">\(\mu_i\)</span>. For example, gaussian regression has <span class="math inline">\(\phi=\sigma\)</span>, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance <span class="math inline">\(\mathbb{V}[y_i] = \lambda_i\)</span> (i.e.&nbsp;already determind by <span class="math inline">\(\theta_i\)</span>).</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(a(.)\)</span> is a normalizing function</td>
+<td style="text-align: left;">A function that normalizes the pdf using the dispersion parameter <span class="math inline">\(\phi\)</span>. E.g. for gaussian regression, it is the variance of the residuals, <span class="math inline">\(a(\phi) = \sigma^2\)</span>. Again this isn’t needed for one parameter distributions.</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(c(.)\)</span> an adjustment function</td>
+<td style="text-align: left;">A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn’t included.</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(b(.)\)</span> is the integral of the inverse-link function</td>
+<td style="text-align: left;">It helps to look at <span class="math inline">\(b'(\theta)\)</span> first. Whereas the link function maps <span class="math inline">\(\mu \rightarrow \theta\)</span>, i.e.&nbsp;<span class="math inline">\(g(\mu) = \theta\)</span>, the inverse of the link function maps the other way <span class="math inline">\(\theta \rightarrow \mu\)</span> i.e.&nbsp;<span class="math inline">\(b'(\theta)=g^{-1}(\theta)=\mu\)</span>. You might also recognise this as the “activation function” in the outer layer of neural networks. Then, the integral <span class="math inline">\(b(\theta) = \int{b'(\theta)\,d\theta}\)</span> by definition. <br> For example, poisson regression has log-link function: <span class="math inline">\(g(\mu) = \ln{(\mu)} = \theta\)</span>. So the inverse-link function is the exponential: <span class="math inline">\(b'(\theta) = g'(\mu)= \exp{(\theta)}\)</span>. It just so happens the integral is the same in this case: <span class="math inline">\(b(\theta) = \int{\exp{\{\theta\}}} = \exp{\{\theta\}}\)</span></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="solving-for-any-exponential-family-using-maximum-likelihood-estimation" class="level2 page-columns page-full">
-<h2 class="anchored" data-anchor-id="solving-for-any-exponential-family-using-maximum-likelihood-estimation">Solving for any exponential family using maximum likelihood estimation</h2>
-<p>So now we have shown we can reformulate poisson, binomial and normal regressions into the exponential family form. Now we want to find our one-use formula to estimate the best coefficients via maximum likelihood estimation!</p>
-<p>So let’s define our generic cost function in negative log-likelihood form:</p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Maximising the the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Also, taking the negative ensures we are looking to minimize the cost.</p>
-</div></div><p><span class="math display">\[
-\displaylines{
-\begin{align}
-L(\theta)
-&amp; = \prod_{i=1}^n{
-  f(y_i;\theta_i,\phi)
-}
-\\ &amp; = \prod_{i=1}^n{
-  \exp{ \left\{
-    \frac{y \theta - b(\theta)}{a(\phi)}
-    + c(y,\phi)
-  \right\} }
-}
-\\ \therefore \mathcal{L}(\theta)
-&amp; = -\ln \left\{ \prod_{i=1}^n{
-  \exp{ \left\{
-    \frac{y_i \theta_i - b(\theta_i)}{a(\phi)}
-    + c(y_i,\phi)
-  \right\} }
-} \right\}
-\\ &amp; = -\sum_{i=1}^n{ \left\{
-  \frac{y_i \theta_i - b(\theta_i)}{a(\phi)}
-  + c(y_i,\phi)
-\right\} }
-\\ &amp; = -\left(
-\frac{1}{a(\phi)}
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } +
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}} \right)
-\end{align}
-}
-\]</span></p>
-<p>Next we want to minimize this generic cost function with respect to <span class="math inline">\(\beta\)</span>. Common methods include “Newton-Raphson”, “Fisher-Scoring”, “Iteratively-reweighted Least Squares” or “Gradient Descent”.</p>
-<p>To execute any of these, we need to derive the the “score” (or “informant”): the first derivative of the negative log likelihood with respect to <span class="math inline">\(\beta\)</span>:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\arg \min_\beta \left[ \mathcal{L}(\theta) \right]
-&amp; = \arg \min_\beta \left[ -\left(
-\frac{1}{a(\phi)}
-\sum_{i=1}^n{ \bigg\{
-    y_i \theta_i - b(\theta_i)
-\bigg\} } +
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right)\right]
-\\
-&amp; = \arg \min_\beta \left[ -\left(
-\frac{1}{a(\phi)}
-\sum_{i=1}^n{ \bigg\{
-    y_i X_i^{\intercal}\beta - b(X_i^{\intercal}\beta)
-\bigg\} } +
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right)\right]
-\\ &amp; \because \theta = \eta(X) \text{ in the canonical case}
-\\
-\\
-\therefore \frac{\partial \mathcal{L}(\theta)}{\partial\beta_i}
-&amp; = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
-      y_i X_i  - \frac{\partial b(\theta)}{\partial \theta} X_i
-  \bigg\} }
-\\ &amp; \because c() \text{ is constant with respect to } \beta
-\\
-&amp; =\underbrace{\frac{1}{a(\phi)}}_{\text{Constant}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
-\end{align}
-}
-\]</span></p>
-
-<div class="no-row-height column-margin column-container"><div class="">
-<p>Only <span class="math inline">\(\theta\)</span> changes with respect to the choice of <span class="math inline">\(\beta\)</span>. So <span class="math inline">\(a(\phi)\)</span> and <span class="math inline">\(c(y_i,\phi)\)</span>, which are not a function of <span class="math inline">\(\theta\)</span>, drop out.</p>
-</div></div><p>So this might start looking familar. Given we know that <span class="math inline">\(b'(\theta)\)</span> is the activation function, we can see that the score function is just the difference between the predicted value and the actual value, multiplied by the feature. This is the same as the gradient of the cost function for a neural network!</p>
-<p>This also uncovers an interesting property of GLMs - that the average prediction <span class="math inline">\(b'(\theta)\)</span> must be equal to the average value of Y too:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\frac{\partial \mathcal{L}(\theta)}{\partial\beta_i}
-&amp; = 0 \text{ (cost is minimized at stationary point)}
-\\
-&amp; = \cancel{\frac{1}{a(\phi)}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) \cancel{X_i} \bigg\} }
-\\
-\therefore
-\sum_{i=1}^n{ y_i } &amp; = \sum_{i=1}^n{ b'(\theta) }
-\\ &amp; \div N
-\\ \\
-\Rightarrow \bar{y} &amp; = \mathbb{E}[y] = b'(\theta)
-\end{align}
-}
-\]</span></p>
-<p>Finally, we need to derive the Hessian matrix, which is the second derivative of the cost function with respect to <span class="math inline">\(\beta\)</span>. This is useful for second order optimization methods, like Newton’s method, which can converge faster than gradient descent:</p>
-<p><span class="math display">\[
-\displaylines{
-\begin{align}
-\frac{\partial^2 \mathcal{L}(\theta)}{\partial\beta_i^2}
-&amp; = \frac{\partial}{\partial\beta_i}\left(
-  \frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
-\right)
-\\
-&amp; = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
-      \frac{\partial b'(\theta)}{\partial \theta} X_i^2
-  \bigg\} }
-\end{align}
-}
-\]</span></p>
-<p>Let’s now start to write out some python to create this ourselves.</p>
 </section>
 <section id="coding-it-up-from-scratch" class="level2">
 <h2 class="anchored" data-anchor-id="coding-it-up-from-scratch">Coding it up from scratch</h2>
 <section id="base-class-for-canonical-exponential-dispersion-family" class="level3">
 <h3 class="anchored" data-anchor-id="base-class-for-canonical-exponential-dispersion-family">Base class for canonical exponential dispersion family</h3>
 <p>Let’s start creating a generic base class then that we can use for any distribution that can be represented by the canonical exponential dispersion family:</p>
-<div id="8d56a9cb" class="cell" data-execution_count="1">
+<div id="46653a35" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> base_canonical_exponential_dispersion_family():</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>,y,X,b,phi,a,c,seed<span class="op">=</span><span class="dv">0</span>):</span>
@@ -785,7 +922,7 @@ L(\theta)
 <section id="base-class-for-canonical-exponential-dispersion-family-1" class="level3">
 <h3 class="anchored" data-anchor-id="base-class-for-canonical-exponential-dispersion-family-1">Base class for canonical exponential dispersion family</h3>
 <p>And now we have our base class, we can utilise it for specific classes of the poisson, bernoulli and gaussian distributions:</p>
-<div id="af9626e2" class="cell" data-execution_count="2">
+<div id="a1b6986e" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> gaussian_family(base_canonical_exponential_dispersion_family):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>,y,X,seed <span class="op">=</span> <span class="dv">0</span>):</span>
