@@ -53,59 +53,59 @@ Now because $\bar{x}$ is calculated from the sample, the datapoints in that same
 
 ## Proving the difference:
 
-Imagine there are $N$ i.i.d random variables $X_1, X_2,...,X_n$[^3]., generated from a population process with mean $\mu$ and $\sigma$. Then we might derive the following:
+Imagine there are $N$ i.i.d random variables $X_1, X_2,...,X_N$[^3]., of sample sizes $n_1, n_2, ..., n_N$, generated from a population process with mean $\mu$ and $\sigma$. Then we might derive the following:
 
-* The mean $\bar{X} = \frac{1}{n}\sum_{i=1}^{n}{(X_{i})}$
-* The *uncorrected* variance $s^2 = \frac{1}{n} \sum_{i=1}^{n}{(X_{i}-\bar{X})^2}$
+* The mean $\bar{X_i} = \frac{1}{n_i}\sum_{j=1}^{n_i}{(X_{i,j})}$
+* The variance of sample $i$ is $s_i^2 = \frac{1}{n_i} \sum_{j=1}^{n_i}{(X_{i,j}-\bar{X_i})^2}$
 
-Let's now analyse the expected value for this uncorrected population variance:
+Let's now compare how the expected sample variance, $\mathbb{E}[s_i^2]$ differs from the true population variance, $\mathbb{V}[X]=\frac{1}{N} \sum_{i=1}^{N}{ (X_i-\mu)^2 }$:
 
 $$
 \displaylines{
 \begin{align}
-E[s^2] & = 
-E\left[
-  \frac{1}{n} \sum_{i=1}^{n}{(X_i-\bar{X})^2}
+\mathbb{E}[s^2] & = 
+\mathbb{E}\left[
+  \frac{1}{n_i} \sum_{i=1}^{n_i}{(X_i-\bar{X})^2}
 \right]
 \\ & = 
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \sum_{i=1}^{n}{\bigg( 
     (X_i-\mu)-(\bar{X}-\mu)
   \bigg)^2}
 \right]
 \\ & = 
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \sum_{i=1}^{n}{\bigg( 
     (X_i-\mu)^2-2(X_i-\mu)(\bar{X}-\mu)+(\bar{X}-\mu)^2
   \bigg)}
 \right]
 \\ & = 
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
   - \frac{2}{n} \bigg((\bar{X}-\mu) \sum_{i=1}^{n}{(X_i-\mu)} \bigg)
   + \frac{1}{n} \bigg(n(\bar{X}-\mu)^2 \bigg)
 \right] & \because \bar{X}-\mu \text{ is constant}
 \\ & = 
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
   - \frac{2}{n} \bigg( (\bar{X}-\mu) [n(\bar{X}-\mu)] \bigg)
   + (\bar{X}-\mu)^2
   \bigg)
 \right] & \because \frac{1}{n}\sum_{i=1}^{n}{(X_i-\mu)} = \bar{X} - \mu
 \\ & = 
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
   - (\bar{X}-\mu)^2
   \bigg)
 \right] 
 \\ & = 
 \underbrace{
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \sum_{i=1}^{n}{ (X_i-\mu)^2 } 
 \right]
 }_{\text{True population variance}} - 
 \underbrace{
-E\Bigg[
+\mathbb{E}\Bigg[
   (\bar{X}-\mu)^2
 \Bigg]
 }_{\text{Sample vs pop. mean}}
