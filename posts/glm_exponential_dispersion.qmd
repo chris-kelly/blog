@@ -2,13 +2,18 @@
 title: "Generalized Linear Models from scratch"
 author: "Chris Kelly"
 date: '05-28-24'
-categories: [Gaussian, Binomial, Poisson, Generalized Linear Models, Maximum Likelihood]
+categories: [Generalized Linear Models, Maximum Likelihood]
 format:
   html:
     code-fold: show
     toc: true
 image: '../images/glm_exponential_dispersion.png'
 ---
+
+::: {.callout-tip}
+## What we are exploring
+Deriving (and implementing in python) a generic way to optimize GLMs, by using the exponential family form for poisson, binomial and gaussian distributions.
+:::
 
 ## Introduction
 
