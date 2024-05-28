@@ -243,58 +243,58 @@ What are we exploring?
 </section>
 <section id="proving-the-difference" class="level2">
 <h2 class="anchored" data-anchor-id="proving-the-difference">Proving the difference:</h2>
-<p>Imagine there are <span class="math inline">\(N\)</span> i.i.d random variables <span class="math inline">\(X_1, X_2,...,X_n\)</span><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>., generated from a population process with mean <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>. Then we might derive the following:</p>
+<p>Imagine there are <span class="math inline">\(N\)</span> i.i.d random variables <span class="math inline">\(X_1, X_2,...,X_N\)</span><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>., of sample sizes <span class="math inline">\(n_1, n_2, ..., n_N\)</span>, generated from a population process with mean <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>. Then we might derive the following:</p>
 <ul>
-<li>The mean <span class="math inline">\(\bar{X} = \frac{1}{n}\sum_{i=1}^{n}{(X_{i})}\)</span></li>
-<li>The <em>uncorrected</em> variance <span class="math inline">\(s^2 = \frac{1}{n} \sum_{i=1}^{n}{(X_{i}-\bar{X})^2}\)</span></li>
+<li>The mean <span class="math inline">\(\bar{X_i} = \frac{1}{n_i}\sum_{j=1}^{n_i}{(X_{i,j})}\)</span></li>
+<li>The variance of sample <span class="math inline">\(i\)</span> is <span class="math inline">\(s_i^2 = \frac{1}{n_i} \sum_{j=1}^{n_i}{(X_{i,j}-\bar{X_i})^2}\)</span></li>
 </ul>
-<p>Let’s now analyse the expected value for this uncorrected population variance:</p>
+<p>Let’s now compare how the expected sample variance, <span class="math inline">\(\mathbb{E}[s_i^2]\)</span> differs from the true population variance, <span class="math inline">\(\mathbb{V}[X]=\frac{1}{N} \sum_{i=1}^{N}{ (X_i-\mu)^2 }\)</span>:</p>
 <p><span class="math display">\[
 \displaylines{
 \begin{align}
-E[s^2] &amp; =
-E\left[
-  \frac{1}{n} \sum_{i=1}^{n}{(X_i-\bar{X})^2}
+\mathbb{E}[s^2] &amp; =
+\mathbb{E}\left[
+  \frac{1}{n_i} \sum_{i=1}^{n_i}{(X_i-\bar{X})^2}
 \right]
 \\ &amp; =
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \sum_{i=1}^{n}{\bigg(
     (X_i-\mu)-(\bar{X}-\mu)
   \bigg)^2}
 \right]
 \\ &amp; =
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \sum_{i=1}^{n}{\bigg(
     (X_i-\mu)^2-2(X_i-\mu)(\bar{X}-\mu)+(\bar{X}-\mu)^2
   \bigg)}
 \right]
 \\ &amp; =
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
   - \frac{2}{n} \bigg((\bar{X}-\mu) \sum_{i=1}^{n}{(X_i-\mu)} \bigg)
   + \frac{1}{n} \bigg(n(\bar{X}-\mu)^2 \bigg)
 \right] &amp; \because \bar{X}-\mu \text{ is constant}
 \\ &amp; =
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
   - \frac{2}{n} \bigg( (\bar{X}-\mu) [n(\bar{X}-\mu)] \bigg)
   + (\bar{X}-\mu)^2
   \bigg)
 \right] &amp; \because \frac{1}{n}\sum_{i=1}^{n}{(X_i-\mu)} = \bar{X} - \mu
 \\ &amp; =
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \bigg(\sum_{i=1}^{n}{ (X_i-\mu)^2 } \bigg)
   - (\bar{X}-\mu)^2
   \bigg)
 \right]
 \\ &amp; =
 \underbrace{
-E\left[
+\mathbb{E}\left[
   \frac{1}{n} \sum_{i=1}^{n}{ (X_i-\mu)^2 }
 \right]
 }_{\text{True population variance}} -
 \underbrace{
-E\Bigg[
+\mathbb{E}\Bigg[
   (\bar{X}-\mu)^2
 \Bigg]
 }_{\text{Sample vs pop. mean}}

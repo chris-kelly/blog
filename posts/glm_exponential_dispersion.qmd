@@ -5,7 +5,7 @@ date: '05-15-24'
 categories: []
 format:
   html:
-    code-fold: false
+    code-fold: show
     toc: true
 image: '../images/glm_exponential_dispersion.png'
 ---
@@ -14,13 +14,287 @@ image: '../images/glm_exponential_dispersion.png'
 
 There many types of generalized linear regression models: such as linear regression, logistic regression, poisson regression etc. Every one of these models is made up of a "random component" and a "systematic component". Each also has a "link function" that combines the random and systematic parts.
 
-Let's take the example of a poisson regression:
+To make it easier to contrast and compare, first let's take a normal (gaussian) linear regression:
+
+$$
+\displaylines{
+\mu_i = X_i^{\intercal}\beta \\
+y_i \sim N(\mu_i,\sigma^2)
+}
+$$
+
+In other words, for every observation $i$:
+
+* The expected value $\mathbb{E}[y_i|X_i]=\mu_i$ can be perfectly explained: by taking the dot product of the features and the true coefficients, so $\mu_i = X_i^{\intercal}\beta$.
+* However, in reality the actual observation $y_i$ varies around this expected value: its variation follows a normal distribution  with uniform variance $\mathbb{V}[y_i]=\sigma^2$, i.e. $y_i \sim N(\mu_i,\sigma^2)$. 
+  * This idiosyncratic error, $y_i - \mu_i$, is irreducible (can never be predicted - it is random)
+* When regressing, we try to find the best coefficients $\hat{\beta}$ to predict $\hat{\mu}_i=X_i^{\intercal}\hat{\beta}$ by minimizing the residuals equally across all observations (so that, hopefully, only the idiosyncratic error remains).
+
+
+```{python}
+#| code-fold: true
+#| code-summary: "Click here to show the code"
+import numpy as np, pandas as pd
+from scipy.stats import norm, poisson, gamma
+import statsmodels.api as sm
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+np.random.seed(42)
+
+# Generate some X
+n = 300
+X = np.random.rand(n,3).astype('float64') + 2
+
+# Generate some y using true coefficients β
+true_beta = np.random.normal(0.5,0.1,3).reshape(-1,1)
+eta = X.dot(true_beta)
+
+# Sort data by eta
+eta = eta.ravel()
+idxs = np.argsort(eta)
+X, eta = X[idxs], eta[idxs]
+
+# Estimate coefficients to the data
+sigma_sq=0.5
+y = np.random.normal(eta,sigma_sq).reshape(-1,1)
+
+fig = make_subplots(
+  rows=2,cols=1,
+  subplot_titles=(
+    "Relationship is identity: E[y|X,β] = μ = X'β",
+    "Variance is constant: y ~ N(μ,σ^2)",
+    ),
+  specs=[
+    [{"type": "scatter", "l": 0.2, "r": 0.2, "b":0}],
+    [{"type": "scatter3d", "b": 0.1, "t": 0}]
+  ],
+  row_heights = [2,5],
+  horizontal_spacing = 0,
+)
+
+fig.add_trace(
+  go.Scatter(
+    x=eta, 
+    y=y.flatten(), 
+    mode='markers', name='Observations',
+    marker=dict(size=2, color="blue"),
+  ),
+  row=1, col=1
+)
+
+fig.update_xaxes(title=dict(text="μ = X'β", font_size=16),row=1, col=1)
+fig.update_yaxes(title=dict(text="y", font_size=16),row=1, col=1)
+
+fig.add_trace(
+  go.Scatter(
+    x=eta, 
+    y=eta,
+    line_shape='spline',
+    mode='lines',
+  ),
+  row=1, col=1
+)
+
+# 3d plot of data
+fig.add_trace(
+  go.Scatter3d(
+    x=eta, 
+    y=y.flatten(),
+    z=norm.pdf(y.flatten(), eta, sigma_sq),
+    marker=dict(size=1, color="blue"),
+    mode='markers', name='Observations'
+  ),
+  row=2, col=1
+)
+
+# 3d line of data
+fig.add_trace(
+  go.Scatter3d(
+    x=eta, 
+    y=eta,
+    z=norm.pdf(x=eta,loc=eta,scale=sigma_sq),
+    line=dict(color="red"),
+    mode='lines',
+  ),
+  row=2, col=1
+)
+
+gaus_x = np.arange(3,4.5,0.05)
+gaus_y = np.arange(2,6,0.05)
+xv, yv = np.meshgrid(gaus_x, gaus_y)
+gaus_pdf = norm.pdf(yv, xv, sigma_sq)
+
+fig.add_trace(
+  go.Surface(
+    x=xv, y=yv, z=gaus_pdf, 
+    opacity=0.2,
+    colorscale=[(0, 'gray'), (1, 'gray')],
+    showscale=False,
+    contours = dict(x= {"show": True})
+  ),
+  row=2, col=1
+)
+
+fig.update_layout(
+    scene = dict(
+      aspectratio=dict(x=1.5,y=1.8,z=1),
+      xaxis_title="μ = X'β",
+      yaxis_title="y",
+      zaxis_title="N(μ,σ^2)",
+    ),
+
+    scene_camera = dict(
+        eye = dict(x=1.8, y=-1.5, z=0.3),
+        center = dict(x=0,y=0,z=-0.35),
+    ),
+    showlegend=False,
+  )
+
+fig.show()
+
+```
+
+:::{.column-margin}
+The top plot shows the linear (identity) relationship linking the expected value of $y_i$ to the prediction $\mu_i = X_i^{\intercal}\beta$. We see $y$ is equally dispersed for all values of $\mu$ (equal to $\sigma^2$). 
+<br>
+
+The bottom plot is identical to the first, but adds a third axis with the probability density of the gaussian distribution. The peak of the probability density is at its expected value $\mu_i$, the density is symmetric around $\mu_i$ and the variance is constant $\sigma^2$.
+:::
+
+With this in mind, let's now go through poisson regression, to compare and contrast:
+$$
+\displaylines{
+y_i \sim Pois(\lambda_i) \\
+\ln{(\lambda_i)} = X_i^{\intercal}\beta \\
+}
+$$
+
+There's lots of similarities, but lots of differences too:
+
+* The expected value $\mathbb{E}[y_i|X_i]=\lambda_i$ can be perfectly explained: also by taking the dot product of the features and the true coefficients, but then raising it to the exponential as well: $\lambda_i=X_i^{\intercal}\beta$
+  * Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then $\lambda_i = e^{X_i^{\intercal}\beta}$
+* In reality, the actual observation $y_i$ varies around the expected value too: but this time its variation follows a poisson distribution. The poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
+* Consequently, this impacts how we aim to minimize residuals and estimate our ideal coefficients $\beta$. A poisson regression permits larger residuals at higher counts vs normal regression.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Click here to show the code"
+
+# Poisson:
+y3 = np.random.poisson(np.exp(eta))
+
+fig = make_subplots(
+  rows=2,cols=1,
+  subplot_titles=(
+    "Relationship is exponential: E[y|X,β] = λ = exp(X'β)",
+    "Variance increases with λ: y ~ Pois(λ)",
+    ),
+  specs=[
+    [{"type": "scatter", "l": 0.2, "r": 0.2, "b":0}],
+    [{"type": "scatter3d", "b": 0.1, "t": 0}]
+  ],
+  row_heights = [2,5],
+  horizontal_spacing = 0,
+)
+
+fig.add_trace(
+  go.Scatter(
+    x=eta, 
+    y=y3.flatten(), 
+    mode='markers', name='Observations',
+    marker=dict(size=2, color="blue"),
+  ),
+  row=1, col=1
+)
+
+fig.update_xaxes(title=dict(text="ln(λ) = X'β", font_size=16),row=1, col=1)
+fig.update_yaxes(title=dict(text="y", font_size=16),row=1, col=1)
+
+fig.add_trace(
+  go.Scatter(
+    x=eta, 
+    y= np.exp(eta),
+    line_shape='spline',
+    mode='lines', name='Poisson fit',
+  ),
+  row=1, col=1
+)
+
+# 3d plot of data
+fig.add_trace(
+  go.Scatter3d(
+    x=eta, 
+    y=y3.flatten(),
+    z=poisson.pmf(y3.flatten(), np.exp(eta)),
+    marker=dict(size=1, color="blue"),
+    mode='markers', name='Observations'
+  ),
+  row=2, col=1
+)
+
+# 3d line of data
+fig.add_trace(
+  go.Scatter3d(
+    x=eta, 
+    y=np.exp(eta),
+    z=gamma.pdf(x=np.exp(eta),a=np.exp(eta)+1),
+    line=dict(color="red"),
+    mode='lines', name='Poisson fit',
+  ),
+  row=2, col=1
+)
+
+pois_mu = np.arange(3,4.5,0.05)
+pois_z = np.arange(0,100,1)
+xv, yv = np.meshgrid(pois_mu, pois_z)
+pois_pmf = poisson.pmf(yv, np.exp(xv))
+
+fig.add_trace(
+  go.Surface(
+    x=xv, y=yv, z=pois_pmf, 
+    opacity=0.2,
+    colorscale=[(0, 'gray'), (1, 'gray')],
+    showscale=False,
+    contours = dict(x= {"show": True})
+  ),
+  row=2, col=1
+)
+
+fig.update_layout(
+    scene = dict(
+      aspectratio=dict(x=1.5,y=1.8,z=1),
+      xaxis_title="ln(λ) ~ X'β",
+      yaxis_title="y",
+      zaxis_title="Pois(λ)",
+    ),
+    
+    scene_camera = dict(
+        eye = dict(x=1.8, y=-1.5, z=0.3),
+        center = dict(x=0,y=0,z=-0.35),
+    ),
+    showlegend=False,
+  )
+
+fig.show()
+
+```
+
+:::{.column-margin}
+The top plot shows the exponential relationship linking the systematic component and the observed count $y$, where $y$ is more dispersed at higher values of $\lambda$ (higher variance). 
+
+The bottom plot is identical to the first, but adds a third axis with the probability mass of the poisson distribution. Again, the higher variance makes the peak of the poisson probability mass function lower, and its probability density is more spread.
+:::
+
+It can now help to start to denote this into its random and systematic components, and their link function:
 $$
 \displaylines{
 \underbrace{y_i \sim Pois(\lambda_i)}_{\text{random}} \\
 \underbrace{\ln{(\lambda_i)}}_{\text{link function}} = \underbrace{X_i^{\intercal}\beta}_{\text{systematic}}
 }
 $$
+
+Let's dive into this in a bit more detail:
 
 ### Random component
 
@@ -30,17 +304,15 @@ $$
 y_i \sim Pois(\lambda_i)
 $$
 
-The mean rate of the count is $\lambda_i$ - so we expect $y_i$ to be around $\lambda_i$. However, for any individual observation $i$, the actual observed $y_i$ will vary above and below the mean rate $\lambda_i$. In fact, by using poisson we assume the variance of $y_i$ increases as the mean rate $\lambda_i$ increases too. And this is why it is called the "random component": since $y$ varies randomly around the mean, following the poisson distribution, it is a random variable.
+The expected rate of the count is $\lambda_i$. This means we expect $y_i$ to be around $\lambda_i$, i.e. $\mathbb{E}[y_i|X_i]=\lambda_i$. However, for any individual observation $i$, the actual observed $y_i$ will vary above and below this expected rate. By using poisson, we assume the variance is equal to the mean rate: $\mathbb{V}[y_i|X_i] = \lambda_i$. Thus we permit the dispersion of observations to increase if the expected rate is higher.
 
-!!!!
-GRAPH OF POISSON
-!!!!
+This is why it is called the "random component": since $y_i$ varies randomly around $\lambda_i$, following the poisson distribution, it is a *random variable*.
 
 But how do we find a good estimation for $\mathbb{E}[y_i|X_i]=\lambda_i$? Concretely, how do we best map our independent variables $X_i$ to $\lambda_i$? This is down to our systematic component and link function.
 
 ### Systematic component and link function
 
-In most cases, the systematic component $\eta(X)$ is usually just a linear transformation of $X$, most often the result of multiplying each value by some good fitted coefficients $\beta$.
+In most cases, the systematic component $\eta(X)$ is usually just a linear transformation of $X$, most often the result of multiplying each value by some good fitted coefficients $\beta$. It is deterministic (non-random), so it is *systematic*.
 
 $$
 \eta(X_i) = X_i^{\intercal}\beta
@@ -52,13 +324,15 @@ $$
 \ln{(\lambda_i)} = \eta(X) = X^{\intercal}\beta
 $$
 
-Okay, so now we want to find the best values for $\beta$. These coefficients will transform our features $X$ to make the best predictions for $\ln{(\lambda_i)}$, given we want to predict $y$ as accurately as possible (but permit larger residuals when $\lambda_i$ is larger, following the poisson distribution).
+Okay, so now we want to find the best values for $\beta$. These coefficients will transform our features $X_i$ to make the best predictions for $\ln{(\lambda_i)}$, given we want to predict $y_i$ as accurately as possible (but permit larger residuals when $\lambda_i$ is larger, following the poisson distribution).
 
 To achieve this: we can try some initial coefficients, calculate the cost function and its first derivative, update the coefficients, and continue to minimize the cost function through gradient descent.
 
 But how cumbersome that would be to do for every type of distribution we want to model! Wouldn't it be nice if we can derive a generic representation for the cost function and its first derivative, so that we can re-use the same code for every type of regression?
 
 ## Exponential Dispersion Family of Distributions
+
+### Notation for Generalized linear models
 
 It can be shown that many common distributions can be reformulated into the "Exponential Dispersion Family of Distributions". This generic representation makes it easier to re-use the same code to run a regression, rather than hand calculate each pdf in different ways.
 
@@ -71,9 +345,9 @@ $$
 }
 $$
 
-$\xi_i$ is a shape parameter, governing the shape of the distribution (e.g. in poisson, the expected value is the mean $\xi_i=\lambda_i$). In fact for many distributions, $\xi_i$ is the expected value of $y_i$, so $\xi_i = \mu_i$.
+$\xi_i$ is a shape parameter, governing the shape of the distribution (e.g. in poisson, the expected value is the mean $\xi_i=\lambda_i$). Or for bernoulli, $\xi_i=p_i$. In fact for many distributions, $\xi_i$ is the expected value of $y_i$ i.e. $\xi_i = \mu_i$.
 
-$\phi$ is a dispersion parameter, governing the spread of the data (e.g. gaussian has the standard deviation $\phi = \sigma$). It is not always necessary if this is determined by the shape parameter though(e.g. in poisson the variance is already equated to the expected rate $\lambda_i$).
+$\phi$ is a dispersion parameter, governing the spread of the data (e.g. gaussian has the standard deviation $\phi = \sigma$). It is not always necessary if the dispersion is determined by the shape parameter already (e.g. in poisson the variance is already equated to the expected rate $\lambda_i$).
 
 Here are some examples of the common forms of poisson, bernoulli and gaussian probability distribution functions $y \sim f_{\theta_i}(\mu_i)$, along with some choices for link functions $g(\mu)$ to use in regression:
 
@@ -84,7 +358,11 @@ Binary<br>$\xi_i = \mu_i \equiv p_i$ | $y_i \sim Bern(\mu_i)$<br>$y_i \sim \mu_i
 Binary<br>$\xi_i = \mu_i \equiv p_i$ | $y_i \sim Bern(\mu_i)$<br>$y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}$ | $g(\mu) = \Phi^{-1}[\mu_i]$<br>(probit-link)
 Normal<br>$\xi_i = \mu_i$ | $y_i \sim N(\mu_i,\sigma^2)$<br>$y_i \sim \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}\left(\frac{y_i-\mu_i}{\sigma^2}\right)^2}$ | $g(\mu) = \mu$<br>(identity-link)
 
-Now all of these probability density functions can be rewritten into a the exponential family form! Which we show now:
+### Formulating normal, bernoulli and poisson distributions into the exponential family
+
+All of the probability density functions above - poisson, gaussian, bernoulli - can be rewritten into a the exponential family form!
+
+The footnotes detail the derivations for the exponential forms for each of the poisson[^1], gaussian[^2] and bernoulli[^3] distributions.
 
 $$
 \displaylines{
@@ -92,9 +370,10 @@ $$
 f(y;\xi,\phi) 
 & = 
 \exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } & \tag{1.1}
-\\
-Pois(y;\xi,\phi) = \frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!}
-& \equiv \exp{ \left\{ 
+\\ \\
+Pois(y;\xi,\phi) 
+& = \frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!} 
+\\ & \equiv \exp{ \left\{ 
 \frac{
   \underbrace{y_i}_{T(y_i)}
   \underbrace{\ln{ \left[ \xi_i \right]}}_{r(\xi_i)}
@@ -104,9 +383,10 @@ Pois(y;\xi,\phi) = \frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!}
 } 
 - \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
 \right\}} \tag{1.2}
-\\
-Bern(y;\xi,\phi) = \xi_i^{y_i}(1-\xi_i)^{1-y_i} 
-& \equiv \exp{ \left\{ \frac{
+\\ \\
+Bern(y;\xi,\phi) 
+& = \xi_i^{y_i}(1-\xi_i)^{1-y_i} 
+\\ & \equiv \exp{ \left\{ \frac{
   \underbrace{y_i}_{T(y)}
 \underbrace{ \ln{
   \left[\frac{\xi_i}{1-\xi_i} \right]
@@ -117,9 +397,10 @@ Bern(y;\xi,\phi) = \xi_i^{y_i}(1-\xi_i)^{1-y_i}
   } 
   + \underbrace{0}_{c(y_i,\phi)}
 \right\}} \tag{1.3}
-\\
-N(y;\xi,\phi) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y_i-\xi_i)^2}{2\sigma^2} \right\} }
-& \equiv \exp{\left\{
+\\ \\
+N(y;\xi,\phi) 
+& = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y_i-\xi_i)^2}{2\sigma^2} \right\} } 
+\\ & \equiv \exp{\left\{
   \frac{
     \underbrace{y_i}_{T(y_i)} \underbrace{\xi_i}_{r(\xi_i)} - 
     \underbrace{\frac{\mu_i^2}{2}}_{b(\xi_i)}
@@ -152,13 +433,19 @@ $c(y_i,\phi)$ | $c(y_i,\phi) = \ln[y!]$ | $c(y_i,\phi) = 0$ | $c(y_i,\phi) = 0$ 
 <!-- $\phi$ | $\phi=1$ | $\phi=1$ | $\phi=1$ | $\phi=\sigma$ -->
 <!-- $\xi_i$ | $\xi_i=\lambda_i\equiv\mu_i$ | $\xi_i=p_i\equiv\mu_i$ | $\xi_i=p_i\equiv\mu_i$ | $\xi_i=\mu_i$ -->
 
-That's a lot of terms! (e.g. $r(\xi_i)$, $a(\phi)$ etc). But now we have reformulated the bernoulli, poisson and gaussian distributions into this form, we can start to develop some intuition as to what each of these terms mean:
+<!-- That's a lot of terms! (e.g. $r(\xi_i)$, $a(\phi)$ etc). But now we have reformulated the bernoulli, poisson and gaussian distributions into this form, we can start to develop some intuition as to what each of these terms mean: -->
 
 ### The "canonical" link function
 
-Firstly, you may have noticed that $r(\xi_i)$ looks very familiar... in fact, it is the link functions we commonly use for that regression! For example in logistic regression, we use the logit link function $g(\xi_i) = \ln{\left[\frac{\xi_i}{1-\xi_i}\right]} = \eta(X)$. So for any exponential distribution, $r(\xi_i)$ is the default choice for link function, the so-called "canonical link function".
+You may have noticed that $r(\xi_i)$ looks very familiar... in fact, it is the link functions we commonly use for that regression! For example in logistic regression, we use the logit link function $g(\xi_i) = \ln{\left[\frac{\xi_i}{1-\xi_i}\right]} = \eta(X)$. 
 
-In fact, if the canonical link function is used, and no transformation means $T(y_i) = y_i$, then we can simplify the notation, where $\theta_i = g(\xi_i)$:
+:::{.callout-tip}
+## Canonical link function
+
+For any exponential distribution, $r(\xi_i)$ is the default choice for link function, the so-called "canonical link function", is given by $r(\xi)$.
+:::
+
+In fact, if the canonical link function is used (so $g(\xi_i)=r(\xi_i)$), and no transformation means $T(y_i) = y_i$, then we can simplify the formula to its "canonical form", where $\theta_i = g(\xi_i)$:
 
 $$
 \displaylines{
@@ -175,10 +462,17 @@ f(y;\xi,\phi)
 }
 $$
 
+Where this falls down is when you don't use the canonical link function, such as in probit regression. While the canonical link function for bernoulli is logit, the probit link is the inverse cumulative distribution function of the standard normal $g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)$. So because it is not canonical, it's a bit more complicated to deal with (which we explore later).
 
-The odd one out is the probit link function - as this is not the canonical link function. While the canonical link function for bernoulli is logit, the probit link is the inverse cumulative distribution function of the standard normal $g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)$. So because it is not canonical, it's a bit more complicated to deal with (which we explore later).
+### Some intutition into the terms:
 
-### The integral of the inverse canonical link function
+We go into detail into the intution behind the other terms in the footnotes, but for now, here is a quick summary:
+
+* $a(.)$ normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$.
+* $c(.)$ is an adjustment function that ensures the pdf sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.
+* $b(.)$ is the integral of the inverse of the link function. This might seem unintuitive right now, but it is easier to see when we derive a cost function and minimize it.
+
+<!-- ### The integral of the inverse canonical link function
 
 $b(\xi_i)$ seems slightly odd at first: it is the integral of the inverse of the canonical link function. It's easier to see this by running through each example:
 
@@ -198,7 +492,7 @@ $b(\xi_i)$ seems slightly odd at first: it is the integral of the inverse of the
   * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$.
   * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}$.
 
-Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network. I.e. is the function that maps the output of the network to the final prediction.
+Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network. I.e. is the function that maps the output of the network to the final prediction. Have a look at the section about the score function for further intuition for why [this is the integral](#score)! -->
 
 <!-- Term | Poisson | Gaussian | Bernoulli 
 --|--|--|--
@@ -207,7 +501,7 @@ inverse-link <br> $r^{-1}(\eta(X))$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{
 $\therefore b'(\xi_i) = r^{-1}(\xi_i)$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$
 $\therefore b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}$ | $b(\xi_i) = e^{\eta(X)}$ | $b(\xi_i) = \frac{\xi_i^2}{2}$ | $b(\xi_i) = \frac{e^{\eta(X)}}{1+e^{\eta(X)}}$ -->
 
-### Other terms
+<!-- ### Other terms
 
 The other terms are less interesting! But here is a quick summary for completeness:
 
@@ -216,18 +510,18 @@ Parameter / Function | intuition
 $T(y)$ is a transformation of $y$ | It is the identity for all the distributions we are looking at, so can be ignored for now.
 $\phi$ is the "dispersion parameter", | A parameter for the expected dispersion of $y_i$ around $\mu_i$. For example, gaussian regression has $\phi=\sigma$, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance $\mathbb{V}[y_i] = \lambda_i$ (i.e. already determined by $\xi_i$).
 $a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$. Again this isn't needed for one parameter distributions.
-$c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included. 
+$c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.  -->
 
-## Solving for any exponential family using maximum likelihood estimation
+## Applying the exponential families to regression
 
-So far we have reformulated poisson, binomial and normal regressions into the exponential family form. So now we want to derive our "one-use formula" to estimate the best coefficients for any GLM via maximum likelihood estimation!
+So far we have reformulated poisson, binomial and normal regressions into the exponential family form. So now we want to derive a "generic-use formula" to estimate the best coefficients via maximum likelihood estimation for any GLM.
 
 ### Cost function
 
 Let's define our generic cost function in negative log-likelihood form assuming the canonical link function is used (so in terms of $\theta_i$):
 
 :::{.column-margin}
-Maximising the the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Also, taking the negative ensures we are looking to minimize the cost.
+Maximising the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Also, taking the negative ensures we are looking to minimize the cost.
 :::
 $$
 \displaylines{
@@ -265,17 +559,27 @@ L(\theta)
 }
 $$
 
-### Score
+### Informant (score function)
 
-Next we want to minimize this generic cost function with respect to $\beta$. Common methods include "Newton-Raphson", "Fisher-Scoring", "Iteratively-reweighted Least Squares" or "Gradient Descent".
+Next we want to minimize this generic cost function with respect to $\theta$. Common methods for optimization include "Newton-Raphson", "Fisher-Scoring", "Iteratively-reweighted Least Squares" or "Gradient Descent".
 
-To execute any of these, we need to derive the the "score" (or "informant"): the first derivative of the negative log likelihood with respect to $\beta$:
+:::{.column-margin}
+It is trival to connect $\theta$ to the coefficients $\beta$, since 
+$$
+\displaylines{
+\frac{\partial\theta}{\partial\beta_j}=\frac{\partial} {\partial\beta_j}[\eta(X)]=X_j 
+\\ \iff \eta(X)=X^{\intercal}\beta
+}
+$$
+:::
+
+To execute any of these, we need to derive the "score" (or "informant"): the first derivative of the negative log likelihood with respect to $\beta$:
 
 $$
 \displaylines{
 \begin{align}
-\arg \min_\beta \left[ \mathcal{L}(\theta) \right]
-& = \arg \min_\beta \left[ -\left(
+\arg \min_\theta \left[ \mathcal{L}(\theta) \right]
+& = \arg \min_\theta \left[ -\left(
 \frac{1}{a(\phi)} 
 \sum_{i=1}^n{ \bigg\{
     y_i \theta_i - b(\theta_i)
@@ -285,10 +589,10 @@ $$
 \bigg\}}
 \right)\right]
 \\ 
-& = \arg \min_\beta \left[ -\left(
+& = \arg \min_\theta \left[ -\left(
 \frac{1}{a(\phi)} 
 \sum_{i=1}^n{ \bigg\{
-    y_i X_i^{\intercal}\beta - b(X_i^{\intercal}\beta)
+    y_i X_i^{\intercal}\theta - b(X_i^{\intercal}\theta)
 \bigg\} } + 
 \sum_{i=1}^n{ \bigg\{
   c(y_i,\phi)
@@ -297,11 +601,11 @@ $$
 \\ & \because \theta = \eta(X) \text{ in the canonical case}
 \\
 \\
-\therefore \frac{\partial \mathcal{L}(\theta)}{\partial\beta_i} 
+\therefore \frac{\partial \mathcal{L}(\theta)}{\partial\theta_i} 
 & = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
       y_i X_i  - \frac{\partial b(\theta)}{\partial \theta} X_i
   \bigg\} } 
-\\ & \because c() \text{ is constant with respect to } \beta
+\\ & \because c() \text{ is constant with respect to } \theta
 \\
 & =\underbrace{\frac{1}{a(\phi)}}_{\text{Constant}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
 \end{align}
@@ -319,7 +623,7 @@ This also uncovers an interesting property of GLMs - that the average prediction
 $$
 \displaylines{
 \begin{align}
-\frac{\partial \mathcal{L}(\theta)}{\partial\beta_i} 
+\frac{\partial \mathcal{L}(\theta)}{\partial\theta} 
 & = 0 \text{ (cost is minimized at stationary point)}
 \\
 & = \cancel{\frac{1}{a(\phi)}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) \cancel{X_i} \bigg\} }
@@ -333,15 +637,20 @@ $$
 }
 $$
 
+
+$$
+H(\theta; y) = \frac{\partial^2 \ell(\theta; y)}{\partial \theta \partial \theta^\top}
+$$
+
 ### Hessian
 
-Finally, we need to derive the Hessian matrix, which is the second derivative of the cost function with respect to $\beta$. This is required for second order optimization methods, like Newton's method, which can converge faster than gradient descent:
+Finally, we can derive the Hessian matrix, which is the second derivative of the cost function with respect to $\beta$.
 
 $$
 \displaylines{
 \begin{align}
-\frac{\partial^2 \mathcal{L}(\theta)}{\partial\beta_i^2} 
-& = \frac{\partial}{\partial\beta_i}\left( 
+\frac{\partial^2 \mathcal{L}(\theta)}{\partial\theta\theta^{\intercal}} 
+& = \frac{\partial}{\partial\theta}\left( 
   \frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
 \right)
 \\
@@ -352,303 +661,138 @@ $$
 }
 $$
 
-Well done on getting this far!. We can now start to write out some python to create this ourselves.
-
-### Poisson
-
-Now let's have a look at poisson, with mean rate of $\lambda_i = \mu_i = \xi_i$:
+This is required for second order optimization methods, like Newton's method, which can converge faster than gradient descent:
 
 $$
 \displaylines{
 \begin{align}
-f_y(\xi_i,\phi)
-& = 
-\frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!}
-\\ & = \exp{ \left\{ 
-\ln{ \left[ \frac{\mu_i^{y_i} \times e^{-\mu_i}}{y_i!} \right]}
-\right\}}
-\\ & = \exp{ \left\{ 
-\ln{ \left[ \mu_i^{y_i} \right]}
-+ \ln{ \left[ e^{-\mu_i} \right] }
-- \ln{ \left[ y_i! \right] }
-\right\}}
-\\ & = \exp{ \left\{ 
-y_i \ln{ \left[ \mu_i \right]}
--\mu_i
-- \ln{ \left[ y_i! \right] }
-\right\}}
-\\ & \equiv \exp{ \left\{ 
-\frac{
-  \underbrace{y_i}_{T(y_i)}
-  \underbrace{\ln{ \left[ \mu_i \right]}}_{r(\xi_i)}
-  - \underbrace{\mu_i}_{b(\xi_i)}
-}{
-  \underbrace{1}_{a(\phi)}
-} 
-- \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
-\right\}}
-\\ & = \exp{ \left\{ \frac{T(y_i) r(\xi_i) - b(\xi_i)}{a(\phi)} + c(y_i,\phi) \right\} } & \tag{1.2}
+\beta_{\text{new}} & = \beta_{\text{old}} - \underbrace{\frac{\partial^2 \mathcal{L}(\theta)}{\partial\theta\theta^{\intercal}}^{-1}}_{\text{Learning rate}} \times \underbrace{\frac{\partial \mathcal{L}(\theta)}{\partial\theta}}_{}
+\\ & \equiv \beta_{\text{old}} - H^{-1} \nabla J
 \end{align}
 }
 $$
-
-
-
-
-So when reformulating the poisson distribution as an exponential dispersion family, we find:
-
-* $T(.) = I(.)$ i.e. it is simply the identity, so $T(y) = y$
-* $r(\xi_i) = \ln{[\mu_i]}$
-* 
-* Since we are using the log-link, our choice of link function is canonical: $r(\xi_i) = \ln{[\mu_i]} = g(\mu_i)$. So we can simplify to $\theta_i$!
-* $b(\theta_i) = \mu_i = \exp\{\theta_i\}$.
-  * Note that the differential of this with respect to $\theta_i$ is still the exponential function, $\frac{\partial b(\theta_i)}{\partial \theta_i}=\exp\{{\theta_i}\}$. So the differential is the inverse of the log-link function!
-* We can ignore $a(\phi)$. This term usually helps normalize the pdf by its dispersion, but the poisson distribution only has one parameter: the variance is identical to the mean, $\mathbb{V}[y_i] = \mu_i$. So no normalisation is needed.
-* Since the exponential form of the poisson distribution actually sums to more than one, we need to adjust it using $c(y_i,\phi)=\ln{ \left[ y_i! \right] }$.
-
-### Bernoulli (Logit vs probit)
-
-Let's take the bernoulli pdf with expected success probability $p_i=\mu_i$, and reformulate it to the exponential dispersion family form:
-
-$$
-\displaylines{
-\begin{align}
-f(y;\theta,\phi)
-& = \mu_i^{y_i}(1-\mu_i)^{1-y_i} \\
-& = \exp{ \left\{\ln{\left[\mu_i^{y_i}(1-\mu_i)^{(1-y_i)} \\\right]} \right\}} \\
-& = \exp{ \left\{
-  \ln{\left[\mu_i^{y_i}\right]} + \ln{\left[(1-\mu_i)^{(1-y_i)}\right]} 
-  \right\}} \\
-& = \exp{ \left\{ y_i \ln{[\mu_i]} + (1-y_i)\ln{[1-\mu_i]} \right\}} \\
-& = \exp{ \left\{ y_i \ln{
-  \left[\frac{\mu_i}{1-\mu_i} \right]} + \ln{[1-\mu_i]} \right\}} \\
-& = \exp{ \left\{ \frac{
-  \underbrace{y_i}_{T(y)}
-\underbrace{ \ln{
-  \left[\frac{\mu_i}{1-\mu_i} \right]
-} }_{r(\xi_i)}
-  + \underbrace{ \ln{[1-\mu_i]} }_{b(\xi_i)}
-  }{
-    \underbrace{1}_{a(\phi)}
-  } 
-  + \underbrace{0}_{c(y_i,\phi)}
-\right\}} 
-\\
-& = \exp{ \left\{ \frac{y_i 
-\underbrace{ \ln{
-  \left[\frac{\mu_i}{1-\mu_i} \right]
-} }_{\theta_i}
-  + \underbrace{ \ln{[1-\mu_i]} }_{b(\theta_i)}
-  }{
-    \underbrace{1}_{a(\phi)}
-  } 
-  + \underbrace{0}_{c(y_i,\phi)}
-\right\}} 
-\\ & = \exp{ \left\{ \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} + c(y_i,\phi) \right\} }
-\end{align}
-}
-$$
-
-So we find that:
-
-* Now when using the logit-link, our choice of link function is canonical: $r(\xi_i) = \ln{\left[\frac{\mu_i}{1-\mu_i} \right]} = g(\mu_i)$. So we can simplify to $\theta_i$ when using logistic regression!
-  * However, this isn't the case for probit, since $r(\xi_i) = \ln{\left[\frac{\mu_i}{1-\mu_i} \right]} \neq g(\mu_i) = \Phi^{-1}[\mu_i]$. So to conduct probit regression, we need to use the non-canonical form.
-* $b(\theta_i) = \ln{[1-\mu_i]} = \ln{[1+\exp\{\theta_i\}]}$[^1].
-  * Note that the differential of this with respect to $\theta$ is just the logistic function, $\frac{\partial b(\theta_i)}{\partial\theta_i}=\frac{\exp\{\theta_i\}}{1+\exp\{\theta_i\}}$. This differential is the inverse of the logit link function.
-* We can ignore $a(\phi)$. This term usually helps normalize the pdf by its dispersion, but the bernoulli distribution only has one parameter: the variance is $\mathbb{V}[y_i] = \mu_i \times (1-\mu_i)$
-* We can also ignore $c(y_i,\phi)$. Since the exponential form of the bernoulli distribution already sums to one, we do not need to adjust it.
-
-:::{.column-margin}
-See footnotes for deriving $\ln{[1-p]} = \ln{[1+\exp\{X_i^{\intercal}\beta\}]}$.
-:::
-
-### Gaussian
-
-$$
-\displaylines{
-\begin{align}
-f(y;\theta,\phi) 
-& = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y_i-\mu_i)^2}{2\sigma^2} \right\} }
-\\ & =
-\exp{\left\{
-\ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} 
-\exp{ \left\{ -\frac{(y_i-\mu_i)^2}{2\sigma^2} \right\} }
-\right]}
-\right\}}
-\\ & =
-\exp{\left\{
-\ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} \right]}
-- \frac{(y_i-\mu_i)^2}{2\sigma^2}
-\right\}}
-\\ & =
-\exp{\left\{
-\cancel{\ln{ \left[ 1 \right]}}
-+ \ln{ \left[ 2 \pi \sigma^2 \right]}^{-1/2}
-- \frac{y_i^2+\mu_i^2-2y\mu_i}{2\sigma^2}
-\right\}}
-\\ & =
-\exp{\left\{
-- \frac{1}{2}\ln{ \left[ 2 \pi \sigma^2 \right]}
-- \frac{y_i^2}{2\sigma^2}
-- \frac{\frac{\mu_i^2}{2}}{\sigma^2}
-+ \frac{\cancel{2}y_i\mu_i}{\cancel{2}\sigma^2}
-\right\}}
-\\ & =
-\exp{\left\{
-  \frac{
-    y \underbrace{\mu_i}_{\theta_i} - 
-    \underbrace{\frac{\mu_i^2}{2}}_{b(\theta_i)}
-  }{
-    \underbrace{\sigma^2}_{a(\phi)}
-  }
-- 
-\underbrace{
-  \frac{1}{2}
-  \left( 
-    \frac{y_i^2}{\sigma^2} + 
-    \ln{ \left[ 2 \pi \sigma^2 \right]}
-  \right)
-}_{c(y_i,\phi)}
-\right\}}
-\\ & = \exp{ \left\{ \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} + c(y_i,\phi) \right\} }
-\end{align}
-}
-$$
-
-So we find that:
-
-* Since we are using the identity-link, our choice of link function is canonical: $r(\xi_i) = \xi_i = g(\xi_i)$. So we can simplify to $\theta_i$!
-* $b(\theta_i) = \frac{\mu_i^2}{2}$. You might recognise this squared term as part of the usual cost function for least squares regression!
-  * Note that the differential of this with respect to $\theta_i$ is the identity, $\frac{\partial b(\theta_i)}{\partial \theta_i}=\theta_i$. It is the inverse of the link function (again the identity).
-* Finally, we have a use for $a(\phi)$. The gaussian distribution has two parameters, a second relating to its variance, so we need to normalize our cost function by this measure of the dispersion of our data.
-* And again, we have a use $c(y_i,\phi)$. Without this correction, the exponential form of the gaussian distribution sums to more than one.
-
-
-
-$$
-\displaylines{
-\begin{align}
-f(y;\xi,\phi) 
-& = 
-\exp{ \left\{ \frac{T(y) r(\xi) - b(\xi)}{a(\phi)} + c(y,\phi) \right\} } & \tag{1.1}
-\\
-\equiv f(y; \theta_i, \phi)
-& = \exp{ \left\{ \frac{y \theta - b(\theta)}{a(\phi)} + c(y,\phi) \right\} } & \tag{1.2}
-\\
-\\
-& \iff T(y) = y; g(\xi) = r(\xi) = \theta
-\end{align}
-}
-$$
-
-Now when reformulating the probability density functions into the exponential family form, a good choice for the link function $g(.)$ often "reveals itself": i.e. the "canonical" choice of $g(\xi_i) = r(\xi_i)$.
-
-If the chosen link function is this canonical one, then we can further simplify the non-canonical form $(1.1)$ to its more common canonical form $(1.2), iff:
-
-1. $T(y) = y$ i.e. it happens to be the identity function.
-1. $g(\xi) = r(\xi)$ i.e. $r(\xi)$ is identical to the chosen link function $g(\xi)$. If we are using a linear predictor too, so $r(\xi_i)=\theta_i = \eta(X_i) = X_i^{\intercal}\beta$, then we actually find $b(\xi) = b(\theta_i)$ too, hence simplifying to $(1.2)$.
-
-Now it is actually true that both these conditions are met for poisson, logistic and gaussian regression! However isn't true for probit, because the choice of link function is not "canonical", i.e. $r(\mu_i) \neq \Phi^{-1}[\mu_i]$. We will go through this later though.
-
-### Intuition behind the exponential form
-
-There's a lot of terms in the formula above. We will try to give some intuition behind $(1.2)$, but don't worry if this still seems hard to get your head around: we are going to show how to reformulate each of the poisson, binomial and gaussian distributions into an exponential dispersion family form after this, to provide further intuition:
-
-Parameter / Function | intuition
----|:--------
-$\theta$ is the "natural parameter" | This is a parameter influencing the shape of the distribution. It is clearly related to location, but sometimes the dispersion too. For example, in bernoulli, the mean (expected) $p_i = \mu_i$, so $\theta_i = g(\mu_i)=\ln{\left(\frac{\mu_i}{1-\mu_i}\right)}=\ln{\left(\frac{p_i}{1-p_i}\right)}$. However, since $\mathbb{V}[y]=p_i(1-p_i)$, it also governs the dispersion of the bernoulli too. 
-$\phi$ is the "dispersion parameter", | A parameter for the expected dispersion of $y_i$ around $\mu_i$. For example, gaussian regression has $\phi=\sigma$, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance $\mathbb{V}[y_i] = \lambda_i$ (i.e. already determind by $\theta_i$).
-$a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$. Again this isn't needed for one parameter distributions.
-$c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.
-$b(.)$ is the integral of the inverse-link function | It helps to look at $b'(\theta)$ first. Whereas the link function maps $\mu \rightarrow \theta$, i.e. $g(\mu) = \theta$, the inverse of the link function maps the other way $\theta \rightarrow \mu$ i.e. $b'(\theta)=g^{-1}(\theta)=\mu$. You might also recognise this as the "activation function" in the outer layer of neural networks. Then, the integral $b(\theta) = \int{b'(\theta)\,d\theta}$ by definition. <br> For example, poisson regression has log-link function: $g(\mu) = \ln{(\mu)} = \theta$. So the inverse-link function is the exponential: $b'(\theta) = g'(\mu)= \exp{(\theta)}$. It just so happens the integral is the same in this case: $b(\theta) = \int{\exp{\{\theta\}}} = \exp{\{\theta\}}$
-
-
 
 ## Coding it up from scratch
 
-### Base class for canonical exponential dispersion family
+Well done on getting this far! We can now start to write out some python to create this ourselves. We will start by creating a parent class for exponential dispersion families, and then create child classes for the poisson, bernoulli and gaussian distributions specifically.
 
-Let's start creating a generic base class then that we can use for any distribution that can be represented by the canonical exponential dispersion family:
 ```{python}
+#| code-fold: true
+#| code-summary: "Click here to Show the code"
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import statsmodels.api as sm
 
-class base_canonical_exponential_dispersion_family():
+np.random.seed(42)
 
-    def __init__(self,y,X,b,phi,a,c,seed=0):
+# Generate some X
+n = 100
+X = np.random.normal(2,0.5,n*3).reshape(-1,3).astype('float64')
+
+# Generate some y using coefficients β
+true_beta = np.random.normal(0.5,0.1,3).reshape(-1,1)
+y = X.dot(true_beta) + np.random.normal(0,0.5,n).reshape(-1,1)
+```
+
+### Parent class for the canonical form:
+
+First, let's create a generic parent class then that we can use for any canonical exponential dispersion family. Note that this contains the MLE proceedure to minimize the cost function for regression (we will explain this in a future post - just know for now that this uses maximum likelihood estimation to optimize the coefficients).
+
+```{python}
+#| code-fold: true
+#| code-summary: "Click here to Show the code"
+class exponential_regression_parent():
+
+    def __init__(self,seed=0,y=None,X=None):
       """
+      a:    Function for a(φ): Normalizes the pdf using the dispersion parameter. 
+            E.g. for gaussian reg, it is the variance of the residuals a(φ) = φ^2.
+      b:    Function for b(θ): the integral of the inverse-log function.
+      db:   Function for b'(θ): the first derivative of b(θ) with respect to theta.
+            Note that this is the inverse of the link function
+            E.g. for poisson reg, g(µ) = ln(µ) = η(X) = θ. So b(θ) = exp(θ).
+      d2b:  Function for b''(θ): the second derivative of b(θ) with respect to theta.
+            E.g. for poisson reg, b'(θ) = exp(θ). So b''(θ) = exp(θ) too.
+      c:    Function for c(y,φ). Adjusts the likelihood so that the pdf sums to 1.
+      seed: Scalar sets seed for random coefficient initialization
       y:    Dependent variable. A 1d vector of numeric values 
       X:    Independent variables. A 2d matrix of numeric values 
-      b:    Function for the integral of the activation function. See db for more details.
-      db:   Function for the first derivative of b(θ) with respect to theta.
-            Note that this should be the inverse of the link function
-            E.g. for poisson reg, g(µ) = ln(µ) = η(X) = θ. So b(θ) = exp(θ).
-      phi:  Parameter: the "dispersion parameter", φ. 
-            A measure of the dispersion of the distribution
-            E.g. for gaussian reg, φ is the standard deviation of residuals.
-      a:    Function of φ. Normalizes the pdf using the dispersion parameter. 
-            E.g. for gaussian reg, it is the variance of the residuals a(φ) = φ^2.
-      c:    Function for y and φ. Adjusts the likelihood so that the pdf sums to 1.
       """
+      self.seed = seed
+      self.y = y
+      self.X = X
 
-      self.y = np.array(y).reshape(-1,1)
-      self.X = np.array(X).reshape(y.shape[0],-1)
-      self.b = b
-      self.phi = phi
-      self.a = a
-      self.c = c
-      
-      np.random.seed(seed)
-      
-      # Initialize beta with random values
-      self.n, self.k = self.X
-      self.beta = np.random.normal(0, 0.5, self.k).reshape((self.k,1))
+    def _initialize(self,y=None,X=None):
+        if y is None:
+            if self.y is None:
+                raise ValueError('Please provide y')
+            else:
+                y = np.array(self.y).reshape(-1,1)
+        if X is None:
+            if self.X is None:
+                raise ValueError('Please provide X')
+            else:
+                X = np.array(self.X).reshape(y.shape[0],-1)
+        self.y = y
+        self.X = X
+        self.n, self.k = X.shape
+        np.random.seed(self.seed)
+        self.beta = np.random.normal(0, 0.5, self.k).reshape((self.k,1))
 
-    def canonical_theta(X, beta):
-      """ In the canonical form, theta is simply θ = η(X)= X'β """
-      return X.dot(beta)
+    def _theta(self, theta=None):
+        """ helper function """
+        if theta is None:
+            theta = self.theta()
+        return theta
 
-    def negative_log_likelihood(self, beta):
-        """ Negative log likelihood i.e. the current cost
-        """
-        y, X = self.y, self.X
-        theta = self.canonical_theta(self.X, beta)
-        phi = self.phi
+    def _phi(self,phi=None):
+        """ helper function """
+        if phi is None:
+            phi = self.phi()
+        return phi
+
+    def negative_log_likelihood(self):
+        """ Negative log likelihood i.e. the current cost"""
+        y = self.y
+        theta, phi = self._theta(), self._phi()
         a, b, c = self.a, self.b, self.c
-        log_likelihood = ( y * _theta - b(_theta) ) / a(phi) + c(y,phi)
+        log_likelihood = ( y * theta - b(theta) ) / a(phi) + c(y,phi)
         J = -1 * log_likelihood
         return J
 
     def informant(self, theta=None, phi=None):
         """ First derivative of the cost function with respect to theta """
-        y, X, a, b = self.y, self.X, self.a, self.b
-        if theta is None:
-            theta = self.canonical_theta()
-        if phi is None:
-            phi = self.phi
-        dJ = ( X.T/a(phi) ).dot( db( theta ) - y )
+        y, X, a, b, db = self.y, self.X, self.a, self.b, self.db
+        theta, phi = self._theta(theta), self._phi(phi)
+        dJ = (1/a(phi)) * X.T.dot( db( theta ) - y )
         return dJ
-
-    def hessian(self, theta, phi):
+    
+    def hessian(self, theta=None, phi=None):
         """ Second derivative of the cost function with respect to theta """
-        a, d2b, X = self.a, self.d2b, self.X
-        V = self.var_y(theta, phi)
-        d2J = X.T.dot( V / a(phi)**2 ).dot(X)
+        X, y, phi = self.X, self.y, self._phi(phi)
+        a, d2b = self.a, self.d2b
+        # VarY = a(phi) * np.diagflat(self.d2b(theta))
+        VarY = np.diag(((self.db(theta)-y)**2).squeeze(axis=1)) 
+        d2J = X.T.dot(VarY/a(phi)**2).dot(X)
         return d2J
 
-    def update_beta(self, fit_type='Netwon-Raphson'):
+    def update_beta(self, fit_type='Newton-Raphson'):
         """ A single step towards optimizing beta """
-        beta, X = self.beta, self.X
-        theta, phi =  self.theta(), self.phi()
-        d2J = self.hessian( theta, phi )
-        learning_rate = np.linalg.solve( d2J, np.eye(X.shape[1]) )
-        if fit_type in ['Netwon-Raphson']:
-            dJ = self.score_function( theta, phi )
+        X, beta = self.X, self.beta
+        theta, phi = self._theta(), self._phi()
+        learning_rate = np.linalg.inv(self.hessian(theta))
+        if fit_type in ['Newton-Raphson']:
+            dJ = self.informant( theta, phi )
         else:
             raise ValueError('Please select "Newton-Raphson". "IRLS" coming soon')
         beta -= learning_rate.dot(dJ)
         return beta
 
-    def fitting_mle(self, max_iter = 100, fit_type='Netwon-Raphson', epsilon = 1e-8):
-        """ Fitting using MLE """
+    def fitting_mle(self, y=None, X=None, max_iter = 100, fit_type='Newton-Raphson', epsilon = 1e-8):
+        # Initialize beta with random values, store in self.beta
+        self._initialize(y,X)
+        # Fitting using MLE
         for i in range(max_iter):
             old_beta = self.beta.copy()
             new_beta = self.update_beta(fit_type=fit_type)
@@ -658,131 +802,469 @@ class base_canonical_exponential_dispersion_family():
                 break
             if (i == max_iter):
                 print("Warning - coefficients did not fully converge within " + str(max_iter) + " iterations.")
-        self.fitted = True
-        self.unadj_r_squared = -1
-        self.residuals = (self.y - self.db(self.theta())).reshape(-1,1)
+
+    def predict(self, X):
+        """ Predicted value of y uses the activation function, b'(θ) """
+        y_hat = self.db( self.theta(X=X) )
+        return y_hat
       
 ```
 
-### Base class for canonical exponential dispersion family
+### Gaussian (normal) regression
+
+Okay now we can write our gaussian function. We can see that we define:
+
+* $\theta$, the canonical form of the link function $g(\mu)=\eta(X)=X^{\intercal}\beta$
+* $b'(\theta)$, the inverse-link/activation function
+* $b(\theta)$, the integral of the activation function 
+* $b''(\theta)$, the first derivative of the activation function 
+* The measure of the dispersion $\phi$ 
+* The normalising and adjustment functions $a(\phi)$ and $c(y,\phi)$.
+
+```{python}
+class gaussian(exponential_regression_parent):
+
+  def __init__(self,seed = 0,**kwargs):
+      super().__init__(seed, **kwargs)
+
+  def theta(self, X=None):
+        """ As canonical form, theta == link function. 
+        So we simply equate θ = g(µ) = η(X)= X'β """
+        beta = self.beta
+        if X is None:
+            X = self.X
+        return X.dot(beta)
+
+  def b(self,theta):
+      """ b(θ): integral of the activation function """
+      return 0.5*theta**2
+  
+  def db(self,theta):
+      """ b'(θ): Activation function is identity (inverse of the indentity function)"""
+      return theta
+
+  def d2b(self,theta):
+      """ b''(θ): Differential of the Activation function is identity """
+      return np.ones(theta.shape)
+
+  def phi(self):
+      """ φ = std.dev of residuals = σ = sqrt(RSS / DoF) """
+      y, n, k = self.y, self.n, self.k
+      y_hat = self.predict(self.X)
+      std_dev = np.sqrt(np.sum( (y - y_hat)**2 ) / ( n - k ) )
+      # std_dev = np.std(self.y)
+      return std_dev
+  
+  def a(self,phi):
+      """ a(φ) = variance of residuals = σ^2 """
+      return phi**2
+
+  def c(self,y,phi):
+      """ Adjustment needed so pdf sums to one """
+      return -0.5 * ( y**2/phi + np.log(2*pi*phi))
+```
+
+Now let's run a gaussian regression on some dummy data, and see how well it fits. We also compare with OLS derived coefficients (and check against statsmodels) to see if we are correct:
+
+```{python}
+#| code-fold: true
+#| code-summary: "Click here to Show the code"
+
+# Fit the model and predict y
+z = gaussian(y=y,X=X)
+z.fitting_mle(y,X,epsilon = 1e-10)
+
+# Compare with OLS
+XtX = X.transpose().dot(X)
+Xty = X.transpose().dot(y).flatten()
+ls_beta = np.linalg.pinv(XtX).dot(Xty)
+ls_beta = ls_beta.reshape(-1,1)
+
+# Compare with statsmodels
+glm_stats_model = sm.GLM(y, X, family=sm.families.Gaussian())
+results = glm_stats_model.fit()
+
+for i in range(len(ls_beta)):
+    if np.round(i,5) != np.round(results.params[i],5):
+        ValueError('Coefficients do not match with OLS')
+    if np.round(i,5) != np.round(results.params[i],5):
+        ValueError('Coefficients do not match with Statsmodels')
+
+ols_stats_model = sm.OLS(y, X)
+results = ols_stats_model.fit()
+
+# Create a scatter plot of predictions vs actuals
+y_hat = z.predict(X)
+fig = go.Figure(data=go.Scatter(
+    x=y_hat.flatten(), 
+    y=y.flatten(), 
+    mode='markers', 
+    name = 'Actuals'
+))
+# fig.add_trace(go.Scatter(
+#   x=y_hat.flatten(), 
+#   y=y_hat.flatten(), 
+#   mode='lines'
+# ))
+fig.update_layout(title='Scatter plot of fitted vs actuals', xaxis_title='Fitted', yaxis_title='Actuals', showlegend=False)
+fig.show()
+
+pd.DataFrame(
+  np.hstack([true_beta,z.beta,ls_beta]),
+  columns=['True coefficients','Gaussian coefficients','OLS coefficients']
+)
+
+```
+
+The coefficients are identical to what OLS would predict, and the scatter plot shows an decent fit. So we can be confident that our gaussian regression is working as expected!
+
+### Logistic
+
+Let's now try the same  logistic and normal regressions
 
 And now we have our base class, we can utilise it for specific classes of the poisson, bernoulli and gaussian distributions:
 
 ```{python}
-class gaussian_family(base_canonical_exponential_dispersion_family):
+class bernoulli(exponential_regression_parent):
 
-  def __init__(self,y,X,seed = 0):
+  def __init__(self,seed = 0, **kwargs):
+      super().__init__(seed, **kwargs)
 
-      def b(theta):
-          """ Integral of the activation function """
-          return 0.5*theta**2
+  def theta(self, X=None):
+        """ As canonical form, theta == link function. 
+        So we simply equate θ = g(µ) = η(X)= X'β """
+        beta = self.beta
+        if X is None:
+            X = self.X
+        return X.dot(beta)
 
-      def db(theta):
-          """ Activation function is identity (inverse of the indentity function):"""
-          return theta
-
-      def d2b(theta):
-          """ Differential of the activation function """
-          return 1
-
-      def dispersion(y, theta):
-          """ Std.dev of residuals = sqrt(RSS / DoF) """
-          n, k = self.n, self.k
-          std_dev = np.sqrt(np.sum( (y - theta)**2 ) / ( n - k ) )
-          return std_dev
-
-      def a(phi):
-          """ Variance of residuals """
-          return phi**2
-
-      def c(y,phi):
-          """ Adjustment needed so pdf sums to one """
-          return -0.5 * ( y**2/phi + np.log(2*pi*phi))
-
-      super().__init__(y,X,b,db,d2b,dispersion,a,c)
-
-class bernoulli_family(base_canonical_exponential_dispersion_family):
-
-  def __init__(self,y,X,seed = 0):
+  def b(self,theta):
+      """ b(θ): integral of the activation function """
+      return -np.log(1 + np.exp(theta))
+      # return np.exp(-theta)/(1+np.exp(-theta))**2
+  
+  def db(self,theta):
+      """ b'(θ): Activation function is logistic (inverse of the logit function):"""
+      # return np.exp(theta)/(1 + np.exp(theta))
+      return (1+np.exp(-theta))**-1
+      # return 1/(1 + np.exp(-theta))
       
-      def b(theta):
-          """ Integral of the activation function """
-          return np.log(1 + np.exp(theta))
+  def d2b(self,theta):
+      """ b''(θ): Differential of the Activation function is logstic distribution b'(θ) """
+      _db = self.db(theta)
+      return _db*(1-_db)
+      # return np.exp(theta)*(1+np.exp(theta))**-2
+      # return np.exp(theta)/(1 + np.exp(theta))**2
 
-      def db(theta):
-          """ Activation function is logistic (inverse of the logit function):"""
-          return np.exp(theta)/(1 + np.exp(theta))
-
-      def d2b(theta):
-          """ Differential of the activation function """
-          return np.exp(theta)/(1 + np.exp(theta))**2
-
-      def dispersion(y, theta):
-          """ Not needed - one parameter distribution """
-          return 1
-
-      def a(dispersion):
-          """ Not needed - one parameter distribution """
-          return 1
-
-      def c(y, dispersion):
-          """ No adjustment needed (pdf already sums to one) """
-          return 0
-
-      super().__init__(y,X,b,db,d2b,dispersion,a,c) 
-
-class poisson_family(base_canonical_exponential_dispersion_family):
-
-  def __init__(self,y,X,seed = 0):
-      
-      def b(theta):
-          """ Integral of the activation function """
-          return np.exp(theta)
-
-      def db(theta):
-          """ Activation function is exponential (inverse of the log-link function):"""
-          return np.exp(theta)
-
-      def d2b(theta):
-          """ Differential of the activation function """
-          return np.exp(theta)
-
-      def dispersion(y, theta):
-          """ Not needed - one parameter distribution """
-          return 1
-
-      def a(dispersion):
-          """ Not needed - one parameter distribution """
-          return 1
-
-      def c(y, dispersion):
-          """ Adjustment needed so pdf sums to one """
-          return np.vectorize(-np.log(np.math.factorial(y)))
-
-      super().__init__(y,X,b,db,d2b,dispersion,a,c)
+  def phi(self):
+      """ Not needed - one parameter distribution """
+      return 1
+  
+  def a(self,phi):
+      """ Not needed - one parameter distribution """
+      return 1
+  
+  def c(self,y,phi):
+      """ No adjustment needed (pdf already sums to one) """
+      return 0
 ```
 
-[^1]:
-  Showing how $\ln[1-p] = -\ln[1+e^{\theta}]$
-$$
-\displaylines{
-\begin{align} 
-\theta & = \ln{\left[\frac{p}{1-p} \right]}
-\\ \text{ (1) Put } p \text{ in terms of } \theta \text{:}
-\\ \therefore e^{\theta} & = \frac{p}{1-p} & \text{raise by }e
-\\ \therefore e^{\theta}-pe^{\theta} & = p & \times (1-p)
-\\ \therefore e^{\theta} & = p(1+e^\theta) & + pe^\theta
-\\ \therefore p & = \frac{e^{\theta}}{1+e^\theta} & \div (1+e^\theta)
-\\\\ 
-\\ \text{ (2) Substitute in } p = \frac{e^{\theta}}{1+e^\theta}
-\\
-\Rightarrow \ln[1-p] 
-& = \ln\left[1-\frac{e^{\theta}}{1+e^\theta} \right]
-\\ & \equiv \ln\left[\frac{1+e^\theta}{1+e^\theta}-\frac{e^{\theta}}{1+e^\theta} \right]
-\\ & = \ln\left[\frac{1}{1+e^\theta} \right]
-\\ & \equiv \ln\left[(1+e^\theta \right)^{-1}]
-\\ & \equiv -\ln\left[1+e^\theta \right]
-\end{align}
-}
-$$
+```{python}
+# y2 = (y > y.mean()).astype(int)
+# z = bernoulli(y=y2,X=X)
+# z._initialize()
+
+# print( z.b(np.array([0,1,2])) )
+# print( z.db(np.array([0,1,2])) )
+# print( z.d2b(np.array([0,1,2])) )
+
+
+# # theta = z._theta()
+# # # print( z.db(theta).shape )
+# # # print( X.T.shape )
+# # # print( ( z.db( theta ) - y ).shape )
+# # # print( (X.T.dot( z.db( theta ) - y )).shape )
+# # print( z.informant(theta) )
+# # # print( z.hessian(theta) )
+# # print( np.diag(np.linalg.pinv(z.hessian(theta))).reshape(-1,1) )
+# # # print( z._hessian_inv(theta) )
+# # # print( z._hessian_inv(theta).dot( z.informant(theta) ) )
+# # # print( z._varY( theta ))
+
+# # # print( z.beta )
+# # # print( z.update_beta() )
+# # # z.fitting_mle(y2,X)
+```
+
+```{python}
+# z2 = bernoulli(X=X,y=y2)
+# z2._initialize()
+
+# V = np.diag(((z.predict(X)-y2)**2).squeeze(axis=1))
+# print(V)
+
+# V2 = z.a(z.phi()) * z.d2b(z.theta())
+# V2 = np.diag(V2.squeeze(axis=1))
+# print(V2)
+```
+
+```{python}
+y2 = (y > y.mean()).astype(int)
+
+glm2 = sm.GLM(y2, X, family=sm.families.Binomial())
+results2 = glm2.fit(  method='newton')
+
+z2 = bernoulli(X=X,y=y2)
+z2.fitting_mle()
+
+pd.DataFrame(
+  np.hstack([
+    z2.beta,
+    results2.params.reshape(-1,1),
+    ]),
+  columns=['Bernoulli coefficients','StatsModel coefficients']
+)
+
+# fig = go.Figure(data=go.Scatter(
+#     x=y.flatten(), 
+#     y=y2.flatten(), 
+#     mode='markers', 
+#     name = 'Actuals'
+# ))
+
+# fig.add_trace(go.Scatter(
+#   x=y.flatten(), 
+#   y=results2.fittedvalues,
+#   mode='markers',
+# ))
+
+# fig.add_trace(go.Scatter(
+#   x=y.flatten(), 
+#   y=results2a.fittedvalues,
+#   mode='markers',
+# ))
+
+# fig.add_trace(go.Scatter(
+#   x=y.flatten(), 
+#   y=z2.predict(X).flatten(),
+#   mode='markers',
+# ))
+
+# fig.add_trace(go.Scatter(
+#   x=y.flatten(), 
+#   y=z2a.predict(X).flatten(),
+#   mode='markers',
+# ))
+
+# fig.show()
+```
+
+```{python}
+class poisson(exponential_regression_parent):
+
+  def __init__(self,seed = 0):
+      super().__init__(seed)
+
+  def theta(self, X=None):
+        """ As canonical form, theta == link function. 
+        So we simply equate θ = g(µ) = η(X)= X'β """
+        beta = self.beta
+        if X is None:
+            X = self.X
+        return X.dot(beta)
+
+  def b(self,theta):
+      """ b(θ): integral of the activation function """
+      return np.exp(theta)
+  
+  def db(self,theta):
+      """ b'(θ): Activation function is exponential (inverse of the log-link function)"""
+      return np.exp(theta)
+
+  def d2b(self,theta):
+      """ b''(θ): Differential of the Activation function b'(θ) """
+      return np.exp(theta)
+  
+  def phi(self):
+      """ Not needed - one parameter distribution """
+      return 1
+  
+  def a(self,phi):
+      """ Not needed - one parameter distribution """
+      return 1
+  
+  def c(self,y,phi):
+      """ Adjustment needed so pdf sums to one """
+      return np.vectorize(-np.log(np.math.factorial(y)))
+```
+
+```{python}
+y3 = np.random.poisson(X.dot(true_beta))
+
+z3 = poisson()
+
+z3.fitting_mle(y3,X,epsilon = 1e-8)
+z3_beta = z3.beta
+
+glm3 = sm.GLM(y3, X, family=sm.families.Poisson())
+results3 = glm3.fit()
+results3_beta = results3.params.reshape(-1,1)
+
+pd.DataFrame(
+  np.hstack([z3_beta,results3_beta]),
+  columns=['Poisson coefficients','StatsModel coefficients']
+)
+```
+
+[^1]: 
+  Rearranging poisson into exponential form, with mean rate of $\lambda_i = \mu_i = \xi_i$:
+  $$
+  \displaylines{
+  \begin{align}
+  f_y(\xi_i,\phi)
+  & = 
+  \frac{\mu_i^{y_i}e^{-\mu_i}}{y_i!}
+  \\ & = \exp{ \left\{ 
+  \ln{ \left[ \frac{\mu_i^{y_i} \times e^{-\mu_i}}{y_i!} \right]}
+  \right\}}
+  \\ & = \exp{ \left\{ 
+  \ln{ \left[ \mu_i^{y_i} \right]}
+  + \ln{ \left[ e^{-\mu_i} \right] }
+  - \ln{ \left[ y_i! \right] }
+  \right\}}
+  \\ & = \exp{ \left\{ 
+  y_i \ln{ \left[ \mu_i \right]}
+  -\mu_i
+  - \ln{ \left[ y_i! \right] }
+  \right\}}
+  \\ & \equiv \exp{ \left\{ 
+  \frac{
+    \underbrace{y_i}_{T(y_i)}
+    \underbrace{\ln{ \left[ \mu_i \right]}}_{r(\xi_i)}
+    - \underbrace{\mu_i}_{b(\xi_i)}
+  }{
+    \underbrace{1}_{a(\phi)}
+  } 
+  - \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
+  \right\}}
+  \\ & = \exp{ \left\{ \frac{T(y_i) r(\xi_i) - b(\xi_i)}{a(\phi)} + c(y_i,\phi) \right\} } & \tag{1.2}
+  \end{align}
+  }
+  $$
+
+[^2]: 
+  Rearranging gaussian into exponential form, with mean success $\mu_i=\xi_i$:
+  $$
+  \displaylines{
+  \begin{align}
+  f(y;\theta,\phi) 
+  & = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp{ \left\{-\frac{(y_i-\mu_i)^2}{2\sigma^2} \right\} }
+  \\ & =
+  \exp{\left\{
+  \ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} 
+  \exp{ \left\{ -\frac{(y_i-\mu_i)^2}{2\sigma^2} \right\} }
+  \right]}
+  \right\}}
+  \\ & =
+  \exp{\left\{
+  \ln{ \left[ \frac{1}{\sqrt{2 \pi \sigma^2}} \right]}
+  - \frac{(y_i-\mu_i)^2}{2\sigma^2}
+  \right\}}
+  \\ & =
+  \exp{\left\{
+  \cancel{\ln{ \left[ 1 \right]}}
+  + \ln{ \left[ 2 \pi \sigma^2 \right]}^{-1/2}
+  - \frac{y_i^2+\mu_i^2-2y\mu_i}{2\sigma^2}
+  \right\}}
+  \\ & =
+  \exp{\left\{
+  - \frac{1}{2}\ln{ \left[ 2 \pi \sigma^2 \right]}
+  - \frac{y_i^2}{2\sigma^2}
+  - \frac{\frac{\mu_i^2}{2}}{\sigma^2}
+  + \frac{\cancel{2}y_i\mu_i}{\cancel{2}\sigma^2}
+  \right\}}
+  \\ & =
+  \exp{\left\{
+    \frac{
+      y \underbrace{\mu_i}_{\theta_i} - 
+      \underbrace{\frac{\mu_i^2}{2}}_{b(\theta_i)}
+    }{
+      \underbrace{\sigma^2}_{a(\phi)}
+    }
+  - 
+  \underbrace{
+    \frac{1}{2}
+    \left( 
+      \frac{y_i^2}{\sigma^2} + 
+      \ln{ \left[ 2 \pi \sigma^2 \right]}
+    \right)
+  }_{c(y_i,\phi)}
+  \right\}}
+  \\ & = \exp{ \left\{ \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} + c(y_i,\phi) \right\} }
+  \end{align}
+  }
+  $$
+
+[^3]: 
+  Rearranging bernoulli into exponential form, with expected success probability $p_i=\mu_i=\xi_i$:
+  $$
+  \displaylines{
+  \begin{align}
+  f(y;\theta,\phi)
+  & = \mu_i^{y_i}(1-\mu_i)^{1-y_i} \\
+  & = \exp{ \left\{\ln{\left[\mu_i^{y_i}(1-\mu_i)^{(1-y_i)} \\\right]} \right\}} \\
+  & = \exp{ \left\{
+    \ln{\left[\mu_i^{y_i}\right]} + \ln{\left[(1-\mu_i)^{(1-y_i)}\right]} 
+    \right\}} \\
+  & = \exp{ \left\{ y_i \ln{[\mu_i]} + (1-y_i)\ln{[1-\mu_i]} \right\}} \\
+  & = \exp{ \left\{ y_i \ln{
+    \left[\frac{\mu_i}{1-\mu_i} \right]} + \ln{[1-\mu_i]} \right\}} \\
+  & = \exp{ \left\{ \frac{
+    \underbrace{y_i}_{T(y)}
+  \underbrace{ \ln{
+    \left[\frac{\mu_i}{1-\mu_i} \right]
+  } }_{r(\xi_i)}
+    + \underbrace{ \ln{[1-\mu_i]} }_{b(\xi_i)}
+    }{
+      \underbrace{1}_{a(\phi)}
+    } 
+    + \underbrace{0}_{c(y_i,\phi)}
+  \right\}} 
+  \\
+  & = \exp{ \left\{ \frac{y_i 
+  \underbrace{ \ln{
+    \left[\frac{\mu_i}{1-\mu_i} \right]
+  } }_{\theta_i}
+    + \underbrace{ \ln{[1-\mu_i]} }_{b(\theta_i)}
+    }{
+      \underbrace{1}_{a(\phi)}
+    } 
+    + \underbrace{0}_{c(y_i,\phi)}
+  \right\}} 
+  \\ & = \exp{ \left\{ \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} + c(y_i,\phi) \right\} }
+  \end{align}
+  }
+  $$
+  And showing how $\ln[1-p] = -\ln[1+e^{\theta}]$
+  $$
+  \displaylines{
+  \begin{align} 
+  \theta & = \ln{\left[\frac{p}{1-p} \right]}
+  \\ \text{ (1) Put } p \text{ in terms of } \theta \text{:}
+  \\ \therefore e^{\theta} & = \frac{p}{1-p} & \text{raise by }e
+  \\ \therefore e^{\theta}-pe^{\theta} & = p & \times (1-p)
+  \\ \therefore e^{\theta} & = p(1+e^\theta) & + pe^\theta
+  \\ \therefore p & = \frac{e^{\theta}}{1+e^\theta} & \div (1+e^\theta)
+  \\\\ 
+  \\ \text{ (2) Substitute in } p = \frac{e^{\theta}}{1+e^\theta}
+  \\
+  \Rightarrow \ln[1-p] 
+  & = \ln\left[1-\frac{e^{\theta}}{1+e^\theta} \right]
+  \\ & \equiv \ln\left[\frac{1+e^\theta}{1+e^\theta}-\frac{e^{\theta}}{1+e^\theta} \right]
+  \\ & = \ln\left[\frac{1}{1+e^\theta} \right]
+  \\ & \equiv \ln\left[(1+e^\theta \right)^{-1}]
+  \\ & \equiv -\ln\left[1+e^\theta \right]
+  \end{align}
+  }
+  $$
 
