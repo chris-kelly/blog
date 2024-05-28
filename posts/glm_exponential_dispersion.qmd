@@ -1,7 +1,7 @@
 ---
 title: "Generalized Linear Models from scratch"
 author: "Chris Kelly"
-date: '05-15-24'
+date: '05-28-24'
 categories: []
 format:
   html:
@@ -26,7 +26,7 @@ $$
 In other words, for every observation $i$:
 
 * The expected value $\mathbb{E}[y_i|X_i]=\mu_i$ can be perfectly explained: by taking the dot product of the features and the true coefficients, so $\mu_i = X_i^{\intercal}\beta$.
-* However, in reality the actual observation $y_i$ varies around this expected value: its variation follows a normal distribution  with uniform variance $\mathbb{V}[y_i]=\sigma^2$, i.e. $y_i \sim N(\mu_i,\sigma^2)$. 
+* However, in reality the actual observation $y_i$ varies around this expected value: its variation follows a normal distribution with uniform variance $\mathbb{V}[y_i]=\sigma^2$, i.e. $y_i \sim N(\mu_i,\sigma^2)$ 
   * This idiosyncratic error, $y_i - \mu_i$, is irreducible (can never be predicted - it is random)
 * When regressing, we try to find the best coefficients $\hat{\beta}$ to predict $\hat{\mu}_i=X_i^{\intercal}\hat{\beta}$ by minimizing the residuals equally across all observations (so that, hopefully, only the idiosyncratic error remains).
 
@@ -172,9 +172,9 @@ $$
 
 There's lots of similarities, but lots of differences too:
 
-* The expected value $\mathbb{E}[y_i|X_i]=\lambda_i$ can be perfectly explained: also by taking the dot product of the features and the true coefficients, but then raising it to the exponential as well: $\lambda_i=X_i^{\intercal}\beta$
+* The expected value $\mathbb{E}[y_i|X_i]=\lambda_i$ can be perfectly explained: also by taking the dot product of the features and the true coefficients, but then raising it to the exponential as well: $\lambda_i=e^{X_i^{\intercal}\beta}$
   * Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then $\lambda_i = e^{X_i^{\intercal}\beta}$
-* In reality, the actual observation $y_i$ varies around the expected value too: but this time its variation follows a poisson distribution. The poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
+* In reality, the actual observation $y_i$ varies around the expected value: but this time its variation follows a poisson distribution. The poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
 * Consequently, this impacts how we aim to minimize residuals and estimate our ideal coefficients $\beta$. A poisson regression permits larger residuals at higher counts vs normal regression.
 
 ```{python}
@@ -328,7 +328,7 @@ Okay, so now we want to find the best values for $\beta$. These coefficients wil
 
 To achieve this: we can try some initial coefficients, calculate the cost function and its first derivative, update the coefficients, and continue to minimize the cost function through gradient descent.
 
-But how cumbersome that would be to do for every type of distribution we want to model! Wouldn't it be nice if we can derive a generic representation for the cost function and its first derivative, so that we can re-use the same code for every type of regression?
+But how cumbersome and error prone would it be to write bespoke code for every type of distribution we want to model! Wouldn't it be nice if we can derive a generic representation for the cost function and its first derivative, so that we can re-use the same code for every type of regression?
 
 ## Exponential Dispersion Family of Distributions
 
@@ -362,7 +362,7 @@ Normal<br>$\xi_i = \mu_i$ | $y_i \sim N(\mu_i,\sigma^2)$<br>$y_i \sim \frac{1}{\
 
 All of the probability density functions above - poisson, gaussian, bernoulli - can be rewritten into a the exponential family form!
 
-The footnotes detail the derivations for the exponential forms for each of the poisson[^1], gaussian[^2] and bernoulli[^3] distributions.
+See the footnotes that dive into the derivations for the exponential forms for each of the poisson[^1], gaussian[^2] and bernoulli[^3] distributions.
 
 $$
 \displaylines{
@@ -442,10 +442,10 @@ You may have noticed that $r(\xi_i)$ looks very familiar... in fact, it is the l
 :::{.callout-tip}
 ## Canonical link function
 
-For any exponential distribution, $r(\xi_i)$ is the default choice for link function, the so-called "canonical link function", is given by $r(\xi)$.
+For any exponential distribution, $r(\xi_i)$ is the default choice for link function: the so-called "canonical link function".
 :::
 
-In fact, if the canonical link function is used (so $g(\xi_i)=r(\xi_i)$), and no transformation means $T(y_i) = y_i$, then we can simplify the formula to its "canonical form", where $\theta_i = g(\xi_i)$:
+In fact, if the canonical link function is used, so $g(\xi_i)=r(\xi_i)$, and no transformation means $T(y_i) = y_i$, then we can simplify the formula to its "canonical form", where $\theta_i = g(\xi_i)$:
 
 $$
 \displaylines{
@@ -462,15 +462,15 @@ f(y;\xi,\phi)
 }
 $$
 
-Where this falls down is when you don't use the canonical link function, such as in probit regression. While the canonical link function for bernoulli is logit, the probit link is the inverse cumulative distribution function of the standard normal $g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)$. So because it is not canonical, it's a bit more complicated to deal with (which we explore later).
+Where this falls down is when you don't use the canonical link function, such as in probit regression. While the canonical link function for bernoulli is logit, the probit link is the inverse cumulative distribution function of the standard normal $g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)$. So because it is not canonical, it's a bit more complicated to deal with (which we explore in a later post).
 
 ### Some intutition into the terms:
 
 We go into detail into the intution behind the other terms in the footnotes, but for now, here is a quick summary:
 
-* $a(.)$ normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$.
-* $c(.)$ is an adjustment function that ensures the pdf sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.
-* $b(.)$ is the integral of the inverse of the link function. This might seem unintuitive right now, but it is easier to see when we derive a cost function and minimize it.
+* $a(\phi)$ normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$.
+* $c(y,\phi)$ is an adjustment function that ensures the pdf sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.
+* $b(\theta)$ is the integral of the inverse of the link function. This might seem unintuitive right now, but it is easier to see when we derive the generic cost function and minimize it.
 
 <!-- ### The integral of the inverse canonical link function
 
@@ -518,7 +518,7 @@ So far we have reformulated poisson, binomial and normal regressions into the ex
 
 ### Cost function
 
-Let's define our generic cost function in negative log-likelihood form assuming the canonical link function is used (so in terms of $\theta_i$):
+First let's define our generic cost function in negative log-likelihood form, assuming the canonical link function is used (so in terms of $\theta_i$):
 
 :::{.column-margin}
 Maximising the likelihood is hard, because it involves calculating the total product across every observation. Instead, taking the log likelihood makes everything a sum, far easier to calculate. Also, taking the negative ensures we are looking to minimize the cost.
@@ -547,21 +547,35 @@ L(\theta)
   \frac{y_i \theta_i - b(\theta_i)}{a(\phi)} 
   + c(y_i,\phi)
 \right\} }
-\\ & = -\left(
+\\ & = -
 \frac{1}{a(\phi)} 
 \sum_{i=1}^n{ \bigg\{
     y_i \theta_i - b(\theta_i)
-\bigg\} } + 
+\bigg\} } - 
 \sum_{i=1}^n{ \bigg\{
   c(y_i,\phi)
-\bigg\}} \right)
+\bigg\}}
+\end{align}
+}
+$$
+
+### Optimization
+
+Common methods for optimization include "Newton-Raphson", "Fisher-Scoring", "Iteratively-reweighted Least Squares" or "Gradient Descent". For all of these we need to derive the "score" (or "informant"): the first derivative of the negative log likelihood with respect to $\theta$. Second order optimization methods, like Newton's method, also need the second differential: using the inverse hessian as the learning rate instead helps the regression converge faster than gradient descent.
+
+$$
+\displaylines{
+\begin{align}
+\beta_{\text{new}} & := \beta_{\text{old}} - \underbrace{\frac{\partial^2 \mathcal{L}(\theta)}{\partial\theta\theta^{\intercal}}^{-1}}_{\text{Learning rate}} \times \underbrace{\frac{\partial \mathcal{L}(\theta)}{\partial\theta}}_{\text{Score}}
+\\ \\
+& \equiv \beta_{\text{old}} - H^{-1} \nabla J
 \end{align}
 }
 $$
 
 ### Informant (score function)
 
-Next we want to minimize this generic cost function with respect to $\theta$. Common methods for optimization include "Newton-Raphson", "Fisher-Scoring", "Iteratively-reweighted Least Squares" or "Gradient Descent".
+So first we want to minimize this generic cost function with respect to $\theta$. Common methods for optimization include "Newton-Raphson", "Fisher-Scoring", "Iteratively-reweighted Least Squares" or "Gradient Descent".
 
 :::{.column-margin}
 It is trival to connect $\theta$ to the coefficients $\beta$, since 
@@ -573,52 +587,43 @@ $$
 $$
 :::
 
-To execute any of these, we need to derive the "score" (or "informant"): the first derivative of the negative log likelihood with respect to $\beta$:
+To run any of these, we need to derive the "score" (or "informant"): the first derivative of the negative log likelihood with respect to $\beta$:
 
 $$
 \displaylines{
 \begin{align}
 \arg \min_\theta \left[ \mathcal{L}(\theta) \right]
-& = \arg \min_\theta \left[ -\left(
-\frac{1}{a(\phi)} 
+& = \arg \min_\theta \left[
+-\frac{1}{a(\phi)} 
 \sum_{i=1}^n{ \bigg\{
     y_i \theta_i - b(\theta_i)
-\bigg\} } + 
-\sum_{i=1}^n{ \bigg\{
+\bigg\} }
+\underbrace{\cancel{ -\sum_{i=1}^n{ \bigg\{
   c(y_i,\phi)
 \bigg\}}
-\right)\right]
-\\ 
-& = \arg \min_\theta \left[ -\left(
-\frac{1}{a(\phi)} 
-\sum_{i=1}^n{ \bigg\{
-    y_i X_i^{\intercal}\theta - b(X_i^{\intercal}\theta)
-\bigg\} } + 
-\sum_{i=1}^n{ \bigg\{
-  c(y_i,\phi)
-\bigg\}}
-\right)\right] 
-\\ & \because \theta = \eta(X) \text{ in the canonical case}
-\\
-\\
+}}_{
+  \because c() \text{ is constant with respect to } \theta
+}
+\right]
+\\ \\
 \therefore \frac{\partial \mathcal{L}(\theta)}{\partial\theta_i} 
-& = -\frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
-      y_i X_i  - \frac{\partial b(\theta)}{\partial \theta} X_i
+& = - \frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
+      y_i  - \frac{\partial b(\theta)}{\partial \theta}
   \bigg\} } 
-\\ & \because c() \text{ is constant with respect to } \theta
+\\ & 
 \\
-& =\underbrace{\frac{1}{a(\phi)}}_{\text{Constant}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) X_i \bigg\} }
+& \equiv \underbrace{\frac{1}{a(\phi)}}_{\text{Constant}} \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) \bigg\} }
 \end{align}
 }
 $$
 
 :::{.column-margin}
-Only $\theta$ changes with respect to the choice of $\beta$. So $a(\phi)$ and $c(y_i,\phi)$, which are not a function of $\theta$, drop out.
+The cost is minimized by differentiating with respect to $\theta$. Since the derivative of $c(.)$ is zero, it drops out.
 :::
 
 So hopefully this now gives a bit more intuition behind why $b(\theta)$ is the integral of the inverse canonical link. Since $b'(\theta)$ is the activation function, we can see that the score function is just the difference between the predicted value and the actual value, multiplied by the feature. This is the same as the gradient of the cost function used for gradient descent!
 
-This also uncovers an interesting property of GLMs - that the average prediction $b'(\theta)$ must be equal to the average value of Y too:
+This also uncovers an interesting property of GLMs - that the average prediction $b'(\theta)$ must be equal to the average value of $\bar{y}$ too:
 
 $$
 \displaylines{
@@ -626,21 +631,23 @@ $$
 \frac{\partial \mathcal{L}(\theta)}{\partial\theta} 
 & = 0 \text{ (cost is minimized at stationary point)}
 \\
-& = \cancel{\frac{1}{a(\phi)}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) \cancel{X_i} \bigg\} }
+& = \cancel{\frac{1}{a(\phi)}}  \times \sum_{i=1}^n{ \bigg\{ \left( b'(\theta) - y_i \right) \bigg\} }
 \\
 \therefore 
-\sum_{i=1}^n{ y_i } & = \sum_{i=1}^n{ b'(\theta) } 
-\\ & \div N 
+\sum_{i=1}^n{ y_i } & = \sum_{i=1}^n{ b'(\theta) }
 \\ \\
-\Rightarrow \bar{y} & = \mathbb{E}[y] = b'(\theta)
+\therefore 
+\frac{\sum_{i=1}^n{ y_i }}{n} & = \mathbb{E}[y] = \frac{\sum_{i=1}^n{ b'(\theta)}}{n} = b'(\theta)
+\\ \\
+\Rightarrow
+\mathbb{E}[y] & = b'(\theta) 
 \end{align}
 }
 $$
 
-
-$$
-H(\theta; y) = \frac{\partial^2 \ell(\theta; y)}{\partial \theta \partial \theta^\top}
-$$
+:::{.column-margin}
+The cost is minimized at the stationary point. So by equating to zero, $a(.)$ drops out as it is a constant.
+:::
 
 ### Hessian
 
@@ -661,39 +668,11 @@ $$
 }
 $$
 
-This is required for second order optimization methods, like Newton's method, which can converge faster than gradient descent:
-
-$$
-\displaylines{
-\begin{align}
-\beta_{\text{new}} & = \beta_{\text{old}} - \underbrace{\frac{\partial^2 \mathcal{L}(\theta)}{\partial\theta\theta^{\intercal}}^{-1}}_{\text{Learning rate}} \times \underbrace{\frac{\partial \mathcal{L}(\theta)}{\partial\theta}}_{}
-\\ & \equiv \beta_{\text{old}} - H^{-1} \nabla J
-\end{align}
-}
-$$
+Now we have all the parts we need to optimize the coefficients for any GLM using maximum likelihood estimation.
 
 ## Coding it up from scratch
 
 Well done on getting this far! We can now start to write out some python to create this ourselves. We will start by creating a parent class for exponential dispersion families, and then create child classes for the poisson, bernoulli and gaussian distributions specifically.
-
-```{python}
-#| code-fold: true
-#| code-summary: "Click here to Show the code"
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
-import statsmodels.api as sm
-
-np.random.seed(42)
-
-# Generate some X
-n = 100
-X = np.random.normal(2,0.5,n*3).reshape(-1,3).astype('float64')
-
-# Generate some y using coefficients β
-true_beta = np.random.normal(0.5,0.1,3).reshape(-1,1)
-y = X.dot(true_beta) + np.random.normal(0,0.5,n).reshape(-1,1)
-```
 
 ### Parent class for the canonical form:
 
@@ -701,20 +680,12 @@ First, let's create a generic parent class then that we can use for any canonica
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Click here to Show the code"
+#| code-summary: "Creating the exponential regression parent class"
+
 class exponential_regression_parent():
 
     def __init__(self,seed=0,y=None,X=None):
       """
-      a:    Function for a(φ): Normalizes the pdf using the dispersion parameter. 
-            E.g. for gaussian reg, it is the variance of the residuals a(φ) = φ^2.
-      b:    Function for b(θ): the integral of the inverse-log function.
-      db:   Function for b'(θ): the first derivative of b(θ) with respect to theta.
-            Note that this is the inverse of the link function
-            E.g. for poisson reg, g(µ) = ln(µ) = η(X) = θ. So b(θ) = exp(θ).
-      d2b:  Function for b''(θ): the second derivative of b(θ) with respect to theta.
-            E.g. for poisson reg, b'(θ) = exp(θ). So b''(θ) = exp(θ) too.
-      c:    Function for c(y,φ). Adjusts the likelihood so that the pdf sums to 1.
       seed: Scalar sets seed for random coefficient initialization
       y:    Dependent variable. A 1d vector of numeric values 
       X:    Independent variables. A 2d matrix of numeric values 
@@ -728,14 +699,14 @@ class exponential_regression_parent():
             if self.y is None:
                 raise ValueError('Please provide y')
             else:
-                y = np.array(self.y).reshape(-1,1)
+                y = self.y
         if X is None:
             if self.X is None:
                 raise ValueError('Please provide X')
             else:
                 X = np.array(self.X).reshape(y.shape[0],-1)
-        self.y = y
-        self.X = X
+        self.y = np.array(y).reshape(-1,1)
+        self.X = np.array(X).reshape(y.shape[0],-1)
         self.n, self.k = X.shape
         np.random.seed(self.seed)
         self.beta = np.random.normal(0, 0.5, self.k).reshape((self.k,1))
@@ -789,7 +760,7 @@ class exponential_regression_parent():
         beta -= learning_rate.dot(dJ)
         return beta
 
-    def fitting_mle(self, y=None, X=None, max_iter = 100, fit_type='Newton-Raphson', epsilon = 1e-8):
+    def fit(self, y=None, X=None, max_iter = 100, fit_type='Newton-Raphson', epsilon = 1e-8):
         # Initialize beta with random values, store in self.beta
         self._initialize(y,X)
         # Fitting using MLE
@@ -810,18 +781,25 @@ class exponential_regression_parent():
       
 ```
 
+And now we have our base class, we can utilise it for specific classes of the poisson, bernoulli and gaussian distributions:
+
 ### Gaussian (normal) regression
 
-Okay now we can write our gaussian function. We can see that we define:
+Okay now we can write our gaussian class: 
+
+<!-- We can see that we define:
 
 * $\theta$, the canonical form of the link function $g(\mu)=\eta(X)=X^{\intercal}\beta$
 * $b'(\theta)$, the inverse-link/activation function
 * $b(\theta)$, the integral of the activation function 
 * $b''(\theta)$, the first derivative of the activation function 
 * The measure of the dispersion $\phi$ 
-* The normalising and adjustment functions $a(\phi)$ and $c(y,\phi)$.
+* The normalising and adjustment functions $a(\phi)$ and $c(y,\phi)$. -->
 
 ```{python}
+#| code-fold: true
+#| code-summary: "Creating the gaussian base class"
+
 class gaussian(exponential_regression_parent):
 
   def __init__(self,seed = 0,**kwargs):
@@ -836,27 +814,28 @@ class gaussian(exponential_regression_parent):
         return X.dot(beta)
 
   def b(self,theta):
-      """ b(θ): integral of the activation function """
+      """ b(θ) = 0.5*θ^2: Integral of the activation function """
       return 0.5*theta**2
   
   def db(self,theta):
-      """ b'(θ): Activation function is identity (inverse of the indentity function)"""
+      """ b'(θ) = θ: Activation function is the identity """
       return theta
 
   def d2b(self,theta):
-      """ b''(θ): Differential of the Activation function is identity """
+      """ b''(θ) = 1: Differential of the activation function is just one """
       return np.ones(theta.shape)
 
   def phi(self):
-      """ φ = std.dev of residuals = σ = sqrt(RSS / DoF) """
+      """ φ = σ: Dispersion measure is std.dev.
+      It is estimated from the residuals, i.e. s = sqrt(RSS / DoF)
+      """
       y, n, k = self.y, self.n, self.k
       y_hat = self.predict(self.X)
       std_dev = np.sqrt(np.sum( (y - y_hat)**2 ) / ( n - k ) )
-      # std_dev = np.std(self.y)
       return std_dev
   
   def a(self,phi):
-      """ a(φ) = variance of residuals = σ^2 """
+      """ a(φ) = σ^2: The variance of y """
       return phi**2
 
   def c(self,y,phi):
@@ -864,21 +843,20 @@ class gaussian(exponential_regression_parent):
       return -0.5 * ( y**2/phi + np.log(2*pi*phi))
 ```
 
-Now let's run a gaussian regression on some dummy data, and see how well it fits. We also compare with OLS derived coefficients (and check against statsmodels) to see if we are correct:
+Now we can test the gaussian regression on some dummy data. We also compare this with OLS derived coefficients (and check against statsmodels) to see if we are correct:
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Click here to Show the code"
+#| code-summary: "Testing the gaussian regression"
 
 # Fit the model and predict y
-z = gaussian(y=y,X=X)
-z.fitting_mle(y,X,epsilon = 1e-10)
+model_gaus = gaussian()
+model_gaus.fit(y,X)
 
 # Compare with OLS
 XtX = X.transpose().dot(X)
 Xty = X.transpose().dot(y).flatten()
-ls_beta = np.linalg.pinv(XtX).dot(Xty)
-ls_beta = ls_beta.reshape(-1,1)
+ls_beta = (np.linalg.pinv(XtX).dot(Xty)).reshape(-1,1)
 
 # Compare with statsmodels
 glm_stats_model = sm.GLM(y, X, family=sm.families.Gaussian())
@@ -893,38 +871,25 @@ for i in range(len(ls_beta)):
 ols_stats_model = sm.OLS(y, X)
 results = ols_stats_model.fit()
 
-# Create a scatter plot of predictions vs actuals
-y_hat = z.predict(X)
-fig = go.Figure(data=go.Scatter(
-    x=y_hat.flatten(), 
-    y=y.flatten(), 
-    mode='markers', 
-    name = 'Actuals'
-))
-# fig.add_trace(go.Scatter(
-#   x=y_hat.flatten(), 
-#   y=y_hat.flatten(), 
-#   mode='lines'
-# ))
-fig.update_layout(title='Scatter plot of fitted vs actuals', xaxis_title='Fitted', yaxis_title='Actuals', showlegend=False)
-fig.show()
-
 pd.DataFrame(
-  np.hstack([true_beta,z.beta,ls_beta]),
-  columns=['True coefficients','Gaussian coefficients','OLS coefficients']
+  np.hstack([
+    model_gaus.beta,
+    results.params.reshape(-1,1),
+    ls_beta,
+    ]),
+  columns=['True coefficients','StatsModel coefficients','OLS coefficients']
 )
 
 ```
 
-The coefficients are identical to what OLS would predict, and the scatter plot shows an decent fit. So we can be confident that our gaussian regression is working as expected!
-
 ### Logistic
 
-Let's now try the same  logistic and normal regressions
-
-And now we have our base class, we can utilise it for specific classes of the poisson, bernoulli and gaussian distributions:
+Now let's try the same for a logistic regression:
 
 ```{python}
+#| code-fold: true
+#| code-summary: "Creating the bernoulli base class"
+
 class bernoulli(exponential_regression_parent):
 
   def __init__(self,seed = 0, **kwargs):
@@ -939,22 +904,18 @@ class bernoulli(exponential_regression_parent):
         return X.dot(beta)
 
   def b(self,theta):
-      """ b(θ): integral of the activation function """
+      """ b(θ) = -ln[1+exp{θ}]: integral of the activation function """
       return -np.log(1 + np.exp(theta))
       # return np.exp(-theta)/(1+np.exp(-theta))**2
   
   def db(self,theta):
-      """ b'(θ): Activation function is logistic (inverse of the logit function):"""
-      # return np.exp(theta)/(1 + np.exp(theta))
+      """ b'(θ) = Λ(θ) = 1/(1+exp{-θ}): Activation function is logistic (inverse of the logit-link function)"""
       return (1+np.exp(-theta))**-1
-      # return 1/(1 + np.exp(-theta))
       
   def d2b(self,theta):
-      """ b''(θ): Differential of the Activation function is logstic distribution b'(θ) """
+      """ b''(θ) = Λ(θ)*(1-Λ(θ)): Differential of the activation function is the logistic distribution """
       _db = self.db(theta)
       return _db*(1-_db)
-      # return np.exp(theta)*(1+np.exp(theta))**-2
-      # return np.exp(theta)/(1 + np.exp(theta))**2
 
   def phi(self):
       """ Not needed - one parameter distribution """
@@ -970,96 +931,34 @@ class bernoulli(exponential_regression_parent):
 ```
 
 ```{python}
-# y2 = (y > y.mean()).astype(int)
-# z = bernoulli(y=y2,X=X)
-# z._initialize()
+#| code-fold: true
+#| code-summary: "Testing the bernoulli regression"
 
-# print( z.b(np.array([0,1,2])) )
-# print( z.db(np.array([0,1,2])) )
-# print( z.d2b(np.array([0,1,2])) )
-
-
-# # theta = z._theta()
-# # # print( z.db(theta).shape )
-# # # print( X.T.shape )
-# # # print( ( z.db( theta ) - y ).shape )
-# # # print( (X.T.dot( z.db( theta ) - y )).shape )
-# # print( z.informant(theta) )
-# # # print( z.hessian(theta) )
-# # print( np.diag(np.linalg.pinv(z.hessian(theta))).reshape(-1,1) )
-# # # print( z._hessian_inv(theta) )
-# # # print( z._hessian_inv(theta).dot( z.informant(theta) ) )
-# # # print( z._varY( theta ))
-
-# # # print( z.beta )
-# # # print( z.update_beta() )
-# # # z.fitting_mle(y2,X)
-```
-
-```{python}
-# z2 = bernoulli(X=X,y=y2)
-# z2._initialize()
-
-# V = np.diag(((z.predict(X)-y2)**2).squeeze(axis=1))
-# print(V)
-
-# V2 = z.a(z.phi()) * z.d2b(z.theta())
-# V2 = np.diag(V2.squeeze(axis=1))
-# print(V2)
-```
-
-```{python}
 y2 = (y > y.mean()).astype(int)
 
 glm2 = sm.GLM(y2, X, family=sm.families.Binomial())
 results2 = glm2.fit(  method='newton')
 
-z2 = bernoulli(X=X,y=y2)
-z2.fitting_mle()
+model_bern = bernoulli(X=X,y=y2)
+model_bern.fit()
 
 pd.DataFrame(
   np.hstack([
-    z2.beta,
+    model_bern.beta,
     results2.params.reshape(-1,1),
     ]),
   columns=['Bernoulli coefficients','StatsModel coefficients']
 )
-
-# fig = go.Figure(data=go.Scatter(
-#     x=y.flatten(), 
-#     y=y2.flatten(), 
-#     mode='markers', 
-#     name = 'Actuals'
-# ))
-
-# fig.add_trace(go.Scatter(
-#   x=y.flatten(), 
-#   y=results2.fittedvalues,
-#   mode='markers',
-# ))
-
-# fig.add_trace(go.Scatter(
-#   x=y.flatten(), 
-#   y=results2a.fittedvalues,
-#   mode='markers',
-# ))
-
-# fig.add_trace(go.Scatter(
-#   x=y.flatten(), 
-#   y=z2.predict(X).flatten(),
-#   mode='markers',
-# ))
-
-# fig.add_trace(go.Scatter(
-#   x=y.flatten(), 
-#   y=z2a.predict(X).flatten(),
-#   mode='markers',
-# ))
-
-# fig.show()
 ```
 
+### Poisson
+
+Now let's try the same for a poisson regression:
+
 ```{python}
+#| code-fold: true
+#| code-summary: "Creating the poisson base class"
+ 
 class poisson(exponential_regression_parent):
 
   def __init__(self,seed = 0):
@@ -1074,15 +973,15 @@ class poisson(exponential_regression_parent):
         return X.dot(beta)
 
   def b(self,theta):
-      """ b(θ): integral of the activation function """
+      """ b(θ) = exp{θ}: integral of the activation function """
       return np.exp(theta)
   
   def db(self,theta):
-      """ b'(θ): Activation function is exponential (inverse of the log-link function)"""
+      """ b'(θ) = exp{θ}: Activation function is exponential (inverse of the log-link function)"""
       return np.exp(theta)
 
   def d2b(self,theta):
-      """ b''(θ): Differential of the Activation function b'(θ) """
+      """ b''(θ) = exp{θ}: Differential of the activation function """
       return np.exp(theta)
   
   def phi(self):
@@ -1099,19 +998,20 @@ class poisson(exponential_regression_parent):
 ```
 
 ```{python}
-y3 = np.random.poisson(X.dot(true_beta))
+#| code-fold: true
+#| code-summary: "Testing the poisson regression"
 
-z3 = poisson()
-
-z3.fitting_mle(y3,X,epsilon = 1e-8)
-z3_beta = z3.beta
+model_pois = poisson()
+model_pois.fit(y3,X)
 
 glm3 = sm.GLM(y3, X, family=sm.families.Poisson())
 results3 = glm3.fit()
-results3_beta = results3.params.reshape(-1,1)
 
 pd.DataFrame(
-  np.hstack([z3_beta,results3_beta]),
+  np.hstack([
+    model_pois.beta,
+    results3.params.reshape(-1,1),
+    ]),
   columns=['Poisson coefficients','StatsModel coefficients']
 )
 ```
