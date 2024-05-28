@@ -12,12 +12,12 @@ image: '../images/glm_exponential_dispersion.png'
 
 ::: {.callout-tip}
 ## What we are exploring
-Deriving (and implementing in python) a generic way to optimize GLMs, by using the exponential family form for poisson, binomial and gaussian distributions.
+Deriving (and implementing in python) a generic way to optimize GLMs, by using the exponential family form for Poisson, Bernoulli and Gaussian distributions.
 :::
 
 ## Introduction
 
-There many types of generalized linear regression models: such as linear regression, logistic regression, poisson regression etc. Every one of these models is made up of a "random component" and a "systematic component". Each also has a "link function" that combines the random and systematic parts.
+There many types of generalized linear regression models: such as linear regression, logistic regression, Poisson regression etc. Every one of these models is made up of a "random component" and a "systematic component". Each also has a "link function" that combines the random and systematic parts.
 
 To make it easier to contrast and compare, first let's take a normal (gaussian) linear regression:
 
@@ -167,7 +167,7 @@ The top plot shows the linear (identity) relationship linking the expected value
 The bottom plot is identical to the first, but adds a third axis with the probability density of the gaussian distribution. The peak of the probability density is at its expected value $\mu_i$, the density is symmetric around $\mu_i$ and the variance is constant $\sigma^2$.
 :::
 
-With this in mind, let's now go through poisson regression, to compare and contrast:
+With this in mind, let's now go through Poisson regression, to compare and contrast:
 $$
 \displaylines{
 y_i \sim Pois(\lambda_i) \\
@@ -179,8 +179,8 @@ There's lots of similarities, but lots of differences too:
 
 * The expected value $\mathbb{E}[y_i|X_i]=\lambda_i$ can be perfectly explained: also by taking the dot product of the features and the true coefficients, but then raising it to the exponential as well: $\lambda_i=e^{X_i^{\intercal}\beta}$
   * Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then $\lambda_i = e^{X_i^{\intercal}\beta}$
-* In reality, the actual observation $y_i$ varies around the expected value: but this time its variation follows a poisson distribution. The poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
-* Consequently, this impacts how we aim to minimize residuals and estimate our ideal coefficients $\beta$. A poisson regression permits larger residuals at higher counts vs normal regression.
+* In reality, the actual observation $y_i$ varies around the expected value: but this time its variation follows a Poisson distribution. The Poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
+* Consequently, this impacts how we aim to minimize residuals and estimate our ideal coefficients $\beta$. A Poisson regression permits larger residuals at higher counts vs normal regression.
 
 ```{python}
 #| code-fold: true
@@ -288,7 +288,7 @@ fig.show()
 :::{.column-margin}
 The top plot shows the exponential relationship linking the systematic component and the observed count $y$, where $y$ is more dispersed at higher values of $\lambda$ (higher variance). 
 
-The bottom plot is identical to the first, but adds a third axis with the probability mass of the poisson distribution. Again, the higher variance makes the peak of the poisson probability mass function lower, and its probability density is more spread.
+The bottom plot is identical to the first, but adds a third axis with the probability mass of the Poisson distribution. Again, the higher variance makes the peak of the Poisson probability mass function lower, and its probability density is more spread.
 :::
 
 It can now help to start to denote this into its random and systematic components, and their link function:
@@ -303,15 +303,15 @@ Let's dive into this in a bit more detail:
 
 ### Random component
 
-The random component determines how we want to model the distribution of $y$. For example, if $y_i$ is a count outcome, then it could be well suited to a poisson distribution:
+The random component determines how we want to model the distribution of $y$. For example, if $y_i$ is a count outcome, then it could be well suited to a Poisson distribution:
 
 $$
 y_i \sim Pois(\lambda_i)
 $$
 
-The expected rate of the count is $\lambda_i$. This means we expect $y_i$ to be around $\lambda_i$, i.e. $\mathbb{E}[y_i|X_i]=\lambda_i$. However, for any individual observation $i$, the actual observed $y_i$ will vary above and below this expected rate. By using poisson, we assume the variance is equal to the mean rate: $\mathbb{V}[y_i|X_i] = \lambda_i$. Thus we permit the dispersion of observations to increase if the expected rate is higher.
+The expected rate of the count is $\lambda_i$. This means we expect $y_i$ to be around $\lambda_i$, i.e. $\mathbb{E}[y_i|X_i]=\lambda_i$. However, for any individual observation $i$, the actual observed $y_i$ will vary above and below this expected rate. By using Poisson, we assume the variance is equal to the mean rate: $\mathbb{V}[y_i|X_i] = \lambda_i$. Thus we permit the dispersion of observations to increase if the expected rate is higher.
 
-This is why it is called the "random component": since $y_i$ varies randomly around $\lambda_i$, following the poisson distribution, it is a *random variable*.
+This is why it is called the "random component": since $y_i$ varies randomly around $\lambda_i$, following the Poisson distribution, it is a *random variable*.
 
 But how do we find a good estimation for $\mathbb{E}[y_i|X_i]=\lambda_i$? Concretely, how do we best map our independent variables $X_i$ to $\lambda_i$? This is down to our systematic component and link function.
 
@@ -323,13 +323,13 @@ $$
 \eta(X_i) = X_i^{\intercal}\beta
 $$
 
-The link function is a way of choosing how to map the systematic component to the natural parameter of the random component. For example, in poisson regression, we use a log link function, which means the systematic component predicts the natural log of the mean rate of the count. 
+The link function is a way of choosing how to map the systematic component to the natural parameter of the random component. For example, in Poisson regression, we use a log link function, which means the systematic component predicts the natural log of the mean rate of the count. 
 
 $$
 \ln{(\lambda_i)} = \eta(X) = X^{\intercal}\beta
 $$
 
-Okay, so now we want to find the best values for $\beta$. These coefficients will transform our features $X_i$ to make the best predictions for $\ln{(\lambda_i)}$, given we want to predict $y_i$ as accurately as possible (but permit larger residuals when $\lambda_i$ is larger, following the poisson distribution).
+Okay, so now we want to find the best values for $\beta$. These coefficients will transform our features $X_i$ to make the best predictions for $\ln{(\lambda_i)}$, given we want to predict $y_i$ as accurately as possible (but permit larger residuals when $\lambda_i$ is larger, following the Poisson distribution).
 
 To achieve this: we can try some initial coefficients, calculate the cost function and its first derivative, update the coefficients, and continue to minimize the cost function through gradient descent.
 
@@ -350,11 +350,11 @@ $$
 }
 $$
 
-$\xi_i$ is a shape parameter, governing the shape of the distribution (e.g. in poisson, the expected value is the mean $\xi_i=\lambda_i$). Or for bernoulli, $\xi_i=p_i$. In fact for many distributions, $\xi_i$ is the expected value of $y_i$ i.e. $\xi_i = \mu_i$.
+$\xi_i$ is a shape parameter, governing the shape of the distribution (e.g. in Poisson, the expected value is the mean $\xi_i=\lambda_i$). Or for Bernoulli, $\xi_i=p_i$. In fact for many distributions, $\xi_i$ is the expected value of $y_i$ i.e. $\xi_i = \mu_i$.
 
-$\phi$ is a dispersion parameter, governing the spread of the data (e.g. gaussian has the standard deviation $\phi = \sigma$). It is not always necessary if the dispersion is determined by the shape parameter already (e.g. in poisson the variance is already equated to the expected rate $\lambda_i$).
+$\phi$ is a dispersion parameter, governing the spread of the data (e.g. gaussian has the standard deviation $\phi = \sigma$). It is not always necessary if the dispersion is determined by the shape parameter already (e.g. in Poisson the variance is already equated to the expected rate $\lambda_i$).
 
-Here are some examples of the common forms of poisson, bernoulli and gaussian probability distribution functions $y \sim f_{\theta_i}(\mu_i)$, along with some choices for link functions $g(\mu)$ to use in regression:
+Here are some examples of the common forms of Poisson, Bernoulli and Gaussian probability distribution functions $y \sim f_{\theta_i}(\mu_i)$, along with some choices for link functions $g(\mu)$ to use in regression:
 
 Type | Probability Density Function: | Link Function for Regression:
 ---|---|---
@@ -363,11 +363,11 @@ Binary<br>$\xi_i = \mu_i \equiv p_i$ | $y_i \sim Bern(\mu_i)$<br>$y_i \sim \mu_i
 Binary<br>$\xi_i = \mu_i \equiv p_i$ | $y_i \sim Bern(\mu_i)$<br>$y_i \sim \mu_i^y \times (1-\mu_i)^{(1-y)}$ | $g(\mu) = \Phi^{-1}[\mu_i]$<br>(probit-link)
 Normal<br>$\xi_i = \mu_i$ | $y_i \sim N(\mu_i,\sigma^2)$<br>$y_i \sim \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}\left(\frac{y_i-\mu_i}{\sigma^2}\right)^2}$ | $g(\mu) = \mu$<br>(identity-link)
 
-### Formulating normal, bernoulli and poisson distributions into the exponential family
+### Formulating Gaussian, Bernoulli and Poisson distributions into the exponential family
 
-All of the probability density functions above - poisson, gaussian, bernoulli - can be rewritten into a the exponential family form!
+All of the probability density functions above - Poisson, Gaussian, Bernoulli - can be rewritten into a the exponential family form!
 
-See the footnotes that dive into the derivations for the exponential forms for each of the poisson[^1], gaussian[^2] and bernoulli[^3] distributions.
+See the footnotes that dive into the derivations for the exponential forms for each of the Poisson[^1], Gaussian[^2] and Bernoulli[^3] distributions.
 
 $$
 \displaylines{
@@ -467,59 +467,19 @@ f(y;\xi,\phi)
 }
 $$
 
-Where this falls down is when you don't use the canonical link function, such as in probit regression. While the canonical link function for bernoulli is logit, the probit link is the inverse cumulative distribution function of the standard normal $g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)$. So because it is not canonical, it's a bit more complicated to deal with (which we explore in a later post).
+Where this falls down is when you don't use the canonical link function, such as in probit regression. While the canonical link function for Bernoulli is Logit, the Probit link is the inverse cumulative distribution function of the standard normal $g(\xi_i) = \Phi^{-1}[\xi_i] \neq r(\xi_i)$. So because it is not canonical, it's a bit more complicated to deal with (which we explore in a later post).
 
 ### Some intutition into the terms:
 
-We go into detail into the intution behind the other terms in the footnotes, but for now, here is a quick summary:
+We go into detail into the intution behind the other terms in the footnotes[^4], but for now, here is a quick summary:
 
 * $a(\phi)$ normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$.
-* $c(y,\phi)$ is an adjustment function that ensures the pdf sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.
-* $b(\theta)$ is the integral of the inverse of the link function. This might seem unintuitive right now, but it is easier to see when we derive the generic cost function and minimize it.
-
-<!-- ### The integral of the inverse canonical link function
-
-$b(\xi_i)$ seems slightly odd at first: it is the integral of the inverse of the canonical link function. It's easier to see this by running through each example:
-
-* Poisson: 
-  * The canonical link is log: $r(\xi_i) = \ln[\xi_i] = \eta(X)$. 
-  * So the inverse-link is exponential: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$.
-  * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$.
-  * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=e^{\xi_i}$.
-* Gaussian: 
-  * The canonical link is the identity: $r(\xi_i) = \\xi_i = \eta(X)$. 
-  * So the inverse-link is the identity: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)$.
-  * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$.
-  * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}= \frac{\xi_i^2}{2}$.
-* Bernoulli: 
-  * The canonical link is logit: $r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)$. 
-  * So the inverse-link is logistic: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}$.
-  * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$.
-  * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}$.
-
-Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network. I.e. is the function that maps the output of the network to the final prediction. Have a look at the section about the score function for further intuition for why [this is the integral](#score)! -->
-
-<!-- Term | Poisson | Gaussian | Bernoulli 
---|--|--|--
-canonical link <br> $r(\xi_i)$ | $r(\xi_i) = \ln[\xi_i] = \eta(X)$ | $r(\xi_i) = \xi_i = \eta(X)$ | $r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)$
-inverse-link <br> $r^{-1}(\eta(X))$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)$ | $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}$
-$\therefore b'(\xi_i) = r^{-1}(\xi_i)$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$ | $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$
-$\therefore b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}$ | $b(\xi_i) = e^{\eta(X)}$ | $b(\xi_i) = \frac{\xi_i^2}{2}$ | $b(\xi_i) = \frac{e^{\eta(X)}}{1+e^{\eta(X)}}$ -->
-
-<!-- ### Other terms
-
-The other terms are less interesting! But here is a quick summary for completeness:
-
-Parameter / Function | intuition
----|:--------
-$T(y)$ is a transformation of $y$ | It is the identity for all the distributions we are looking at, so can be ignored for now.
-$\phi$ is the "dispersion parameter", | A parameter for the expected dispersion of $y_i$ around $\mu_i$. For example, gaussian regression has $\phi=\sigma$, the standard deviation of all the residuals (assuming homoskedasticity). However, it is not needed for one parameter distributions, like the poisson, where we already assume the variance $\mathbb{V}[y_i] = \lambda_i$ (i.e. already determined by $\xi_i$).
-$a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$. Again this isn't needed for one parameter distributions.
-$c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the poisson distribution would sum to more than one if it wasn't included.  -->
+* $c(y,\phi)$ is an adjustment function that ensures the pdf sums to one. For example, the exponential form of the Poisson distribution would sum to more than one if it wasn't included.
+* $b(\theta)$ is the integral of the inverse of the link function. This might seem unintuitive right now, but it is easier to see when we derive the generic cost function and minimize it (and you can find a detailed breakdown here[^5]).
 
 ## Applying the exponential families to regression
 
-So far we have reformulated poisson, binomial and normal regressions into the exponential family form. So now we want to derive a "generic-use formula" to estimate the best coefficients via maximum likelihood estimation for any GLM.
+So far we have reformulated Poisson, Binomial and Gaussian regressions into the exponential family form. So now we want to derive a "generic-use formula" to estimate the best coefficients via maximum likelihood estimation for any GLM.
 
 ### Cost function
 
@@ -677,7 +637,7 @@ Now we have all the parts we need to optimize the coefficients for any GLM using
 
 ## Coding it up from scratch
 
-Well done on getting this far! We can now start to write out some python to create this ourselves. We will start by creating a parent class for exponential dispersion families, and then create child classes for the poisson, bernoulli and gaussian distributions specifically.
+Well done on getting this far! We can now start to write out some python to create this ourselves. We will start by creating a parent class for exponential dispersion families, and then create child classes for the Poisson, Bernoulli and Gaussian distributions specifically.
 
 ### Parent class for the canonical form:
 
@@ -786,7 +746,7 @@ class exponential_regression_parent():
       
 ```
 
-And now we have our base class, we can utilise it for specific classes of the poisson, bernoulli and gaussian distributions:
+And now we have our base class, we can utilise it for specific classes of the Poisson, Bernoulli and Gaussian distributions:
 
 ### Gaussian (normal) regression
 
@@ -893,7 +853,7 @@ Now let's try the same for a logistic regression:
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Creating the bernoulli base class"
+#| code-summary: "Creating the Bernoulli base class"
 
 class bernoulli(exponential_regression_parent):
 
@@ -937,7 +897,7 @@ class bernoulli(exponential_regression_parent):
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Testing the bernoulli regression"
+#| code-summary: "Testing the Bernoulli regression"
 
 y2 = (y > y.mean()).astype(int)
 
@@ -958,7 +918,7 @@ pd.DataFrame(
 
 ### Poisson
 
-Now let's try the same for a poisson regression:
+Now let's try the same for a Poisson regression:
 
 ```{python}
 #| code-fold: true
@@ -1004,7 +964,7 @@ class poisson(exponential_regression_parent):
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Testing the poisson regression"
+#| code-summary: "Testing the Poisson regression"
 
 model_pois = poisson()
 model_pois.fit(y3,X)
@@ -1022,7 +982,7 @@ pd.DataFrame(
 ```
 
 [^1]: 
-  Rearranging poisson into exponential form, with mean rate of $\lambda_i = \mu_i = \xi_i$:
+  Rearranging Poisson into exponential form, with mean rate of $\lambda_i = \mu_i = \xi_i$:
   $$
   \displaylines{
   \begin{align}
@@ -1058,7 +1018,7 @@ pd.DataFrame(
   $$
 
 [^2]: 
-  Rearranging gaussian into exponential form, with mean success $\mu_i=\xi_i$:
+  Rearranging gaussian into exponential form, with expected value $\mu_i=\xi_i$:
   $$
   \displaylines{
   \begin{align}
@@ -1111,7 +1071,7 @@ pd.DataFrame(
   $$
 
 [^3]: 
-  Rearranging bernoulli into exponential form, with expected success probability $p_i=\mu_i=\xi_i$:
+  Rearranging Bernoulli into exponential form, with expected success probability $p_i=\mu_i=\xi_i$:
   $$
   \displaylines{
   \begin{align}
@@ -1173,3 +1133,32 @@ pd.DataFrame(
   }
   $$
 
+[^4]:
+  Parameter / Function | intuition
+  ---|:--------
+  $T(y)$ is a transformation of $y$ | It is the identity for all the distributions we are looking at, so can be ignored for now.
+  $\xi_i$ is the "shape parameter" | Governs the shape of the distribution (e.g. in Poisson, it is the expected value $\xi_i=\lambda_i$). Or for Bernoulli, $\xi_i=p_i$. In fact for many distributions, $\xi_i$ is the expected value of $y_i$.
+  $r(\xi_i)$ is the "canonical link function" | The function that maps the expected value of $y_i$ to the linear combination of the features. E.g. for Poisson Regression, $r(\xi_i) = \ln[\xi_i] = \eta(X)$.
+  $b(\xi_i)$ is integral of the "activation function" | And if using the canonical form, this is the same as th integral of the inverse link function. It is easier to see this by running through the examples in footnote 5.
+  $\phi$ is the "dispersion parameter", | A parameter for the expected dispersion of $y_i$ around $\mu_i$. For example, gaussian regression has $\phi=\sigma$, the standard deviation of all the residuals (assuming homoskedasticity). It is not needed for one parameter distributions, like Poisson, where we already assume the variance $\mathbb{V}[y_i] = \lambda_i$ (i.e. already determined by $\xi_i$).
+  $a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for Gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$. Again this isn't needed for one parameter distributions.
+  $c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the Poisson distribution would sum to more than one if it wasn't included.
+  
+[^5]:
+  $b(\xi_i)$ seems slightly odd at first: it is the integral of the activation function. It's easier to see this by running through each example:
+  * Poisson: 
+    * The canonical link is log: $r(\xi_i) = \ln[\xi_i] = \eta(X)$. 
+    * So the inverse-link is exponential: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$.
+    * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$.
+    * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=e^{\xi_i}$.
+  * Gaussian: 
+    * The canonical link is the identity: $r(\xi_i) = \\xi_i = \eta(X)$. 
+    * So the inverse-link is the identity: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)$.
+    * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$.
+    * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}= \frac{\xi_i^2}{2}$.
+  * Bernoulli: 
+    * The canonical link is logit: $r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)$. 
+    * So the inverse-link is logistic: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}$.
+    * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$.
+    * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}$.
+  Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network. I.e. is the function that maps the output of the network to the final prediction. Have a look at the section about the score function for further intuition for why [this is the integral](#score)! -->
