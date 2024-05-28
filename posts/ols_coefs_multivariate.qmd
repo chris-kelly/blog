@@ -2,7 +2,7 @@
 title: "Deriving OLS coefficients (multivariate)"
 author: "Chris Kelly"
 date: '02-20-24'
-categories: [Linear models, OLS]
+categories: [Linear Models, OLS]
 format:
   html:
     code-fold: true
