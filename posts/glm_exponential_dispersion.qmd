@@ -5,7 +5,7 @@ date: '05-28-24'
 categories: [Generalized Linear Models, Maximum Likelihood]
 format:
   html:
-    code-fold: show
+    code-fold: true
     toc: true
 image: '../images/glm_exponential_dispersion.png'
 other-links:
@@ -45,6 +45,7 @@ In other words, for every observation $i$:
 #| code-fold: true
 #| code-summary: "Click here to show the code"
 import numpy as np, pandas as pd
+from math import pi, factorial
 from scipy.stats import norm, poisson, gamma
 import statsmodels.api as sm
 import plotly.graph_objects as go
@@ -710,8 +711,8 @@ class exponential_regression_parent():
         theta, phi = self._theta(), self._phi()
         a, b, c = self.a, self.b, self.c
         log_likelihood = ( y * theta - b(theta) ) / a(phi) + c(y,phi)
-        J = -1 * log_likelihood
-        return J
+        L = -1 * np.sum(log_likelihood)
+        return L
 
     def informant(self, theta=None, phi=None):
         """ First derivative of the cost function with respect to theta """
@@ -764,22 +765,13 @@ class exponential_regression_parent():
 
 And now we have our base class, we can utilise it for specific classes of the Poisson, Bernoulli and Gaussian distributions:
 
-### Gaussian (normal) regression
+### Gaussian (normal)
 
 Now we can write our gaussian class: 
 
-<!-- We can see that we define:
-
-* $\theta$, the canonical form of the link function $g(\mu)=\eta(X)=X^{\intercal}\beta$
-* $b'(\theta)$, the inverse-link/activation function
-* $b(\theta)$, the integral of the activation function 
-* $b''(\theta)$, the first derivative of the activation function 
-* The measure of the dispersion $\phi$ 
-* The normalising and adjustment functions $a(\phi)$ and $c(y,\phi)$. -->
-
 ```{python}
 #| code-fold: true
-#| code-summary: "Creating the gaussian base class"
+#| code-summary: "Creating the gaussian child class"
 
 class gaussian(exponential_regression_parent):
 
@@ -812,15 +804,18 @@ class gaussian(exponential_regression_parent):
       """
       y, n, k = self.y, self.n, self.k
       y_hat = self.predict(self.X)
-      std_dev = np.sqrt(np.sum( (y - y_hat)**2 ) / ( n - k ) )
-      return std_dev
-  
+      var = np.sum( (y - y_hat)**2 ) / n # / ( n - k )
+      return var
+      
   def a(self,phi):
       """ a(φ) = σ^2: The variance of y """
-      return phi**2
+      return phi
 
   def c(self,y,phi):
       """ Adjustment needed so pdf sums to one """
+      print(
+        (-0.5 * ( y**2/phi + np.log(2*pi*phi))).shape
+      )
       return -0.5 * ( y**2/phi + np.log(2*pi*phi))
 ```
 
@@ -852,10 +847,24 @@ pd.DataFrame(
     ]),
   columns=['True coefficients','StatsModel coefficients','OLS coefficients']
 )
-
 ```
 
 We find identical coefficients! For more information on why least-squares and MLE derive the same result for gaussian regression, see [this page](mle_ols_normal.html).
+
+We similarly find that the log likelihoods are the same:
+```{python}
+# Compare log likelihoods:
+pd.DataFrame(
+  data = [[
+    -1*model_gaus.negative_log_likelihood(),
+    results.llf,
+    ]],
+  columns=[
+    'Our Log Likelihood',
+    'StatsModel Log Likelihood',
+    ]
+)
+```
 
 ### Logistic
 
@@ -863,7 +872,7 @@ Now let's try the same for a logistic regression:
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Creating the Bernoulli base class"
+#| code-summary: "Creating the Bernoulli child class"
 
 class bernoulli(exponential_regression_parent):
 
@@ -879,18 +888,19 @@ class bernoulli(exponential_regression_parent):
         return X.dot(beta)
 
   def b(self,theta):
-      """ b(θ) = -ln[1+exp{θ}]: integral of the activation function """
-      return -np.log(1 + np.exp(theta))
-      # return np.exp(-theta)/(1+np.exp(-theta))**2
+      """ b(θ) = ln[1+exp{θ}]: integral of the activation function """
+      return np.log(1 + np.exp(theta))
   
   def db(self,theta):
       """ b'(θ) = Λ(θ) = 1/(1+exp{-θ}): Activation function is logistic (inverse of the logit-link function)"""
-      return (1+np.exp(-theta))**-1
+      # return (1+np.exp(-theta))**-1
+      return np.exp(theta) * (1+np.exp(theta))**-1
       
   def d2b(self,theta):
       """ b''(θ) = Λ(θ)*(1-Λ(θ)): Differential of the activation function is the logistic distribution """
       _db = self.db(theta)
       return _db*(1-_db)
+      # return np.exp(theta) * (1 + np.exp(theta))**-2
 
   def phi(self):
       """ Not needed - one parameter distribution """
@@ -926,7 +936,21 @@ pd.DataFrame(
 )
 ```
 
-Again, we find identical coefficients!
+Again, we find identical coefficients! We similarly find that the log likelihoods are the same:
+
+```{python}
+# Compare log likelihoods:
+pd.DataFrame(
+  data = [[
+    -1*model_bern.negative_log_likelihood(),
+    results2.llf,
+    ]],
+  columns=[
+    'Our Log Likelihood',
+    'StatsModel Log Likelihood',
+    ]
+)
+```
 
 For a deep-dive into Logistic regression, and its formulation as a latent-variable model, see [this page](glm_logit.html).
 
@@ -936,7 +960,7 @@ Now let's try the same for a Poisson regression:
 
 ```{python}
 #| code-fold: true
-#| code-summary: "Creating the poisson base class"
+#| code-summary: "Creating the poisson child class"
  
 class poisson(exponential_regression_parent):
 
@@ -972,8 +996,13 @@ class poisson(exponential_regression_parent):
       return 1
   
   def c(self,y,phi):
-      """ Adjustment needed so pdf sums to one """
-      return np.vectorize(-np.log(np.math.factorial(y)))
+      """ Adjustment needed so pdf sums to one. 
+      Uses Stirling's approximation to deal with large factorials"""
+      # def approx_ln_factorial(n):
+      #     return n * np.log(n) - n
+      y = y.flatten()
+      return -np.log(np.array([factorial(v) for v in y.tolist()]).astype(float)).reshape(-1,1)
+
 ```
 
 ```{python}
@@ -995,7 +1024,21 @@ pd.DataFrame(
 )
 ```
 
-Again, we find identical coefficients!
+Again, we find identical coefficients! We similarly find that the log likelihoods are the same:
+
+```{python}
+# Compare log likelihoods:
+pd.DataFrame(
+  data = [[
+    -1*model_pois.negative_log_likelihood(),
+    results3.llf,
+    ]],
+  columns=[
+    'Our Log Likelihood',
+    'StatsModel Log Likelihood',
+    ]
+)
+```
 
 [^1]: 
   Rearranging Poisson into exponential form, with mean rate of $\lambda_i = \mu_i = \xi_i$:
@@ -1028,7 +1071,7 @@ Again, we find identical coefficients!
   } 
   - \underbrace{\ln{ \left[ y_i! \right] }}_{c(y,\phi)}
   \right\}}
-  \\ & = \exp{ \left\{ \frac{T(y_i) r(\xi_i) - b(\xi_i)}{a(\phi)} + c(y_i,\phi) \right\} } & \tag{1.2}
+  \\ & = \exp{ \left\{ \frac{T(y_i) r(\xi_i) - b(\xi_i)}{a(\phi)} + c(y_i,\phi) \right\} }
   \end{align}
   }
   $$
