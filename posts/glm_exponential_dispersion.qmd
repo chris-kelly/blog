@@ -8,6 +8,11 @@ format:
     code-fold: show
     toc: true
 image: '../images/glm_exponential_dispersion.png'
+other-links:
+        - text: MLE vs OLS for Linear Regression
+          href: mle_ols_normal.html
+        - text: Logistic Regression
+          href: glm_logit.html
 ---
 
 ::: {.callout-tip}
@@ -178,9 +183,12 @@ $$
 There's lots of similarities, but lots of differences too:
 
 * The expected value $\mathbb{E}[y_i|X_i]=\lambda_i$ can be perfectly explained: also by taking the dot product of the features and the true coefficients, but then raising it to the exponential as well: $\lambda_i=e^{X_i^{\intercal}\beta}$
-  * Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then $\lambda_i = e^{X_i^{\intercal}\beta}$
 * In reality, the actual observation $y_i$ varies around the expected value: but this time its variation follows a Poisson distribution. The Poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
 * Consequently, this impacts how we aim to minimize residuals and estimate our ideal coefficients $\beta$. A Poisson regression permits larger residuals at higher counts vs normal regression.
+
+:::{.column-margin}
+Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then by raising both sides to the exponential it follows that $\lambda_i = e^{X_i^{\intercal}\beta}$
+:::
 
 ```{python}
 #| code-fold: true
@@ -319,8 +327,16 @@ But how do we find a good estimation for $\mathbb{E}[y_i|X_i]=\lambda_i$? Concre
 
 In most cases, the systematic component $\eta(X)$ is usually just a linear transformation of $X$, most often the result of multiplying each value by some good fitted coefficients $\beta$. It is deterministic (non-random), so it is *systematic*.
 
+:::{.column-margin}
+In constrast, *Generalized Additive Models* use a sum of smooth functions of the features instead:
 $$
-\eta(X_i) = X_i^{\intercal}\beta
+\eta(X_i) = \beta_0 + f_1(X_{i1}) + f_2(X_{i2}) + \ldots
+$$
+The functions can be parametric (e.g. polynomial) or non-parametric (e.g. smoothing splines).
+:::
+
+$$
+\eta(X_i) = X_i^{\intercal}\beta \equiv \beta_0 + \beta_1X_{i1} + \beta_2X_{i2} + \ldots
 $$
 
 The link function is a way of choosing how to map the systematic component to the natural parameter of the random component. For example, in Poisson regression, we use a log link function, which means the systematic component predicts the natural log of the mean rate of the count. 
@@ -586,7 +602,7 @@ $$
 The cost is minimized by differentiating with respect to $\theta$. Since the derivative of $c(.)$ is zero, it drops out.
 :::
 
-So hopefully this now gives a bit more intuition behind why $b(\theta)$ is the integral of the inverse canonical link. Since $b'(\theta)$ is the activation function, we can see that the score function is just the difference between the predicted value and the actual value, multiplied by the feature. This is the same as the gradient of the cost function used for gradient descent!
+So hopefully this now gives a bit more intuition behind why $b(\theta)$ is the integral of the inverse canonical link. Since $b'(\theta)$ is the activation function, we can see that the score function is just the difference between the predicted value and the actual value. This is the same as the gradient of the cost function used for gradient descent!
 
 This also uncovers an interesting property of GLMs - that the average prediction $b'(\theta)$ must be equal to the average value of $\bar{y}$ too:
 
@@ -750,7 +766,7 @@ And now we have our base class, we can utilise it for specific classes of the Po
 
 ### Gaussian (normal) regression
 
-Okay now we can write our gaussian class: 
+Now we can write our gaussian class: 
 
 <!-- We can see that we define:
 
@@ -827,15 +843,7 @@ ls_beta = (np.linalg.pinv(XtX).dot(Xty)).reshape(-1,1)
 glm_stats_model = sm.GLM(y, X, family=sm.families.Gaussian())
 results = glm_stats_model.fit()
 
-for i in range(len(ls_beta)):
-    if np.round(i,5) != np.round(results.params[i],5):
-        ValueError('Coefficients do not match with OLS')
-    if np.round(i,5) != np.round(results.params[i],5):
-        ValueError('Coefficients do not match with Statsmodels')
-
-ols_stats_model = sm.OLS(y, X)
-results = ols_stats_model.fit()
-
+# Compare coefficients
 pd.DataFrame(
   np.hstack([
     model_gaus.beta,
@@ -846,6 +854,8 @@ pd.DataFrame(
 )
 
 ```
+
+We find identical coefficients! For more information on why least-squares and MLE derive the same result for gaussian regression, see [this page](mle_ols_normal.html).
 
 ### Logistic
 
@@ -916,6 +926,10 @@ pd.DataFrame(
 )
 ```
 
+Again, we find identical coefficients!
+
+For a deep-dive into Logistic regression, and its formulation as a latent-variable model, see [this page](glm_logit.html).
+
 ### Poisson
 
 Now let's try the same for a Poisson regression:
@@ -980,6 +994,8 @@ pd.DataFrame(
   columns=['Poisson coefficients','StatsModel coefficients']
 )
 ```
+
+Again, we find identical coefficients!
 
 [^1]: 
   Rearranging Poisson into exponential form, with mean rate of $\lambda_i = \mu_i = \xi_i$:
@@ -1145,7 +1161,6 @@ pd.DataFrame(
   $c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the Poisson distribution would sum to more than one if it wasn't included.
   
 [^5]:
-  $b(\xi_i)$ seems slightly odd at first: it is the integral of the activation function. It's easier to see this by running through each example:
   * Poisson: 
     * The canonical link is log: $r(\xi_i) = \ln[\xi_i] = \eta(X)$. 
     * So the inverse-link is exponential: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$.
