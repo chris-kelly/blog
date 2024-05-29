@@ -708,16 +708,17 @@ class exponential_regression_parent():
     
     def hessian(self, theta=None, phi=None):
         """ Second derivative of the cost function with respect to theta """
-        X, y, phi = self.X, self.y, self._phi(phi)
+        X, y = self.X, self.y
         a, d2b = self.a, self.d2b
+        theta, phi = self._theta(theta), self._phi(phi)
         # VarY = a(phi) * np.diagflat(self.d2b(theta))
-        VarY = np.diag(((self.db(theta)-y)**2).squeeze(axis=1)) 
+        VarY = np.diagflat((self.db(theta)-y)**2)
         d2J = X.T.dot(VarY/a(phi)**2).dot(X)
         return d2J
 
     def update_beta(self, fit_type='Newton-Raphson'):
         """ A single step towards optimizing beta """
-        X, beta = self.X, self.beta
+        X, beta = self.X, self.beta.copy()
         theta, phi = self._theta(), self._phi()
         learning_rate = np.linalg.inv(self.hessian(theta))
         if fit_type in ['Newton-Raphson']:
@@ -798,9 +799,6 @@ class gaussian(exponential_regression_parent):
 
   def c(self,y,phi):
       """ Adjustment needed so pdf sums to one """
-      print(
-        (-0.5 * ( y**2/phi + np.log(2*pi*phi))).shape
-      )
       return -0.5 * ( y**2/phi + np.log(2*pi*phi))
 ```
 
@@ -878,8 +876,8 @@ class bernoulli(exponential_regression_parent):
   
   def db(self,theta):
       """ b'(θ) = Λ(θ) = 1/(1+exp{-θ}): Activation function is logistic (inverse of the logit-link function)"""
-      # return (1+np.exp(-theta))**-1
-      return np.exp(theta) * (1+np.exp(theta))**-1
+      return (1+np.exp(-theta))**-1
+      # return np.exp(theta) * (1+np.exp(theta))**-1
       
   def d2b(self,theta):
       """ b''(θ) = Λ(θ)*(1-Λ(θ)): Differential of the activation function is the logistic distribution """
@@ -981,8 +979,8 @@ class poisson(exponential_regression_parent):
       return 1
   
   def c(self,y,phi):
-      """ Adjustment needed so pdf sums to one. 
-      Uses Stirling's approximation to deal with large factorials"""
+      """ Adjustment needed so pdf sums to one. """
+      # # Optionally use Stirling's approximation to deal easily with large factorials
       # def approx_ln_factorial(n):
       #     return n * np.log(n) - n
       y = y.flatten()
