@@ -442,21 +442,6 @@ N(y;\xi,\phi)
 }
 $$
 
-<!-- In fact, when we put these pdfs into the exponential family form, we uncover the following:
-
-Term | Poisson | Logistic | Probit | Gaussian
---|--|--|--|---
-$T(y_i)$ | $T(y_i)=y_i$ | $T(y_i)=y_i$ | $T(y_i)=y_i$ | $T(y_i)=y_i$
-$r(\xi_i)$ | $r(\xi_i)=\ln[\xi_i]$ | $\displaylines{r(\xi_i)= \\ \ln[\frac{\xi_i}{1-\xi_i}]}$ | $\displaylines{r(\xi_i)= \\ \ln[\frac{\xi_i}{1-\xi_i}]}$ | $r(\xi_i)=\xi_i$
-$b(\xi_i)$ | $b(\xi_i)=\xi_i$ | $\displaylines{b(\xi_i)= \\ \ln[1+e^{\xi_i}]}$ | $\displaylines{b(\xi_i)= \\ \ln[1+e^{\xi_i}]}$ | $\displaylines{b(\xi_i)= \\ \frac{\xi_i^2}{2}}$
-$a(\phi)$ | $a(\phi)=1$ | $a(\phi)=1$ | $a(\phi)=1$ | $a(\phi)=\sigma^2$
-$c(y_i,\phi)$ | $c(y_i,\phi) = \ln[y!]$ | $c(y_i,\phi) = 0$ | $c(y_i,\phi) = 0$ | $\displaylines{c(y_i,\phi) = \\ \frac{1}{2}\left( \frac{y_i^2}{\sigma^2} + \ln{ \left[ 2 \pi \sigma^2 \right]}\right)}$ -->
-
-<!-- $\phi$ | $\phi=1$ | $\phi=1$ | $\phi=1$ | $\phi=\sigma$ -->
-<!-- $\xi_i$ | $\xi_i=\lambda_i\equiv\mu_i$ | $\xi_i=p_i\equiv\mu_i$ | $\xi_i=p_i\equiv\mu_i$ | $\xi_i=\mu_i$ -->
-
-<!-- That's a lot of terms! (e.g. $r(\xi_i)$, $a(\phi)$ etc). But now we have reformulated the bernoulli, poisson and gaussian distributions into this form, we can start to develop some intuition as to what each of these terms mean: -->
-
 ### The "canonical" link function
 
 You may have noticed that $r(\xi_i)$ looks very familiar... in fact, it is the link functions we commonly use for that regression! For example in logistic regression, we use the logit link function $g(\xi_i) = \ln{\left[\frac{\xi_i}{1-\xi_i}\right]} = \eta(X)$. 
@@ -1039,6 +1024,8 @@ pd.DataFrame(
     ]
 )
 ```
+
+Fin.
 
 [^1]: 
   Rearranging Poisson into exponential form, with mean rate of $\lambda_i = \mu_i = \xi_i$:
