@@ -1190,20 +1190,27 @@ Fin.
   $a(.)$ is a normalizing function  | A function that normalizes the pdf using the dispersion parameter $\phi$. E.g. for Gaussian regression, it is the variance of the residuals, $a(\phi) = \sigma^2$. Again this isn't needed for one parameter distributions.
   $c(.)$ an adjustment function | A function that adjusts the normalized pdf so that it sums to one. For example, the exponential form of the Poisson distribution would sum to more than one if it wasn't included.
   
-[^5]:
-  * Poisson: 
-    * The canonical link is log: $r(\xi_i) = \ln[\xi_i] = \eta(X)$. 
-    * So the inverse-link is exponential: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$.
-    * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$.
-    * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=e^{\xi_i}$.
-  * Gaussian: 
-    * The canonical link is the identity: $r(\xi_i) = \\xi_i = \eta(X)$. 
-    * So the inverse-link is the identity: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)$.
-    * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$.
-    * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}= \frac{\xi_i^2}{2}$.
-  * Bernoulli: 
-    * The canonical link is logit: $r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)$. 
-    * So the inverse-link is logistic: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}$.
-    * So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$.
-    * So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}$.
-  Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network. I.e. is the function that maps the output of the network to the final prediction. Have a look at the section about the score function for further intuition for why [this is the integral](#score)! -->
+[^5]: 
+  Here is a break down of the integral of the canonical inverse-link function for each distribution:<br>
+  Poisson:
+  <ul>
+    <li>The canonical link is log: $r(\xi_i) = \ln[\xi_i] = \eta(X)$</li>
+    <li>So the inverse-link is exponential: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=e^{\eta(X)}$</li>
+    <li>So $r^{-1}(\xi_i) \equiv b'(\xi_i) = e^{\xi_i}$</li>
+    <li>So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=e^{\xi_i}$</li>
+  </ul>
+  Gaussian:
+  <ul>
+    <li>The canonical link is the identity: $r(\xi_i) = \\xi_i = \eta(X)$</li>
+    <li>So the inverse-link is the identity: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\eta(X)$</li>
+    <li>So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \xi_i$</li>
+    <li>So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}= \frac{\xi_i^2}{2}$</li>
+  </ul>
+  Bernoulli:
+  <ul>
+    <li>The canonical link is logit: $r(\xi_i) = \ln\left[ \frac{\xi_i}{1-\xi_i} \right] = \eta(X)$</li>
+    <li>So the inverse-link is logistic: $\xi_i = b'(\eta(X)) = r^{-1}(\eta(X))=\frac{e^{\eta(X)}}{1+e^{\eta(X)}}$</li>
+    <li>So $r^{-1}(\xi_i) \equiv b'(\xi_i) = \frac{e^{\xi_i}}{1+e^{\xi_i}}$</li>
+    <li>So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}$</li>
+  </ul>
+  Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network i.e. is the function that maps the output of the network to the final prediction. Have a look at the section about the score function for further intuition for why [this is the integral](#score)
