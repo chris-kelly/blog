@@ -9,7 +9,7 @@
 <meta name="author" content="Chris Kelly">
 <meta name="dcterms.date" content="2024-02-25">
 
-<title>Chris Kelly Blog - Logistic Regression</title>
+<title>Chris Kelly Blog - Logistic Regression as a latent variable model</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -178,7 +178,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Logistic Regression</h1>
+      <h1 class="title">Logistic Regression as a latent variable model</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">Maximum Likelihood</div>
                 <div class="quarto-category">Generalized Linear Models</div>
@@ -241,7 +241,7 @@ What are we exploring?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Modelling bernoulli probabilities using maximum likelihood estimation and the logit link funciton.</p>
+<p>Taking a “latent variable” approach to modelling bernoulli probabilities using maximum likelihood estimation and the logit link function.</p>
 </div>
 </div>
 <section id="a-latent-variable-model" class="level2">
@@ -344,30 +344,37 @@ p(y|X)
 &amp; \max_\beta{p(y|X)} \\
 = &amp;
 \max_\beta{\left\{
-  \prod_{i=1}^{N}{ p_i^{y_i} }
-  \times
-  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
+  \prod_{i=1}^{N}{ \bigg(
+    p_i^{y_i} \times (1-p_i)^{1-y_i}
+  \bigg)}
   \right\}}
-\\ \\ \Rightarrow &amp;
+\\ \\ \equiv &amp;
 \min_\beta{\left\{ -\log{ \left[
-  \prod_{i=1}^{N}{ p_i^{y_i} }
-  \times
-  \prod_{i=1}^{N}{ (1-p_i)^{1-y_i} }
+  \prod_{i=1}^{N}{ \bigg(
+    p_i^{y_i}  \times (1-p_i)^{1-y_i}
+  \bigg) }
   \right] } \right\}}
 \\ \\ = &amp;
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -\log{ \left[ p_i^{y_i} \right] } } +
-  \sum_{i=1}^{N}{ -\log{ \left[ (1-p_i)^{1-y_i}\right] } }
+  -\sum_{i=1}^{N}{ \bigg(
+    \log{ \left[ p_i^{y_i} \right] } } +
+    \log{ \left[ (1-p_i)^{1-y_i}\right] }
+    \bigg)
   \right\}}  
 \\ \\ = &amp;
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -y_i\log{ \left[ p_i \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-p_i\right] } }
+  -\sum_{i=1}^{N}{ \bigg(
+    y_i\log{ \left[ p_i \right] }
+    (1-y_i)\log{ \left[ 1-p_i\right] }
+  \bigg) }
   \right\}}
 \\ \\ = &amp;
 \min_\beta{\left\{
-  \sum_{i=1}^{N}{ -y_i\log{ \left[ P(\varepsilon_i &lt; X \beta) \right] } } +
-  \sum_{i=1}^{N}{ -(1-y_i)\log{ \left[ 1-P(\varepsilon_i &lt; X \beta)\right] } }
+  -\sum_{i=1}^{N}{ \bigg(
+    y_i \log{ [ P(\varepsilon_i &lt; X \beta) ] } +
+    (1-y_i) \log{ [
+      1-P(\varepsilon_i &lt; X \beta)] }
+    } \bigg)
   \right\}}    
 \end{align}
 }
@@ -427,8 +434,8 @@ p(y|X)
 \displaylines{
 \begin{align}
 f(x,\mu,s) &amp; =
-\frac{e^{-(x-\mu)/s)}}
-{s(1+e^{-(x-\mu)/s)})^2}
+\frac{e^{-(x-\mu)/s}}
+{s(1+e^{-(x-\mu)/s})^2}
 \\ \\
 \therefore f(x,0,1) &amp; =
 \frac{e^{-x}}

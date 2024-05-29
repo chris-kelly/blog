@@ -1,5 +1,5 @@
 ---
-title: "About"
+title: "About Chris Kelly"
 image: images/about.jpeg
 about:
   template: jolla
@@ -11,7 +11,7 @@ about:
 
 ---
 
-I've taught myself Data Science over the last few years, and I've taken lots of notes to solidify my understanding along the way. I thought it was worthwhile to share them!
+I've taught myself Data Science over the last few years, and I've taken notes to solidify my understanding along the way. I thought it was worthwhile to start to share them!
 
 All notes and code are my own, or references have been added. 
 

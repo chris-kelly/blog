@@ -1,5 +1,5 @@
 ---
-title: "Logistic Regression"
+title: "Logistic Regression as a latent variable model"
 author: "Chris Kelly"
 date: '02-25-24'
 categories: [Maximum Likelihood, Generalized Linear Models]
@@ -12,7 +12,7 @@ image: '../images/glm_logistic.png'
 
 ::: {.callout-tip}
 ### What are we exploring?
-Modelling bernoulli probabilities using maximum likelihood estimation and the logit link function.
+Taking a "latent variable" approach to modelling bernoulli probabilities using maximum likelihood estimation and the logit link function.
 :::
 
 ## A latent variable model
@@ -218,8 +218,8 @@ $$
 \displaylines{
 \begin{align}
 f(x,\mu,s) & = 
-\frac{e^{-(x-\mu)/s)}}
-{s(1+e^{-(x-\mu)/s)})^2}
+\frac{e^{-(x-\mu)/s}}
+{s(1+e^{-(x-\mu)/s})^2}
 \\ \\
 \therefore f(x,0,1) & = 
 \frac{e^{-x}}

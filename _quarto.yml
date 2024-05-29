@@ -3,10 +3,11 @@ project:
   output-dir: docs
 
 website:
-  title: "Chris Kelly Blog"
+  title: "Sciencing the data"
   navbar:
     right:
-      - about.qmd
+      - text: "about"
+        href: about.qmd
       - icon: github
         href: https://github.com/chris-kelly
       - icon: linkedin

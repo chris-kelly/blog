@@ -11,7 +11,7 @@ image: '../images/glm_exponential_dispersion.png'
 other-links:
         - text: MLE vs OLS for Linear Regression
           href: mle_ols_normal.html
-        - text: Logistic Regression
+        - text: Logistic Regression as a Latent Variable Model
           href: glm_logit.html
 ---
 
