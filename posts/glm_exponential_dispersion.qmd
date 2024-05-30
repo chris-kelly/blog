@@ -173,10 +173,13 @@ The bottom plot is identical to the first, but adds a third axis with the probab
 :::
 
 With this in mind, let's now go through Poisson regression, to compare and contrast:
+:::{.column-margin}
+Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then by raising both sides to the exponential it follows that $\lambda_i = e^{X_i^{\intercal}\beta}$
+:::
 $$
 \displaylines{
-y_i \sim Pois(\lambda_i) \\
 \ln{(\lambda_i)} = X_i^{\intercal}\beta \\
+y_i \sim Pois(\lambda_i) \\
 }
 $$
 
@@ -184,11 +187,7 @@ There's lots of similarities, but lots of differences too:
 
 * The expected value $\mathbb{E}[y_i|X_i]=\lambda_i$ can be perfectly explained: also by taking the dot product of the features and the true coefficients, but then raising it to the exponential as well: $\lambda_i=e^{X_i^{\intercal}\beta}$
 * In reality, the actual observation $y_i$ varies around the expected value: but this time its variation follows a Poisson distribution. The Poisson variance is equal to its expected value $\mathbb{V}[y_i] = \lambda_i$: thus we expect higher variance at higher counts.
-* Consequently, this impacts how we aim to minimize residuals and estimate our ideal coefficients $\beta$. A Poisson regression permits larger residuals at higher counts vs normal regression.
-
-:::{.column-margin}
-Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then by raising both sides to the exponential it follows that $\lambda_i = e^{X_i^{\intercal}\beta}$
-:::
+* A Poisson regression permits larger residuals at higher counts vs gaussian regression. Consequently, this impacts how we aim to minimize residuals (i.e. by not shrinking all residuals with equal weight) and hence this also impacts how we estimate our ideal coefficients $\beta^*$.
 
 ```{python}
 #| code-summary: "Code to generate Poisson graph"
@@ -354,7 +353,7 @@ But how cumbersome and error prone would it be to write bespoke code for every t
 
 ### Notation for Generalized linear models
 
-It can be shown that many common distributions can be reformulated into the "Exponential Dispersion Family of Distributions". This generic representation makes it easier to re-use the same code to run a regression, rather than hand calculate each pdf in different ways.
+It can be shown that many common distributions can be reformulated into the "Exponential Dispersion Family of Distributions". This generic representation makes it easier to re-use the same code to run a regression.
 
 First let's define some generic notation for generalized linear models:
 
@@ -367,7 +366,7 @@ $$
 
 $\xi_i$ is a shape parameter, governing the shape of the distribution (e.g. in Poisson, the expected value is the mean $\xi_i=\lambda_i$). Or for Bernoulli, $\xi_i=p_i$. In fact for many distributions, $\xi_i$ is the expected value of $y_i$ i.e. $\xi_i = \mu_i$.
 
-$\phi$ is a dispersion parameter, governing the spread of the data (e.g. Gaussian has the standard deviation $\phi = \sigma$). It is not always necessary if the dispersion is determined by the shape parameter already (e.g. in Poisson the variance is already equated to the expected rate $\lambda_i$).
+$\phi$ is a dispersion parameter, governing the spread of the data (e.g. Gaussian has the variance $\phi = \sigma^2$). It is not always necessary if the dispersion is determined by the shape parameter already (e.g. in Poisson the variance is already equated to the expected rate $\lambda_i$).
 
 Here are some examples of the common forms of Poisson, Bernoulli and Gaussian probability distribution functions $y \sim f_{\theta_i}(\mu_i)$, along with some choices for link functions $g(\mu)$ to use in regression:
 
@@ -544,12 +543,14 @@ To run conduct any of these optimizations, we need to derive the "score" (or "in
 
 :::{.column-margin}
 It is trival to connect $\theta$ to the coefficients $\beta$, since 
+
 $$
 \displaylines{
 \frac{\partial\theta}{\partial\beta_j}=\frac{\partial} {\partial\beta_j}[\eta(X)]=X_j 
 \\ \iff \eta(X)=X^{\intercal}\beta
 }
 $$
+
 :::
 
 $$
@@ -569,7 +570,6 @@ $$
 }
 \right]
 \\ \\
-
 \therefore \frac{\partial \mathcal{L}(\theta)}{\partial\beta_i} 
 & = - \frac{1}{a(\phi)} \sum_{i=1}^n{ \bigg\{
       y_i 
@@ -635,6 +635,13 @@ $$
        b''(\theta)
       \bigg) X_i
   \bigg\} } 
+& \because \frac{\partial b'(\theta)}{\partial \beta_i} 
+& = 
+\frac{\partial b'(\theta)}{\partial \theta} \times
+\frac{\partial \theta}{\partial \beta_i}
+\\ &&& = b''(\theta) \times 
+\frac{\partial}{\partial \beta_i}\left(X_i^{\intercal}\beta\right) 
+\\ &&& = b''(\theta) \times X_i^{\intercal}
 \end{align}
 }
 $$
@@ -800,8 +807,8 @@ class gaussian(exponential_regression_parent):
       return np.ones(theta.shape)
 
   def phi(self):
-      """ φ = σ: Dispersion measure is std.dev.
-      It is estimated from the residuals, i.e. s = sqrt(RSS / DoF)
+      """ φ = σ^2: Dispersion measure is variance
+      It is estimated from the residuals, i.e. s = RSS / DoF
       """
       y, n, k = self.y, self.n, self.k
       y_hat = self.predict(self.X)
@@ -1233,3 +1240,4 @@ Fin.
     <li>So the integral is: $b(\xi_i)=\int{b'(\xi_i)\,d\xi_i}=\ln{(1+e^{\xi_i})}$</li>
   </ul>
   Another way to think about this is to notice that $b'(\xi_i)$ is the "activation function" in the outer layer of a neural network i.e. is the function that maps the output of the network to the final prediction. Have a look at the section about the score function for further intuition for why [this is the integral](#score)
+
