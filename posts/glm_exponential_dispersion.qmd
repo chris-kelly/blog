@@ -2,7 +2,7 @@
 title: "Generalized Linear Models from scratch"
 author: "Chris Kelly"
 date: '05-28-24'
-categories: [Generalized Linear Models, Maximum Likelihood]
+categories: [Generalized Linear Models, Maximum Likelihood, Python]
 format:
   html:
     code-fold: true
