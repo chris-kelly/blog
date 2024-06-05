@@ -173,9 +173,11 @@ The bottom plot is identical to the first, but adds a third axis with the probab
 :::
 
 With this in mind, let's now go through Poisson regression, to compare and contrast:
+
 :::{.column-margin}
 Since $\ln{(\lambda_i)} = X_i^{\intercal}\beta$, then by raising both sides to the exponential it follows that $\lambda_i = e^{X_i^{\intercal}\beta}$
 :::
+
 $$
 \displaylines{
 \ln{(\lambda_i)} = X_i^{\intercal}\beta \\
@@ -1051,6 +1053,7 @@ pd.DataFrame(
 )
 ```
 
+<br><br>
 Fin.
 
 [^1]: 
