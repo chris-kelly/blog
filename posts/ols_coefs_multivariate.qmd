@@ -7,6 +7,9 @@ format:
   html:
     code-fold: true
     toc: true
+    other-links:
+      - text: When OLS is the Best Linear Unbiased Estimator
+        href: ols_blue.html
 image: '../images/ols_coefs_multivariate.jpeg'
 ---
 
@@ -292,7 +295,7 @@ def RMSE(y,X,coefs)-> np.ndarray:
     return rmse
 ```
 
-Given the true coefficients of $\beta = [-0.4,0.8]$, we show how the estimated coefficients improve with larger sample size:
+Given the true coefficients of $\beta = [-0.4,0.8]$, we show how the estimated coefficients approach the true with larger sample sizes:
 
 ```{python}
 # Example usage
@@ -324,111 +327,28 @@ results = pd.DataFrame(
 results
 ```
 
-Here is a plot of the 
-
-```{python}
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from scipy.stats import norm
-
-y = y[np.argsort(X[:,1])]
-X = X[np.argsort(X[:,1]),:]
-coefs = derive_coefs(y,X)
-y_hat = predict(X,coefs)
-
-fig = make_subplots(
-  rows=2,cols=1,
-  subplot_titles=(
-    "Plot of y against X",
-    "Plot of RMSE against choice of β0 and β1",
-    ),
-  specs=[ [dict(type='scatter',l=0.2,r=0.2)],[dict(type='scatter3d')] ],
-  row_heights = [3,5],
-  horizontal_spacing = 0,
-)
-
-fig.add_trace(
-  go.Scatter(
-    x=X[:,1],
-    y=y.flatten(), 
-    mode='markers', name='Observations',
-    marker=dict(size=2, color="blue"),
-  ),
-)
-fig.add_trace(
-  go.Scatter(
-    x=X[:,1],
-    y=y_hat.flatten(),
-    mode='lines', name='Model',
-    line=dict(color="red"),
-  ),
-)
-
-fig.update_xaxes(title=dict(text="X", font_size=16),row=1, col=1)
-fig.update_yaxes(title=dict(text="y", font_size=16),row=1, col=1)
-
-a, b = np.arange(-2,2,0.1), np.arange(-2,2,0.1)
-av, bv = np.meshgrid(a, b)
-all_coefs = np.dstack([av,bv])
-cv = np.zeros(shape=av.shape)
-
-for idx in range(len(all_coefs)):
-  for idy in range(len(all_coefs[idx])):
-      cv[idx,idy] = np.sqrt(RMSE(y,X,all_coefs[idx,idy].reshape(k,1))[0]/n)
-
-fig.add_trace(
-  go.Surface(
-    x=av, y=bv, z=cv, 
-    opacity=0.2,
-    showscale=False,
-    contours = dict(z=dict(show=True,size=0.01,start=0,end=4))
-  ),
-  row=2, col=1
-)
-
-# 3d plot of data
-fig.add_trace(
-  go.Scatter3d(
-    x=coefs[0], 
-    y=coefs[1],
-    z=np.sqrt(RMSE(y,X,coefs)[0]/n),
-    mode='markers', name='Optimum choice of coefficients',
-    marker=dict(symbol='cross'),
-  ), row=2, col=1,
-)
-
-fig.update_layout(
-    scene = dict(
-      aspectratio=dict(x=1.5,y=1.8,z=1),
-      xaxis_title="β0",
-      yaxis_title="β1",
-      zaxis_title="RSS",
-    ),
-  showlegend=False,
-)
-
-fig.show()
-```
+Below is an interactive plot, that shows how the residuals change with the choice of coefficients. The RMSE for any particular choice of coefficients is shown in the title.
 
 ```{python}
 ojs_define(X = X.tolist(), y=y.tolist(), x1 = X[:,1].tolist(), n=n)
 ```
 
-
 ```{ojs}
-//| echo: false
-
-math = require("https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.0/math.js")
-plotly = require("https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.33.0/plotly.min.js")
-
 viewof beta0 = Inputs.range(
   [-2, 2], 
   {value: -0.4, step: 0.01, label: "Intercept: β0"}
 )
 viewof beta1 = Inputs.range(
   [-2, 2], 
-  {value: 0.2, step: 0.01, label: "Slope: β1"}
+  {value: 0.8, step: 0.01, label: "Slope: β1"}
 )
+```
+
+```{ojs}
+//| output: false
+
+math = require("https://cdnjs.cloudflare.com/ajax/libs/mathjs/13.0.0/math.js")
+plotly = require("https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.33.0/plotly.min.js")
 
 coefs = math.matrix([[beta0],[beta1]])
 
@@ -476,7 +396,7 @@ data = [
 plotly.newPlot(
   "2d_plot", 
   data, 
-  {title: "RSS = " + RSS},
+  {title: "RMSE = " + RMSE},
   {responsive: true}
 )
 
@@ -484,14 +404,69 @@ plotly.newPlot(
 
 <div id="2d_plot""></div>
 
+Finally, here is a surface plot of the RMSE given choices of $\beta_0$ and $\beta_1$, for the random sample.
+
+```{python}
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from scipy.stats import norm
+
+y = y[np.argsort(X[:,1])]
+X = X[np.argsort(X[:,1]),:]
+coefs = derive_coefs(y,X)
+y_hat = predict(X,coefs)
+
+a, b = np.arange(-2,1,0.1), np.arange(-1,3,0.1)
+av, bv = np.meshgrid(a, b)
+all_coefs = np.dstack([av,bv])
+cv = np.zeros(shape=av.shape)
+
+for idx in range(len(all_coefs)):
+  for idy in range(len(all_coefs[idx])):
+      cv[idx,idy] = np.sqrt(RMSE(y,X,all_coefs[idx,idy].reshape(k,1))[0][0]/n)
+
+fig = go.Figure()
+
+# Surface of RMSE
+fig.add_trace(
+  go.Surface(
+    x=av, y=bv, z=cv, 
+    opacity=0.2,
+    showscale=False,
+    contours = dict(z=dict(show=True,size=0.01,start=0,end=4))
+  )
+)
+
+# 3d plot of data
+fig.add_trace(
+  go.Scatter3d(
+    x=coefs[0], 
+    y=coefs[1],
+    z=np.sqrt(RMSE(y,X,coefs)[0]/n),
+    mode='markers', name='Optimum choice of coefficients',
+    marker=dict(symbol='cross'),
+  )
+)
+
+fig.update_layout(
+  title="Plot of RMSE given choices of β0 and β1",
+  scene = dict(
+    xaxis_title="β0",
+    yaxis_title="β1",
+    zaxis_title="RMSE",
+  ),
+  showlegend=False,
+)
+
+fig.show()
+```
+
 ## Final reflections
 
 Unlike logistic regression, or the multiple hidden-layer structure of neural networks, we can "jump" straight to the optimum coefficients for OLS. Why can we do this? Well chiefly its because OLS is a bit of a special case:
 
 * **The minima is a global minima:** The hessian matrix is positive definite, and hence the cost function is strictly convex. This means we know that when a choice of coefficients is found that ensure the partially differentiated cost function is equal zero, this minima is also a global one, not a local one.
 * **There is only one solution for the optimum coefficient:** We assume that the matrix is full rank (every feature provides additional predictive power) and that the number of predictors is smaller than the number of obervations. This also means that partially differentiating is okay to do!
-* **A closed-form solution can be found** The predictions are generated from $X$ using a simple, purely algebraic function, i.e. the sum-product of $X$ by $\beta$. This means we can find an analytical solution to the optimal choice $\beta^*$. Note this often isn't possible since non-linear activation functions (i.e. link functions) are often transcendental.
-
-We will dive into this in another post.
+* **A closed-form solution can be found:** The predictions are generated from $X$ using a simple, purely algebraic function, i.e. the sum-product of $X$ by $\beta$. This means we can find an analytical solution to the optimal choice $\beta^*$. Note this often isn't possible since non-linear activation functions (i.e. link functions) are often transcendental. In this case, we need iterative methods, such as gradient descent or Newton's method: [see this page for more details](glm_exponential_dispersion.html).
 
 Fin.
