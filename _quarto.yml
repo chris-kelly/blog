@@ -1,7 +1,8 @@
 project:
   type: website
   output-dir: docs
-
+filters:
+   - include-code-files
 website:
   title: "Sciencing the data"
   navbar:
