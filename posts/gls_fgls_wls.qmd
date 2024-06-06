@@ -1,5 +1,5 @@
 ---
-title: "OLS: violating linearity"
+title: "Generalized Least Squares"
 author: "Chris Kelly"
 date: '02-21-24'
 categories: []
@@ -10,6 +10,364 @@ format:
 draft: true
 ---
 
-* Mis-specification
-* Omitted relevant variable bias
-* Looking for patterns in the residuals
+::: {.callout-tip}
+### What are we exploring?
+Applying a weight matrix to correct for non-homoskedastic error variance can be more efficient than OLS with sandwich errors. This is a common approach in econometrics and is known as Generalized Least Squares (GLS).
+:::
+
+## Introduction
+
+As seen when exploring [sandwich estimators](ols_sandwich_estimators.html), the assumption of homoskedasticity is often violated in real-world data. This can lead to inefficient estimates and incorrect inference too. 
+
+Sandwich estimators correct for the variance by adjusting the standard error after OLS estimation. However, another approach is to correct for the variance before estimation by applying a weight matrix to the data before fitting. This is known as Generalized Least Squares (GLS). Weighted least squares (WLS) is a special case of GLS.
+
+## The Motivation
+
+First - let’s state that:
+
+* $E(\epsilon|X)=0$
+* $V(\epsilon \epsilon^{\intercal}|X)=\sigma^2\underset{n \times n}{\Omega}$
+
+This means that although the assumption of endogeneity is not violated, the assumption of homoskedasticity is. And more specifically, that the variance of the error term can be decomposed between into the constant variance $\sigma^2$ and a covariance matrix $\Omega$.
+
+Now according to Cholesky decomposition, if $\Omega$ is symmetric positive definite, then there exists a lower triangular matrix $\mathrm{P}$ such that:
+
+$$
+\displaylines{
+\Omega=(\mathrm{P}^{\intercal}\mathrm{P})^{-1} = \mathrm{P}^{-1}(\mathrm{P}^{\intercal})^{-1} \\
+\therefore \mathrm{P} \Omega \mathrm{P}^{\intercal} = I
+}
+$$
+
+So, if we transform all variables by $\mathrm{P}$:
+
+* We get the following form: $\mathrm{P} y = \mathrm{P} X\beta + \mathrm{P} \epsilon$
+* Then the expected error is still zero (i.e. consistency): $E[\mathrm{P} \epsilon] = \mathrm{P} E[\epsilon] = 0$
+* But the variance is now homoskedastic: $V[\mathrm{P} \epsilon] = \mathrm{P} V[\epsilon] \mathrm{P}^{\intercal} = \sigma^2 \mathrm{P} \Omega \mathrm{P}^{\intercal} = \sigma^2 I$
+
+:::{.column-margin}
+It might be apparent now that Weighted Least Squares (WLS) is a special case of GLS, where $\mathrm{P}$ is an error covariance matrix has zero off-digonal elements. 
+:::
+
+This is the motivation behind GLS. We can transform the data by $\mathrm{P}$ to make the error variance homoskedastic, and then apply OLS to the transformed data.
+
+In fact, we can use this to jump straight to the solution for the GLS estimator!
+$$
+\displaylines{
+\beta_{GLS} = 
+[(\mathrm{P} X)^{\intercal}(\mathrm{P} X)]^{-1}[(\mathrm{P} X)^{\intercal}(\mathrm{P} y)] \\
+= 
+[X^{\intercal}\mathrm{P}^{\intercal}\mathrm{P} X]^{-1}
+[X^{\intercal}(\mathrm{P}^{\intercal}\mathrm{P} y)] \\
+= [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}(\Omega^{-1} y)
+}
+$$
+
+However, this isn't feasible unless we know what $\mathrm{P}$ is! We usually have to estimate this.
+
+### Feasible Generalized Least Squares
+
+The feasible GLS estimator is a two-step process:
+
+* Run a normal OLS regression. Estimate the error covariance matrix, $\Omega$, using the residuals from the OLS regression.
+* Estimate $\mathrm{P}$ using the Cholesky decomposition of $\Omega$, and transform $y$ and $X$ by $\mathrm{P}$
+
+Whilst GLS is more efficient, FGLS is only *asymptotically* more efficient, where the error covariance matrix is consistently estimated. In fact, for a small sample size, FGLS can be actually less efficient than OLS - and often it is even biased! It is only for large samples that FGLS would be preferred, as it is consistent. 
+
+Thus some authors prefer OLS, and use a sandwich estimator instead. Finally - its worth noting that we can still apply the sandwich estimator to the FGLS coefficients as well.
+
+## Coding it up from scratch
+
+We can inherit from the OLS class, as this does a lot of the leg work! We need to make two changes though:
+* Add an extra method to estimate the covariance matrix and apply the Cholesky decomposition. 
+* Change the `_estimate_ls_coefs` method to utilise this covariance matrix.
+
+OLS class.
+Error covariance estimation class.
+Sandwich error class (uses error covariance class)
+GLS (uses OLS class and error covariance class)
+
+
+```{python}
+import numpy as np, pandas as pd
+from typing import Optional, Tuple
+from scipy.linalg import qr, solve_triangular
+from scipy.stats import norm, t
+
+class OLS:
+
+    def _convert_types(self, z) -> np.ndarray:
+        """ Re-shape and convert y to numpy array to work nicely with rest of functions """
+        if type(z) in [pd.DataFrame, pd.Series]:
+            z2 = z.to_numpy()
+        if type(z) == list:
+            z2 = np.array(z)
+        if type(z) == np.ndarray:
+            z2 = z
+        else:
+            raise TypeError('Array must be a pandas series/dataframe, numpy array or list')
+        return z2
+             
+    def _get_y(self, y: Optional = None) -> np.ndarray:
+        """Re-shape and convert y to numpy array to work nicely with rest of functions"""
+        if y is None:
+            y = self.y
+        return self._convert_types(y).reshape(-1)
+
+    def _get_X(self, X: Optional = None) -> Tuple[np.ndarray, np.ndarray]:
+        """Re-shape and convert X to numpy array to work nicely with rest of functions
+        Also return names for summarising in coefficient table"""
+        if X is None:
+            X = self.X
+        X2 = self._convert_types(X)
+        if type(X) == pd.DataFrame:
+            exog_names = np.array(X.columns)
+        elif type(X) == pd.Series:
+            exog_names = np.array(['Unamed Exog Feature'])
+        else:
+            exog_names = np.arange(X2.shape[1])
+        X2 = X2.reshape(-1,len(exog_names))
+        return (X2, exog_names)
+        
+    def __init__(
+        self, 
+        y: Optional[np.ndarray] = None, 
+        X: Optional[np.ndarray] = None
+        ) -> None:
+        """Initializes the OLS class to run an least-squares regression"""
+        if y is not None:
+            self.y = self._get_y(y)
+            self.n = len(self.y)
+        if X is not None:
+            self.X, self.exog_names = self._get_X(X)
+            self.k = self.X.shape[1]
+        if y is not None and X is not None and len(self.y) != self.X.shape[0]:
+            raise ValueError("y and X must be the same size.")
+        self.beta, self.RSS, self.beta_se, self.conf_int, self.test_stat, self.p_val = None, None, None, None, None, None
+
+    def _quick_matrix_invert(self, X: np.ndarray) -> np.ndarray:
+        """ Find the inverse of a matrix, using QR factorization """
+        Q, R = qr(X)
+        X_inv = solve_triangular(R, np.identity(X.shape[1])).dot(Q.transpose())
+        return X_inv
+
+    def _check_if_fitted(self):
+        """Quick helper function that raises an error if the model has not been fitted already"""
+        if self.beta is None:
+            raise ValueError('Need to fit the model first - run fit()')
+        else:
+            return True
+
+    def _estimate_ols_coefs(
+        self,
+        y: Optional[np.ndarray] = None,
+        X: Optional[np.ndarray] = None
+    ):
+        """Estimates the OLS coefficients given a vector y and matrix X"""
+        XTX = X.T.dot(X)
+        XTY = X.T.dot(y)
+        XTX_inv = self._quick_matrix_invert(XTX)
+        coefs = XTX_inv.dot(XTY)
+        return coefs, XTX_inv
+
+    def fit(
+        self,
+        y: Optional[np.ndarray] = None,
+        X: Optional[np.ndarray] = None,
+    ):
+        """Estimates the OLS coefficients given a vector y and matrix X"""
+        # Import data
+        y = self._get_y(y)
+        X, exog_names = self._get_X(X)
+        if y is None or X is None:
+            raise ValueError('X and y is required for fitting')
+        if len(y) != X.shape[0]:
+            raise ValueError("y and X must be the same size.")
+        # Store some metadata
+        self.y, self.X, self.exog_names = y, X, exog_names
+        self.n, self.k = X.shape
+        self.DoF = self.n - self.k
+        self.beta, self.var_X_inv = self._estimate_ols_coefs(y,X)
+
+    def _assess_fit(
+        self,
+        y: Optional[np.ndarray] = None,
+        X: Optional[np.ndarray] = None,
+    ) -> float:
+        """Returns the unadjusted R^2"""
+        self._check_if_fitted()
+        if (y is None and X is not None) or (y is not None and X is None):
+            raise ValueError('Need to either provide both X and y, (or provide neither and R^2 is based on the X and y used for fitting)')
+        else:
+            y, (X, exog_names) = self._get_y(y), self._get_X(X)
+        y_hat = self.predict(self.X)
+        residuals = (y - y_hat).reshape(-1, 1)
+        RSS = residuals.T.dot(residuals)
+        TSS = (y - y.mean()).T.dot(y - y.mean())
+        unadj_r_squared = 1 - RSS/TSS
+        
+        if (y == self.y).all() and (X == self.X).all():
+            self.residuals = residuals
+            self.RSS = RSS
+            self.TSS = TSS
+            self.unadj_r_squared = unadj_r_squared
+        return unadj_r_squared
+
+    def _standard_error(self,) -> np.ndarray:
+        """Returns the standard errors for the coefficients from the fitted model"""
+        if self.RSS is None:
+            self._check_if_fitted()
+            self._assess_fit()
+        sigma_sq = self.RSS / float(self.DoF) * np.identity(len(self.beta))
+        var_b = sigma_sq.dot(self.var_X_inv)
+        self.beta_se = np.sqrt(np.diag(var_b))
+        return self.beta_se
+
+    def _confidence_intervals(self, size = 0.95):
+        """Returns the confidence intervals for the coefficients from the fitted model"""
+        if self.beta_se is None:
+            self._check_if_fitted()
+            self._standard_error()
+        alpha = 1-(1-size)/2
+        self.conf_int = np.array([
+            self.beta - t.ppf(alpha, self.DoF) * self.beta_se,
+            self.beta + t.ppf(alpha, self.DoF) * self.beta_se
+        ])
+        return self.conf_int
+
+    def _test_statistic(self) -> np.ndarray:
+        """Returns the test statistics for the coefficients from the fitted model"""
+        if self.conf_int is None:
+            self._check_if_fitted()
+            self.conf_int = self._confidence_intervals()
+        self.test_stat = self.beta.flatten() / self.beta_se
+        return self.test_stat
+
+    def _p_value(self, z_dist: bool = False) -> np.ndarray:
+        """Returns the p-values for the coefficients from the fitted model."""
+        if self.test_stat is None:
+            self._check_if_fitted()
+            self.test_stat = self._test_statistic()
+        if z_dist:
+            self.p_val = [norm.cdf(-abs(z)) + 1 - norm.cdf(abs(z)) for z in self.test_stat]
+        else:
+            self.p_val = [2 * t.sf(abs(x), self.DoF) for x in self.test_stat]
+        return self.p_val    
+
+    def predict(
+        self,
+        X: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        """Predict values for y. Returns fitted values if X not provided."""
+        self._check_if_fitted()
+        X2, exog_names = self._get_X(X)
+        y_hat = X2.dot(self.beta)
+        if X is None:
+            self.y_hat = y_hat
+        return y_hat
+
+    def summary(self, z_dist: bool = False) -> pd.DataFrame:
+        """Returns the coefficients, standard errors, test statistics and p-values in a Pandas DataFrame."""
+        if self.p_val is None:
+            self._check_if_fitted()
+            self._p_value(z_dist)
+        summary = pd.DataFrame(
+            data={
+                'Coefficient': self.beta.flatten(),
+                'Standard Error': self.beta_se,
+                'Lower bound': self.conf_int[0],
+                'Upper bound': self.conf_int[1],
+                'test-statistic': self.test_stat,
+                'p-value': self.p_val,
+            },
+            index=self.exog_names,
+        )
+        return summary
+```
+
+```{python}
+class LS(OLS):
+    
+    def __init__(
+        self, 
+        y: Optional[np.ndarray] = None, 
+        X: Optional[np.ndarray] = None,
+        Omega: Optional[np.ndarray] = None
+        ) -> None:
+        """Initializes the LS class to run an least-squares regression"""
+        super().__init__(y, X)
+        self.Omega = Omega
+        self.P = None
+
+    def _estimate_cov_matrix(self):
+        """Estimates the covariance matrix of the error term"""
+        if self.Omega is None:
+            self.beta, self.var_X_inv = self._estimate_ols_coefs(self.y, self.X)
+            residuals = self.y - self.predict(self.X)
+            self.Omega = residuals.T.dot(residuals) / self.n
+        return self.Omega
+
+    def _estimate_P(self):
+        """Estimates the Cholesky decomposition of the covariance matrix"""
+        if self.Omega is None:
+            self.Omega = self._estimate_cov_matrix()
+        print(self.Omega)
+        self.P = np.linalg.cholesky(self.Omega)
+        return self.P
+
+    def _estimate_gls_coefs(
+        self,
+        y: Optional[np.ndarray] = None,
+        X: Optional[np.ndarray] = None,
+    ):
+        """Estimates the GLS coefficients given a vector y and matrix X"""
+        P = self._estimate_P()
+        print(P)
+        XP = X.dot(self.P)
+        Py = self.P.dot(y)
+        self.beta, self.var_X_inv = self._estimate_ols_coefs(Py,XP)
+    
+    def fit(
+        self,
+        y: Optional[np.ndarray] = None,
+        X: Optional[np.ndarray] = None,
+        Omega: Optional[np.ndarray] = None,
+        run_fgls = False,
+    ):
+        y = self._get_y(y)
+        X, exog_names = self._get_X(X)
+        if y is None or X is None:
+            raise ValueError('X and y is required for fitting')
+        if len(y) != X.shape[0]:
+            raise ValueError("y and X must be the same size.")
+        self.y, self.X, self.exog_names = y, X, exog_names
+        self.n, self.k = X.shape
+        self.DoF = self.n - self.k
+        if Omega is not None:
+            self.Omega = Omega
+        if run_fgls or self.Omega is not None:
+            self.beta, self.var_X_inv = self._estimate_gls_coefs(y,X)
+        else:
+            self.beta, self.var_X_inv = self._estimate_ols_coefs(y,X)
+
+```
+
+```{python}
+np.random.seed(42)
+n, k = 200, 2
+sigma_sq = 1
+beta = np.random.normal(size=(k,1))
+X = np.hstack([ 
+  np.ones(n).reshape(n,1),
+  np.random.normal(size=(n,k-1)) 
+  ])
+y = X.dot(beta) + np.random.normal(loc=0,scale=sigma_sq,size=(n,1))
+model = LS(y,X)
+model.fit()
+model.summary()
+```
+
+```{python}
+model.fit(run_fgls=True)
+model.summary()
+```
