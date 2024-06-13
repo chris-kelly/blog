@@ -15,7 +15,7 @@ format:
     other-links:
       - text: OLS coefficient derivation
         href: ols_coef_derivation.html
-      - text: Dealing with non-spherical errors
+      - text: Correcting SE for non-spherical errors
         href: ols_sandwich_estimators.html
 image: '../images/ols_blue.png'
 ---
@@ -258,7 +258,7 @@ V[\hat{\beta}^{Z}]
 }
 $$
 
-Now since AA is surely a positive semi-definite matrix, then we know that $V[\hat{\beta}^{Z}] > V[\hat{\beta}^{OLS}]$.
+Now since $AA^{\intercal}$ is surely a positive semi-definite matrix, then we know that $V[\hat{\beta}^{Z}] \ge V[\hat{\beta}^{OLS}]$.
 
 We have shown that $\hat{\beta}^{OLS}$ has the smallest variance among all unbiased estimators!
 
@@ -329,7 +329,7 @@ for i in range(bootstraps):
         CI_1[i] = 1
 ```
 
-By plotting a histogram of the estimated coefficients, we see that the estimated OLS coefficients center around the true coefficient, so empirically the standard errors appear correctly specified:
+By plotting a histogram of the estimated coefficients, we see that the estimated OLS coefficients center around the true coefficient, so empirically the coefficient appears unbiased:
 
 ```{python}
 import plotly.graph_objects as go
@@ -373,7 +373,7 @@ fig.update_traces(opacity=0.75)
 fig.show()
 ```
 
-Further, we see that the true coefficient falls within the confidence interval 95% of the time, so the coefficient is efficient:
+Further, we see that the true coefficient falls within the confidence interval 95% of the time, so empirically the standard errors appear correctly specified:
 
 ```{python}
 
