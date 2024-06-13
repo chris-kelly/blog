@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chris Kelly">
-<meta name="dcterms.date" content="2024-02-21">
+<meta name="dcterms.date" content="2024-06-11">
 
 <title>Sciencing the data - Generalized Least Squares</title>
 <style>
@@ -202,7 +202,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 21, 2024</p>
+        <p class="date">June 11, 2024</p>
       </div>
     </div>
     
@@ -220,10 +220,12 @@ window.Quarto = {
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
   <li><a href="#the-motivation" id="toc-the-motivation" class="nav-link" data-scroll-target="#the-motivation">The Motivation</a></li>
+  <li><a href="#checking-the-estimator-is-unbiased-and-more-efficient" id="toc-checking-the-estimator-is-unbiased-and-more-efficient" class="nav-link" data-scroll-target="#checking-the-estimator-is-unbiased-and-more-efficient">Checking the estimator is unbiased and more efficient</a></li>
   <li><a href="#feasible-generalized-least-squares" id="toc-feasible-generalized-least-squares" class="nav-link" data-scroll-target="#feasible-generalized-least-squares">Feasible Generalized Least Squares</a></li>
+  <li><a href="#final-notes" id="toc-final-notes" class="nav-link" data-scroll-target="#final-notes">Final notes</a></li>
   <li><a href="#coding-it-up-from-scratch" id="toc-coding-it-up-from-scratch" class="nav-link" data-scroll-target="#coding-it-up-from-scratch">Coding it up from scratch</a></li>
   </ul>
-<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="../src/ols_blue.py"><i class="bi bi-file-code"></i>OLS class</a></li><li><a href="../src/ols_sandwich_estimators.py"><i class="bi bi-file-code"></i>Sandwich class</a></li><li><a href="../src/gls_fgls_wls.py"><i class="bi bi-file-code"></i>GLS class</a></li></ul></div></nav>
+<div class="quarto-other-links"><h2>Other Links</h2><ul><li><a href="ols_sandwich_estimators.html"><i class="bi bi-link-45deg"></i>Correcting SE for non-spherical errors</a></li></ul></div><div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="../src/ols_blue.py"><i class="bi bi-file-code"></i>OLS class</a></li><li><a href="../src/ols_sandwich_estimators.py"><i class="bi bi-file-code"></i>Sandwich class</a></li><li><a href="../src/gls_fgls_wls.py"><i class="bi bi-file-code"></i>GLS class</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
@@ -248,7 +250,7 @@ What are we exploring?
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>As seen when exploring <a href="ols_sandwich_estimators.html">sandwich estimators</a>, the assumption of homoskedasticity is often violated in real-world data. This can lead to inefficient estimates and incorrect inference too.</p>
-<p>Sandwich estimators correct for the variance by adjusting the standard error after OLS estimation. However, another approach is to correct for the variance before estimation by applying a weight matrix to the data before fitting. This is known as Generalized Least Squares (GLS). Weighted least squares (WLS) is a special case of GLS.</p>
+<p>Sandwich estimators correct for the variance by adjusting the standard error <em>after</em> OLS coefficient estimation. However, another approach is to correct for the variance <em>before</em> estimation - by first applying a weight matrix to the data before fitting. This is known as Generalized Least Squares (GLS). In fact, weighted least squares (WLS) is a special case of GLS.</p>
 </section>
 <section id="the-motivation" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="the-motivation">The Motivation</h2>
@@ -275,27 +277,108 @@ What are we exploring?
 <div class="no-row-height column-margin column-container"><div class="">
 <p>It might be apparent now that Weighted Least Squares (WLS) is a special case of GLS, where <span class="math inline">\(\mathrm{P}\)</span> is an error covariance matrix has zero off-digonal elements.</p>
 </div></div><p>This is the motivation behind GLS. We can transform the data by <span class="math inline">\(\mathrm{P}\)</span> to make the error variance homoskedastic, and then apply OLS to the transformed data.</p>
-<p>In fact, we can use this to jump straight to the solution for the GLS estimator! <span class="math display">\[
+</section>
+<section id="checking-the-estimator-is-unbiased-and-more-efficient" class="level2">
+<h2 class="anchored" data-anchor-id="checking-the-estimator-is-unbiased-and-more-efficient">Checking the estimator is unbiased and more efficient</h2>
+<p>From the above, we can use this to jump straight to the solution for the GLS estimator! <span class="math display">\[
 \displaylines{
-\beta_{GLS} =
+\hat{\beta}_{GLS} =
 [(\mathrm{P} X)^{\intercal}(\mathrm{P} X)]^{-1}[(\mathrm{P} X)^{\intercal}(\mathrm{P} y)] \\
 =
 [X^{\intercal}\mathrm{P}^{\intercal}\mathrm{P} X]^{-1}
-[X^{\intercal}(\mathrm{P}^{\intercal}\mathrm{P} y)] \\
-= [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}(\Omega^{-1} y)
+[X^{\intercal}\mathrm{P}^{\intercal}\mathrm{P} y] \\
+= [X^{\intercal}\Omega^{-1} X]^{-1}[X^{\intercal}\Omega^{-1} y]
 }
 \]</span></p>
-<p>However, this isn’t feasible unless we know what <span class="math inline">\(\mathrm{P}\)</span> is! We usually have to estimate this.</p>
+<p>We can confirm this is unbiased: <span class="math display">\[
+\displaylines{
+\begin{align}
+\hat{\beta}_{GLS} &amp; = [X^{\intercal}\Omega^{-1} X]^{-1}[X^{\intercal}\Omega^{-1} y]
+\\ &amp; = [X^{\intercal}\Omega^{-1} X]^{-1}\left[X^{\intercal}\Omega^{-1}(X\beta+\epsilon)\right]
+\\ &amp; = \left([X^{\intercal}\Omega^{-1} X]^{-1}\left[X^{\intercal}\Omega^{-1}X\right]\right)\beta + \left([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\right)\epsilon
+\\ &amp; = \cancel{\left([X^{\intercal}\Omega^{-1} X]^{-1}\left[X^{\intercal}\Omega^{-1}X\right]\right)}\beta + \left([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\right)\epsilon
+\\ &amp; = \beta + [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon
+\\ \\
+\therefore
+\mathbb{E}[\hat{\beta}_{GLS}|X] &amp; = \mathbb{E} \left[
+    \left(\beta + [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon\right)
+|X\right]
+\\ &amp; = \beta + \mathbb{E} \left[
+    \left([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon\right)
+| X\right]
+\\ &amp; \equiv \beta + [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1} \mathbb{E} \left[
+    \epsilon
+| X\right]
+\\ &amp; = \beta &amp; \iff \mathbb{E}[\epsilon|X] = 0
+\end{align}
+}
+\]</span></p>
+<p>We now show that the GLS estimator is more efficient than OLS. Firstly, we derive the variance of the GLS coefficient:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\mathbb{V}[\hat{\beta}_{GLS}] &amp; =
+\mathbb{E}[(\hat{\beta}_{GLS}-\beta)(\hat{\beta}_{GLS}-\beta)^{\intercal}]
+\\ &amp; = \mathbb{E}[
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon)
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon)^{\intercal}
+]
+\\ &amp; \equiv \mathbb{E}[
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1})\epsilon \epsilon^{\intercal}
+    (\Omega^{-1} X [X^{\intercal}\Omega^{-1} X]^{-1})
+]
+\\ &amp; =
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1})
+    \underbrace{\mathbb{E}[\epsilon \epsilon^{\intercal}]}_{\text{meat} = \sigma^2\Omega}
+    (\Omega^{-1} X [X^{\intercal}\Omega^{-1} X]^{-1})
+\\ &amp; =
+    \sigma^2[X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}
+    \cancel{\Omega} \cancel{\Omega^{-1}} X [X^{\intercal}\Omega^{-1} X]^{-1}
+\\ &amp; =
+    \sigma^2\cancel{[X^{\intercal}\Omega^{-1} X]^{-1}}\cancel{X^{\intercal}\Omega^{-1} X}
+    [X^{\intercal}\Omega^{-1} X]^{-1}
+\\ &amp; = \sigma^2[X^{\intercal}\Omega^{-1} X]^{-1}
+\end{align}
+}
+\]</span></p>
+<p>So we can now compare that to the variance of the usual OLS estimator:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\mathbb{V}[\hat{\beta}_{OLS}] &amp; =
+(X^{\intercal}X)^{-1}X^{\intercal}
+\underbrace{E[\epsilon\epsilon^{\intercal}]}_{\text{meat} = \sigma^2\Omega}
+X(X^{\intercal}X)^{-1}
+\\ &amp; = \sigma^2(X^{\intercal}X)^{-1}X^{\intercal} \Omega X(X^{\intercal}X)^{-1}
+\\ \\
+\therefore
+\mathbb{V}[\hat{\beta}_{OLS}] - \mathbb{V}[\hat{\beta}_{GLS}] &amp; =
+\sigma^2 \left[
+    (X^{\intercal}X)^{-1}X^{\intercal} \Omega X(X^{\intercal}X)^{-1} -
+    [X^{\intercal}\Omega^{-1} X]^{-1}
+\right] \\
+&amp; = \sigma^2 \left[ A \Omega A^{\intercal} \right] &gt; 0
+\\ \\
+\text{where } A &amp; = (X^′X)^{−1}X^′− (X^′\Omega^{−1}X)^{-1} X^′\Omega^{−1}
+\end{align}
+}
+\]</span></p>
+<p>And since <span class="math inline">\(\Omega\)</span> is Positive Semi Definite, then <span class="math inline">\(A \Omega A^{\intercal}\)</span> is also PSD, so the GLS estimator is more efficient than the OLS estimator. For the proof of the last step, see the footnotes<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<p>However, this isn’t feasible unless we know what <span class="math inline">\(\Omega\)</span> is! We usually have to estimate this.</p>
 </section>
 <section id="feasible-generalized-least-squares" class="level2">
 <h2 class="anchored" data-anchor-id="feasible-generalized-least-squares">Feasible Generalized Least Squares</h2>
 <p>The feasible GLS estimator is a two-step process:</p>
-<ul>
-<li>Run a normal OLS regression. Estimate the error covariance matrix, <span class="math inline">\(\Omega\)</span>, using the residuals from the OLS regression.</li>
-<li>Estimate <span class="math inline">\(\mathrm{P}\)</span> using the Cholesky decomposition of <span class="math inline">\(\Omega\)</span>, and transform <span class="math inline">\(y\)</span> and <span class="math inline">\(X\)</span> by <span class="math inline">\(\mathrm{P}\)</span></li>
-</ul>
-<p>Whilst GLS is more efficient, FGLS is&nbsp;only <em>asymptotically</em>&nbsp;more efficient, where the error covariance matrix is consistently estimated. In fact, for a small sample size, FGLS can be actually less efficient than OLS - and often it is even biased! It is only for large samples that FGLS would be preferred, as it is consistent.</p>
-<p>Thus some authors prefer OLS, and use a sandwich estimator instead. Finally - its worth noting that we can still apply the sandwich estimator to the FGLS coefficients as well.</p>
+<ol type="1">
+<li>Run a normal OLS regression, <span class="math inline">\(y \sim X\hat{\beta} + \hat{\epsilon}\)</span>. Now derive an error covariance matrix using the squared residuals from this OLS regression, <span class="math inline">\(\hat{\Omega} \sim \mathrm{V}[\hat{\epsilon}]\)</span>, .</li>
+<li>Estimate <span class="math inline">\(\mathrm{P}\)</span> using the Cholesky decomposition of <span class="math inline">\(\Omega\)</span>, and transform <span class="math inline">\(y\)</span> and <span class="math inline">\(X\)</span> by <span class="math inline">\(\mathrm{P}\)</span>. Then estimate another OLS model on the transformed data: <span class="math inline">\(\mathrm{P}y \sim [\mathrm{P}X]\beta' + \mathrm{P}\epsilon\)</span></li>
+</ol>
+<p>Whilst GLS is more efficient, FGLS is&nbsp;only <em>asymptotically</em>&nbsp;more efficient - when the error covariance matrix is consistently estimated. In fact, for a small sample size, FGLS can be actually less efficient than OLS - and often it is even biased! It is only for large samples that FGLS would be preferred, as it is consistent.</p>
+<p>Thus some authors prefer OLS, and use a sandwich estimator instead. Finally - its worth noting that we can still apply sandwich estimator to FGLS coefficients as well!</p>
+</section>
+<section id="final-notes" class="level2">
+<h2 class="anchored" data-anchor-id="final-notes">Final notes</h2>
+<p>It is worth noting here that the random effects econometric model is a special case of GLS. The random effects model is a panel data model that assumes that the unobserved heterogeneity within groups is both constant and uncorrelated with the other predictors. is a special case of GLS.</p>
 </section>
 <section id="coding-it-up-from-scratch" class="level2">
 <h2 class="anchored" data-anchor-id="coding-it-up-from-scratch">Coding it up from scratch</h2>
@@ -512,10 +595,10 @@ Sandwich class (source code):
 <li>Uses the error covariance estimation methods from the sandwich class to estimate <span class="math inline">\(\Omega\)</span></li>
 <li>Uses the OLS class functionality to estimate the coefficients (and then other methods from OLS and sandwich for the standard errors etc)</li>
 </ul>
-<div id="e3608ef1" class="cell" data-execution_count="2">
+<div id="1e63d9d0" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LS(sandwich):</span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LS(ols_sandwich):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>, </span>
@@ -581,31 +664,46 @@ Sandwich class (source code):
 <span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.beta, <span class="va">self</span>.var_X_inv <span class="op">=</span> <span class="va">self</span>._estimate_gls_coefs(y,X,<span class="va">self</span>.omega)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Let’s now compare it to statsmodels:</p>
-<div id="827da0f9" class="cell" data-execution_count="3">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>n, k <span class="op">=</span> <span class="dv">200</span>, <span class="dv">2</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>sigma_sq <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>beta <span class="op">=</span> np.random.normal(size<span class="op">=</span>(k,<span class="dv">1</span>))</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> np.hstack([ </span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  np.ones(n).reshape(n,<span class="dv">1</span>),</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  np.random.normal(size<span class="op">=</span>(n,k<span class="op">-</span><span class="dv">1</span>)) </span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  ])</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> X.dot(beta) <span class="op">+</span> np.random.normal(loc<span class="op">=</span><span class="dv">0</span>,scale<span class="op">=</span>sigma_sq,size<span class="op">=</span>(n,<span class="dv">1</span>))</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>cl <span class="op">=</span> np.repeat(np.arange(<span class="dv">10</span>), n<span class="op">/</span><span class="dv">10</span>)</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LS(y,X)</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>model.fit()</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="57">
+<!-- Let's now compare it to statsmodels:
+
+::: {#b5dca832 .cell execution_count=3}
+``` {.python .cell-code}
+np.random.seed(42)
+n, k = 200, 2
+sigma_sq = 1
+beta = np.random.normal(size=(k,1))
+X = np.hstack([ 
+  np.ones(n).reshape(n,1),
+  np.random.normal(size=(n,k-1)) 
+  ])
+y = X.dot(beta) + np.random.normal(loc=0,scale=sigma_sq,size=(n,1))
+cl = np.repeat(np.arange(10), n/10)
+model = LS(y,X)
+model.fit()
+model.summary()
+```
+
+::: {.cell-output .cell-output-display execution_count=3}
+
+```{=html}
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe" data-quarto-postprocess="true" data-border="1">
 <thead>
-<tr class="header">
+<tr class="header" style="text-align: right;">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">Coefficient</th>
 <th data-quarto-table-cell-role="th">Standard Error</th>
@@ -636,23 +734,25 @@ Sandwich class (source code):
 </tr>
 </tbody>
 </table>
-
 </div>
-</div>
-</div>
-<div id="ebc36cd1" class="cell" data-execution_count="4">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>model.fit(omega<span class="op">=</span>np.diagflat(np.arange(<span class="dv">1</span>,n<span class="op">+</span><span class="dv">1</span>)))</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="58">
+``` ::: ::: ::: {#8fe1b202 .cell execution_count=4} ``` {.python .cell-code} model.fit(omega=np.diagflat(np.arange(1,n+1))) model.summary() ``` ::: {.cell-output .cell-output-display execution_count=4} ```{=html}
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="dataframe" data-quarto-postprocess="true" data-border="1">
 <thead>
-<tr class="header">
+<tr class="header" style="text-align: right;">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">Coefficient</th>
 <th data-quarto-table-cell-role="th">Standard Error</th>
@@ -683,24 +783,25 @@ Sandwich class (source code):
 </tr>
 </tbody>
 </table>
-
 </div>
-</div>
-</div>
-<div id="e32487ca" class="cell" data-execution_count="5">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>model.omega <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>model.fit(fgls<span class="op">=</span><span class="st">'homoskedastic'</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="59">
+``` ::: ::: ::: {#54826522 .cell execution_count=5} ``` {.python .cell-code} model.omega = None model.fit(fgls='homoskedastic') model.summary() ``` ::: {.cell-output .cell-output-display execution_count=5} ```{=html}
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="dataframe" data-quarto-postprocess="true" data-border="1">
 <thead>
-<tr class="header">
+<tr class="header" style="text-align: right;">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">Coefficient</th>
 <th data-quarto-table-cell-role="th">Standard Error</th>
@@ -731,24 +832,25 @@ Sandwich class (source code):
 </tr>
 </tbody>
 </table>
-
 </div>
-</div>
-</div>
-<div id="e1bfb5bc" class="cell" data-execution_count="6">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>model.omega <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>model.fit(fgls<span class="op">=</span><span class="st">'heteroskedastic'</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="60">
+``` ::: ::: ::: {#fa852b81 .cell execution_count=6} ``` {.python .cell-code} model.omega = None model.fit(fgls='heteroskedastic') model.summary() ``` ::: {.cell-output .cell-output-display execution_count=6} ```{=html}
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="dataframe" data-quarto-postprocess="true" data-border="1">
 <thead>
-<tr class="header">
+<tr class="header" style="text-align: right;">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">Coefficient</th>
 <th data-quarto-table-cell-role="th">Standard Error</th>
@@ -779,30 +881,25 @@ Sandwich class (source code):
 </tr>
 </tbody>
 </table>
-
 </div>
-</div>
-</div>
-<div id="90f49bba" class="cell" data-execution_count="7">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>model.omega <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>model.fit(fgls<span class="op">=</span>cl)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stderr">
-<pre><code>/Users/Chris/dev/blog-1/src/ols_blue.py:135: RuntimeWarning:
-
-invalid value encountered in sqrt
-</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="61">
+``` ::: ::: ::: {#9d60b3a0 .cell execution_count=7} ``` {.python .cell-code} model.omega = None model.fit(fgls=cl) model.summary() ``` ::: {.cell-output .cell-output-display execution_count=7} ```{=html}
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
 
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="dataframe" data-quarto-postprocess="true" data-border="1">
 <thead>
-<tr class="header">
+<tr class="header" style="text-align: right;">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">Coefficient</th>
 <th data-quarto-table-cell-role="th">Standard Error</th>
@@ -816,60 +913,101 @@ invalid value encountered in sqrt
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
 <td>0.570588</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>9.614774e-11</td>
+<td>0.570588</td>
+<td>0.570588</td>
+<td>5.934489e+09</td>
+<td>0.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
 <td>-0.044316</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>1.312602e-10</td>
+<td>-0.044316</td>
+<td>-0.044316</td>
+<td>-3.376160e+08</td>
+<td>0.0</td>
 </tr>
 </tbody>
 </table>
+</div>
 
 </div>
-</div>
-</div>
-<div id="6ac03db7" class="cell" data-execution_count="8">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>model.omega</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="62">
-<pre><code>array([[ 0.89932625,  0.79360054, -1.3556773 , ...,  0.        ,
+```
+
+:::
+:::
+
+
+::: {#e81da23d .cell execution_count=8}
+``` {.python .cell-code}
+model.omega
+```
+
+::: {.cell-output .cell-output-display execution_count=8}
+```
+array([[ 1.00429811,  0.88623181, -1.51391572, ...,  0.        ,
          0.        ,  0.        ],
-       [ 0.79360054,  0.70030406, -1.1963025 , ...,  0.        ,
+       [ 0.88623181,  0.7820455 , -1.33593826, ...,  0.        ,
          0.        ,  0.        ],
-       [-1.3556773 , -1.1963025 ,  2.04359757, ...,  0.        ,
+       [-1.51391572, -1.33593826,  2.28213197, ...,  0.        ,
          0.        ,  0.        ],
        ...,
-       [ 0.        ,  0.        ,  0.        , ...,  1.61626309,
-        -2.1636842 , -0.92289636],
-       [ 0.        ,  0.        ,  0.        , ..., -2.1636842 ,
-         2.89651438,  1.23547724],
-       [ 0.        ,  0.        ,  0.        , ..., -0.92289636,
-         1.23547724,  0.52697961]])</code></pre>
-</div>
-</div>
-<div id="15c327be" class="cell" data-execution_count="9">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm </span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> sm.GLS(y,X).fit()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
+       [ 0.        ,  0.        ,  0.        , ...,  1.80491782,
+        -2.41623544, -1.03061939],
+       [ 0.        ,  0.        ,  0.        , ..., -2.41623544,
+         3.2346036 ,  1.37968558],
+       [ 0.        ,  0.        ,  0.        , ..., -1.03061939,
+         1.37968558,  0.58849013]])
+```
+:::
+:::
+
+
+::: {#c1d215e9 .cell execution_count=9}
+``` {.python .cell-code}
+import statsmodels.api as sm 
+model = sm.GLS(y,X).fit()
+```
+:::
+
+
+-->
 
 
 </section>
 
-</main> <!-- /main -->
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>To show that GLS is more efficient than the OLS estimator, we show that we can rewrite the difference in the variance of the two estimators as a positive semi-definite matrix <span class="math inline">\(\sigma^2 \left[ A \Omega A^{\intercal} \right]\)</span>: <span class="math display">\[
+\displaylines{
+\begin{align}
+A &amp; =
+(X^{\intercal}X)^{−1}X^{\intercal}− (X^{\intercal}\Omega^{−1}X)^{-1} X^{\intercal}\Omega^{−1}
+\\
+\therefore A^{\intercal} &amp; = X(X^{\intercal}X)^{−1} − \Omega^{−1} X (X^{\intercal}\Omega^{−1}X)^{-1}
+&amp; \because \left[\Omega^{-1}\right]^{\intercal} = \Omega^{-1}
+\\ \\
+\Rightarrow A\Omega &amp; =
+(X^{\intercal}X)^{−1}X^{\intercal}\Omega − (X^{\intercal}\Omega^{−1}X)^{-1} X^{\intercal}
+\\ \\
+\Rightarrow A\Omega A^{\intercal}
+&amp; = (X^{\intercal}X)^{−1}X^{\intercal}\Omega X(X^{\intercal}X)^{−1} \\
+&amp; - (X^{\intercal}\Omega^{−1}X)^{-1} \underbrace{X^{\intercal} X(X^{\intercal}X)^{−1}}_{=I} \\
+&amp; - \underbrace{(X^{\intercal}X)^{−1}X^{\intercal}\Omega \Omega^{−1} X}_{=I} (X^{\intercal}\Omega^{−1}X)^{-1}  \\
+&amp; + (X^{\intercal}\Omega^{−1}X)^{-1}X^{\intercal} \underbrace{\Omega^{−1} X (X^{\intercal}\Omega^{−1}X)^{-1}}_{=I} \\
+\\
+\Rightarrow \sigma^2 \left[ A \Omega A^{\intercal} \right]
+&amp; =
+\underbrace{\sigma^2(X^{\intercal}X)^{−1}X^{\intercal}\Omega X(X^{\intercal}X)^{−1}}_{V[\beta^{OLS}]} - \underbrace{\sigma^2(X^{\intercal}\Omega^{−1}X)^{-1}}_{V[\beta^{GLS}]} \\
+&amp; \cancel{-\sigma^2(X^{\intercal}\Omega^{−1}X)^{-1}X^{\intercal} + \sigma^2(X^{\intercal}\Omega^{−1}X)^{-1}X^{\intercal}}
+\end{align}
+}
+\]</span><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

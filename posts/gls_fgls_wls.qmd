@@ -1,7 +1,7 @@
 ---
 title: "Generalized Least Squares"
 author: "Chris Kelly"
-date: '02-21-24'
+date: '06-11-24'
 image: '../images/gls_fgls_wls.jpeg'
 categories: [Linear Models, Generalized Least Squares]
 format:
@@ -18,7 +18,11 @@ format:
       - text: GLS class
         icon: file-code
         href: ../src/gls_fgls_wls.py
-draft: true
+    other-links:
+      - text: Correcting SE for non-spherical errors
+        href: ols_sandwich_estimators.html
+    
+
 ---
 
 ::: {.callout-tip}
@@ -30,7 +34,7 @@ Applying a weight matrix to correct for non-homoskedastic error variance can be 
 
 As seen when exploring [sandwich estimators](ols_sandwich_estimators.html), the assumption of homoskedasticity is often violated in real-world data. This can lead to inefficient estimates and incorrect inference too. 
 
-Sandwich estimators correct for the variance by adjusting the standard error after OLS estimation. However, another approach is to correct for the variance before estimation by applying a weight matrix to the data before fitting. This is known as Generalized Least Squares (GLS). Weighted least squares (WLS) is a special case of GLS.
+Sandwich estimators correct for the variance by adjusting the standard error *after* OLS coefficient estimation. However, another approach is to correct for the variance *before* estimation - by first applying a weight matrix to the data before fitting. This is known as Generalized Least Squares (GLS). In fact, weighted least squares (WLS) is a special case of GLS.
 
 ## The Motivation
 
@@ -62,30 +66,118 @@ It might be apparent now that Weighted Least Squares (WLS) is a special case of 
 
 This is the motivation behind GLS. We can transform the data by $\mathrm{P}$ to make the error variance homoskedastic, and then apply OLS to the transformed data.
 
-In fact, we can use this to jump straight to the solution for the GLS estimator!
+## Checking the estimator is unbiased and more efficient
+
+From the above, we can use this to jump straight to the solution for the GLS estimator!
 $$
 \displaylines{
-\beta_{GLS} = 
+\hat{\beta}_{GLS} = 
 [(\mathrm{P} X)^{\intercal}(\mathrm{P} X)]^{-1}[(\mathrm{P} X)^{\intercal}(\mathrm{P} y)] \\
 = 
 [X^{\intercal}\mathrm{P}^{\intercal}\mathrm{P} X]^{-1}
-[X^{\intercal}(\mathrm{P}^{\intercal}\mathrm{P} y)] \\
-= [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}(\Omega^{-1} y)
+[X^{\intercal}\mathrm{P}^{\intercal}\mathrm{P} y] \\
+= [X^{\intercal}\Omega^{-1} X]^{-1}[X^{\intercal}\Omega^{-1} y]
 }
 $$
 
-However, this isn't feasible unless we know what $\mathrm{P}$ is! We usually have to estimate this.
+We can confirm this is unbiased:
+$$
+\displaylines{
+\begin{align}
+\hat{\beta}_{GLS} & = [X^{\intercal}\Omega^{-1} X]^{-1}[X^{\intercal}\Omega^{-1} y]
+\\ & = [X^{\intercal}\Omega^{-1} X]^{-1}\left[X^{\intercal}\Omega^{-1}(X\beta+\epsilon)\right]
+\\ & = \left([X^{\intercal}\Omega^{-1} X]^{-1}\left[X^{\intercal}\Omega^{-1}X\right]\right)\beta + \left([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\right)\epsilon
+\\ & = \cancel{\left([X^{\intercal}\Omega^{-1} X]^{-1}\left[X^{\intercal}\Omega^{-1}X\right]\right)}\beta + \left([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\right)\epsilon
+\\ & = \beta + [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon
+\\ \\ 
+\therefore 
+\mathbb{E}[\hat{\beta}_{GLS}|X] & = \mathbb{E} \left[
+    \left(\beta + [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon\right)
+|X\right]
+\\ & = \beta + \mathbb{E} \left[ 
+    \left([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon\right)
+| X\right]
+\\ & \equiv \beta + [X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1} \mathbb{E} \left[ 
+    \epsilon
+| X\right]
+\\ & = \beta & \iff \mathbb{E}[\epsilon|X] = 0
+\end{align}
+}
+$$
+
+We now show that the GLS estimator is more efficient than OLS. Firstly, we derive the variance of the GLS coefficient:
+
+$$
+\displaylines{
+\begin{align}
+\mathbb{V}[\hat{\beta}_{GLS}] & = 
+\mathbb{E}[(\hat{\beta}_{GLS}-\beta)(\hat{\beta}_{GLS}-\beta)^{\intercal}] 
+\\ & = \mathbb{E}[
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon)
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}\epsilon)^{\intercal}
+] 
+\\ & \equiv \mathbb{E}[
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1})\epsilon \epsilon^{\intercal}
+    (\Omega^{-1} X [X^{\intercal}\Omega^{-1} X]^{-1})
+]
+\\ & =
+    ([X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1})
+    \underbrace{\mathbb{E}[\epsilon \epsilon^{\intercal}]}_{\text{meat} = \sigma^2\Omega}
+    (\Omega^{-1} X [X^{\intercal}\Omega^{-1} X]^{-1})
+\\ & =
+    \sigma^2[X^{\intercal}\Omega^{-1} X]^{-1}X^{\intercal}\Omega^{-1}
+    \cancel{\Omega} \cancel{\Omega^{-1}} X [X^{\intercal}\Omega^{-1} X]^{-1}
+\\ & =
+    \sigma^2\cancel{[X^{\intercal}\Omega^{-1} X]^{-1}}\cancel{X^{\intercal}\Omega^{-1} X}
+    [X^{\intercal}\Omega^{-1} X]^{-1}
+\\ & = \sigma^2[X^{\intercal}\Omega^{-1} X]^{-1}
+\end{align}
+}
+$$
+
+So we can now compare that to the variance of the usual OLS estimator:
+
+$$
+\displaylines{
+\begin{align}
+\mathbb{V}[\hat{\beta}_{OLS}] & = 
+(X^{\intercal}X)^{-1}X^{\intercal}
+\underbrace{E[\epsilon\epsilon^{\intercal}]}_{\text{meat} = \sigma^2\Omega}
+X(X^{\intercal}X)^{-1}
+\\ & = \sigma^2(X^{\intercal}X)^{-1}X^{\intercal} \Omega X(X^{\intercal}X)^{-1}
+\\ \\
+\therefore
+\mathbb{V}[\hat{\beta}_{OLS}] - \mathbb{V}[\hat{\beta}_{GLS}] & = 
+\sigma^2 \left[ 
+    (X^{\intercal}X)^{-1}X^{\intercal} \Omega X(X^{\intercal}X)^{-1} - 
+    [X^{\intercal}\Omega^{-1} X]^{-1} 
+\right] \\
+& = \sigma^2 \left[ A \Omega A^{\intercal} \right] > 0
+\\ \\
+\text{where } A & = (X^′X)^{−1}X^′− (X^′\Omega^{−1}X)^{-1} X^′\Omega^{−1}
+\end{align}
+}
+$$
+
+And since $\Omega$ is Positive Semi Definite, then $A \Omega A^{\intercal}$ is also PSD, so the GLS estimator is more efficient than the OLS estimator.
+For the proof of the last step, see the footnotes[^1].
+
+However, this isn't feasible unless we know what $\Omega$ is! We usually have to estimate this.
 
 ## Feasible Generalized Least Squares
 
 The feasible GLS estimator is a two-step process:
 
-* Run a normal OLS regression. Estimate the error covariance matrix, $\Omega$, using the residuals from the OLS regression.
-* Estimate $\mathrm{P}$ using the Cholesky decomposition of $\Omega$, and transform $y$ and $X$ by $\mathrm{P}$
+1. Run a normal OLS regression, $y \sim X\hat{\beta} + \hat{\epsilon}$. Now derive an error covariance matrix using the squared residuals from this OLS regression, $\hat{\Omega} \sim \mathrm{V}[\hat{\epsilon}]$, .
+2. Estimate $\mathrm{P}$ using the Cholesky decomposition of $\Omega$, and transform $y$ and $X$ by $\mathrm{P}$. Then estimate another OLS model on the transformed data: $\mathrm{P}y \sim [\mathrm{P}X]\beta' + \mathrm{P}\epsilon$
 
-Whilst GLS is more efficient, FGLS is only *asymptotically* more efficient, where the error covariance matrix is consistently estimated. In fact, for a small sample size, FGLS can be actually less efficient than OLS - and often it is even biased! It is only for large samples that FGLS would be preferred, as it is consistent. 
+Whilst GLS is more efficient, FGLS is only *asymptotically* more efficient - when the error covariance matrix is consistently estimated. In fact, for a small sample size, FGLS can be actually less efficient than OLS - and often it is even biased! It is only for large samples that FGLS would be preferred, as it is consistent. 
 
-Thus some authors prefer OLS, and use a sandwich estimator instead. Finally - its worth noting that we can still apply the sandwich estimator to the FGLS coefficients as well.
+Thus some authors prefer OLS, and use a sandwich estimator instead. Finally - its worth noting that we can still apply sandwich estimator to FGLS coefficients as well!
+
+## Final notes
+
+It is worth noting here that the random effects econometric model is a special case of GLS. The random effects model is a panel data model that assumes that the unobserved heterogeneity within groups is both constant and uncorrelated with the other predictors. is a special case of GLS. 
 
 ## Coding it up from scratch
 
@@ -113,7 +205,7 @@ Now we can define a child GLS class, which utilises the parent classes in two ke
 * Uses the OLS class functionality to estimate the coefficients (and then other methods from OLS and sandwich for the standard errors etc)
 
 ```{python}
-class LS(sandwich):
+class LS(ols_sandwich):
 
     def __init__(
         self, 
@@ -179,8 +271,7 @@ class LS(sandwich):
             self.beta, self.var_X_inv = self._estimate_gls_coefs(y,X,self.omega)
 ```
 
-Let's now compare it to statsmodels:
-
+<!-- Let's now compare it to statsmodels:
 ```{python}
 np.random.seed(42)
 n, k = 200, 2
@@ -227,4 +318,33 @@ model.omega
 ```{python}
 import statsmodels.api as sm 
 model = sm.GLS(y,X).fit()
-```
+``` 
+-->
+
+[^1]: 
+    To show that GLS is more efficient than the OLS estimator, we show that we can rewrite the difference in the variance of the two estimators as a positive semi-definite matrix $\sigma^2 \left[ A \Omega A^{\intercal} \right]$:
+    $$
+    \displaylines{
+    \begin{align}
+    A & = 
+    (X^{\intercal}X)^{−1}X^{\intercal}− (X^{\intercal}\Omega^{−1}X)^{-1} X^{\intercal}\Omega^{−1}
+    \\
+    \therefore A^{\intercal} & = X(X^{\intercal}X)^{−1} − \Omega^{−1} X (X^{\intercal}\Omega^{−1}X)^{-1}
+    & \because \left[\Omega^{-1}\right]^{\intercal} = \Omega^{-1}
+    \\ \\
+    \Rightarrow A\Omega & = 
+    (X^{\intercal}X)^{−1}X^{\intercal}\Omega − (X^{\intercal}\Omega^{−1}X)^{-1} X^{\intercal}
+    \\ \\
+    \Rightarrow A\Omega A^{\intercal} 
+    & = (X^{\intercal}X)^{−1}X^{\intercal}\Omega X(X^{\intercal}X)^{−1} \\
+    & - (X^{\intercal}\Omega^{−1}X)^{-1} \underbrace{X^{\intercal} X(X^{\intercal}X)^{−1}}_{=I} \\
+    & - \underbrace{(X^{\intercal}X)^{−1}X^{\intercal}\Omega \Omega^{−1} X}_{=I} (X^{\intercal}\Omega^{−1}X)^{-1}  \\
+    & + (X^{\intercal}\Omega^{−1}X)^{-1}X^{\intercal} \underbrace{\Omega^{−1} X (X^{\intercal}\Omega^{−1}X)^{-1}}_{=I} \\
+    \\ 
+    \Rightarrow \sigma^2 \left[ A \Omega A^{\intercal} \right]
+    & = 
+    \underbrace{\sigma^2(X^{\intercal}X)^{−1}X^{\intercal}\Omega X(X^{\intercal}X)^{−1}}_{V[\beta^{OLS}]} - \underbrace{\sigma^2(X^{\intercal}\Omega^{−1}X)^{-1}}_{V[\beta^{GLS}]} \\ 
+    & \cancel{-\sigma^2(X^{\intercal}\Omega^{−1}X)^{-1}X^{\intercal} + \sigma^2(X^{\intercal}\Omega^{−1}X)^{-1}X^{\intercal}}
+    \end{align}
+    }
+    $$
