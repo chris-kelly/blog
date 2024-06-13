@@ -18,6 +18,8 @@ format:
     other-links:
       - text: Deriving the variance of the OLS coefficient
         href: ols_blue.html#coefficient-variance-for-ols
+      - text: Using a weight matrix to correct for non-spherical errors 
+        href: gls_fgls_wls.html
 ---
 
 ::: {.callout-tip}
@@ -229,7 +231,9 @@ First we use the OLS parent class we defined previously in the [BLUE OLS post](o
 %run ../src/ols_blue.py
 ```
 
-Now we can define a child sandwich class, that adapts the standard errors of the existing OLS regression model:
+Now we can define two new classes:
+* A new class, `error_covariance` that returns an $n \times n$ matrix of the estimated errors
+* a child `ols_sandwich` class, that adapts the standard errors of the existing `OLS` class:
 
 <details>
 <summary>Sandwich class (source code):</summary>
@@ -255,7 +259,7 @@ X = np.hstack([
 y = X.dot(beta) + np.random.normal(loc=0,scale=sigma_sq,size=(n,1))
 cl = np.repeat(np.arange(10), 5)
 
-our_mod = sandwich(y,X)
+our_mod = ols_sandwich(y,X)
 our_mod.fit()
 # our_mod.summary()
 
@@ -269,7 +273,7 @@ First let's try homoskedastic errors:
 ```{python}
 pd.DataFrame(
   np.hstack([
-    our_mod.summary(correction="homoskedastic")['Standard Error'].to_numpy().reshape(-1,1),
+    our_mod.summary(se_correction="homoskedastic")['Standard Error'].to_numpy().reshape(-1,1),
     stats_mod.fit().bse.reshape(-1,1)
     ]),
   columns=['Our Standard Errors','StatsModel Standard Errors'],
@@ -282,8 +286,8 @@ And now heteroskedastic:
 ```{python}
 pd.DataFrame(
   np.hstack([
-    our_mod.summary(correction='heteroskedastic')['Standard Error'].to_numpy().reshape(-1,1),
-    stats_mod.fit(cov_type='HC0').bse.reshape(-1,1)
+    our_mod.summary(se_correction='heteroskedastic')['Standard Error'].to_numpy().reshape(-1,1),
+    stats_mod.fit(cov_type='HC1').bse.reshape(-1,1)
     ]),
   columns=['Our Standard Errors','StatsModel Standard Errors'],
 )
@@ -294,11 +298,16 @@ And finally, cluster-robust:
 ```{python}
 pd.DataFrame(
   np.hstack([
-    our_mod.summary(correction=cl)['Standard Error'].to_numpy().reshape(-1,1),
+    our_mod.summary(se_correction=cl)['Standard Error'].to_numpy().reshape(-1,1),
     stats_mod.fit(cov_type='cluster', cov_kwds={'groups': cl}).bse.reshape(-1,1)
     ]),
   columns=['Our Standard Errors','StatsModel Standard Errors'],
 )
 ```
+
+## Some final reflections
+
+Sandwich estimators correct for the variance by adjusting the standard error *after* OLS coefficient estimation. However, another approach is to correct for the variance *before* estimation - by first applying a weight matrix to the data before fitting. You can read more about this in the [GLS post](gls_fgls_wls.html)
+
 
 Fin.
