@@ -256,7 +256,7 @@ $$
 
 Since $X^{\intercal}X$ is clearly positive definite, the cost function is convex. Thus, we know our unique solution for $\beta$ where the partial differential is at zero is indeed a **global minimum** for the cost function.
 
-### 5. Coding and visualising in Python and OJS
+## Coding up and visualising in Python and OJS
 
 Below we share some simple functions to derive the optimum beta, and visualise the univariate case (with an intercept).
 
@@ -327,7 +327,64 @@ results = pd.DataFrame(
 results
 ```
 
-Below is an interactive plot, that shows how the residuals change with the choice of coefficients. The RMSE for any particular choice of coefficients is shown in the title.
+Here is a surface plot of the RMSE given choices of $\beta_0$ and $\beta_1$, for the random sample.
+
+```{python}
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from scipy.stats import norm
+
+y = y[np.argsort(X[:,1])]
+X = X[np.argsort(X[:,1]),:]
+coefs = derive_coefs(y,X)
+y_hat = predict(X,coefs)
+
+a, b = np.arange(-2,1,0.1), np.arange(-1,3,0.1)
+av, bv = np.meshgrid(a, b)
+all_coefs = np.dstack([av,bv])
+cv = np.zeros(shape=av.shape)
+
+for idx in range(len(all_coefs)):
+  for idy in range(len(all_coefs[idx])):
+      cv[idx,idy] = np.sqrt(RMSE(y,X,all_coefs[idx,idy].reshape(k,1))[0][0]/n)
+
+fig = go.Figure()
+
+# Surface of RMSE
+fig.add_trace(
+  go.Surface(
+    x=av, y=bv, z=cv, 
+    opacity=0.2,
+    showscale=False,
+    contours = dict(z=dict(show=True,size=0.01,start=0,end=4))
+  )
+)
+
+# 3d plot of data
+fig.add_trace(
+  go.Scatter3d(
+    x=coefs[0], 
+    y=coefs[1],
+    z=np.sqrt(RMSE(y,X,coefs)[0]/n),
+    mode='markers', name='Optimum choice of coefficients',
+    marker=dict(symbol='cross'),
+  )
+)
+
+fig.update_layout(
+  title="Plot of RMSE given choices of β0 and β1",
+  scene = dict(
+    xaxis_title="β0",
+    yaxis_title="β1",
+    zaxis_title="RMSE",
+  ),
+  showlegend=False,
+)
+
+fig.show()
+```
+
+And below is an interactive plot, that shows how the residuals change with the choice of coefficients. The RMSE for any particular choice of coefficients is shown in the title.
 
 ```{python}
 ojs_define(X = X.tolist(), y=y.tolist(), x1 = X[:,1].tolist(), n=n)
@@ -404,62 +461,58 @@ plotly.newPlot(
 
 <div id="2d_plot""></div>
 
-Finally, here is a surface plot of the RMSE given choices of $\beta_0$ and $\beta_1$, for the random sample.
+## Some properties of OLS estimators
 
-```{python}
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from scipy.stats import norm
+The process of minimzing the sum of squares reveals some interesting properties about the regression.
 
-y = y[np.argsort(X[:,1])]
-X = X[np.argsort(X[:,1]),:]
-coefs = derive_coefs(y,X)
-y_hat = predict(X,coefs)
+First let's rearrange the equation for the estimated coefficients, to find that the errors must be orthogonal with the features $X$:
 
-a, b = np.arange(-2,1,0.1), np.arange(-1,3,0.1)
-av, bv = np.meshgrid(a, b)
-all_coefs = np.dstack([av,bv])
-cv = np.zeros(shape=av.shape)
+$$
+\displaylines{
+\begin{align}
+\hat{\beta} & = (X^{\intercal}X)^{-1}X^{\intercal}y
+\\
+\Rightarrow (X^{\intercal}X)\hat{\beta} &= X^{\intercal}y
+\\
+& = X^{\intercal} (X^{\intercal} \hat{\beta} + \hat{\epsilon})
+\\
+\therefore X^{\intercal}\hat{\epsilon} & = 0
+\end{align}
+}
+$$
 
-for idx in range(len(all_coefs)):
-  for idy in range(len(all_coefs[idx])):
-      cv[idx,idy] = np.sqrt(RMSE(y,X,all_coefs[idx,idy].reshape(k,1))[0][0]/n)
+We further find that OLS ensures that the predicted outcome $\hat{y}$ is not correlated with the residuals $\epsilon$:
 
-fig = go.Figure()
+::: {.column-margin}
+Note that this simply ensures the predicitons are uncorrelated with the residuals - the true observations could still be correlated.
+:::
+$$
+\displaylines{
+\begin{align}
+\hat{y}^{\intercal}\epsilon & = (X\hat{\beta})^{\intercal} \hat{\epsilon}
+\\ & = \hat{\beta}^{\intercal} \underbrace{X^{\intercal}\hat{\epsilon}}_{=0}
+\\ & = 0
+\end{align}
+}
+$$
 
-# Surface of RMSE
-fig.add_trace(
-  go.Surface(
-    x=av, y=bv, z=cv, 
-    opacity=0.2,
-    showscale=False,
-    contours = dict(z=dict(show=True,size=0.01,start=0,end=4))
-  )
-)
+Now if we include an intercept in the regression (i.e. one of the columns of $X$ must be all ones) then since $X^{\intercal}\hat{\epsilon} = 0$:
 
-# 3d plot of data
-fig.add_trace(
-  go.Scatter3d(
-    x=coefs[0], 
-    y=coefs[1],
-    z=np.sqrt(RMSE(y,X,coefs)[0]/n),
-    mode='markers', name='Optimum choice of coefficients',
-    marker=dict(symbol='cross'),
-  )
-)
+* The residuals must sum to zero: $\sum_{i=1}^n{\hat{\epsilon}_i} = 0$
+* The sample mean of the residual must sum to zero: $\frac{1}{n}\sum_{i=1}^n{\hat{\epsilon}_i} =\bar{\hat{\epsilon}} = 0$
 
-fig.update_layout(
-  title="Plot of RMSE given choices of β0 and β1",
-  scene = dict(
-    xaxis_title="β0",
-    yaxis_title="β1",
-    zaxis_title="RMSE",
-  ),
-  showlegend=False,
-)
+And since we know the sum of the residuals is zero, it follows that the regression also passes through the mean of the observations $\bar{X}$ and $\bar{y}$ too:
 
-fig.show()
-```
+$$
+\displaylines{
+\sum_{i=1}^n{\hat{\epsilon}_i} = \sum_{i=1}^n{y_i -X_i\hat{\beta}} = 0 \\
+\therefore \sum_{i=1}^n{y_i} = \sum_{i=1}^n{X_i\hat{\beta}} \\
+\therefore \frac{1}{n} \sum_{i=1}^n{y_i} = \bar{y} = 
+\frac{1}{n} \sum_{i=1}^n{X_i\hat{\beta}} = \bar{X}\hat{\beta}
+}
+$$
+
+However, it is important to tnote that these properties are enforced by OLS: for example, it does not ensure that the true errors are orthogonal to the features, simply the residuals. To understand the validity of the regression for causal inference, we need to look at the [Gauss Markov assumptions](ols_blue.html).
 
 ## Final reflections
 
