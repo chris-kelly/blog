@@ -3,12 +3,25 @@ title: "Generalized Linear Models from scratch"
 author: "Chris Kelly"
 date: '05-28-24'
 categories: [Generalized Linear Models, Maximum Likelihood, Python]
+image: '../images/glm_exponential_dispersion.png'
 format:
   html:
     code-fold: true
     toc: true
-image: '../images/glm_exponential_dispersion.png'
-other-links:
+    code-links:
+        - text: Parent class for exponential family regression
+          icon: file-code
+          href: ../src/glm_exponential_dispersion_parent.py
+        - text: Gaussian child class
+          icon: file-code
+          href: ../src/glm_exponential_dispersion_gaussian.py
+        - text: Bernoulli child class
+          icon: file-code
+          href: ../src/glm_exponential_dispersion_bernoulli.py
+        - text: Poisson child class
+          icon: file-code
+          href: ../src/glm_exponential_dispersion_poisson.py
+    other-links:
         - text: MLE vs OLS for Linear Regression
           href: mle_ols_normal.html
         - text: Logistic Regression as a Latent Variable Model
@@ -44,7 +57,7 @@ In other words, for every observation $i$:
 ```{python}
 #| code-summary: "Code to generate Gaussian graph"
 import numpy as np, pandas as pd
-from math import pi, factorial
+# from math import pi, factorial
 from scipy.stats import norm, poisson, gamma
 import statsmodels.api as sm
 import plotly.graph_objects as go
@@ -668,110 +681,15 @@ Well done on getting this far! We can now start to write out some python to crea
 
 First, let's create a generic parent class then that we can use for any canonical exponential dispersion family. Note that this contains the MLE proceedure to minimize the cost function for regression (we will explain this in a future post - just know for now that this uses maximum likelihood estimation to optimize the coefficients).
 
+<details>
+<summary>Exponential Family Regression Parent Class (source code):</summary>
+```{.python include='../src/glm_exponential_dispersion_parent.py' }
+```
+</details>
+
 ```{python}
-#| code-summary: "Creating the exponential regression parent class"
-
-class exponential_regression_parent():
-
-    def __init__(self,seed=0,y=None,X=None,beta=None):
-      """
-      seed: Scalar sets seed for random coefficient initialization
-      y:    Dependent variable. A 1d vector of numeric values. Optional.
-      X:    Independent variables. A 2d matrix of numeric values. Optional.
-      beta: Initial coefficients. A 1d vector of numeric values. Optional.
-      """
-      self.seed = seed
-      self.y = y
-      self.X = X
-      self.beta = beta
-
-    def _initialize(self,y=None,X=None):
-        if y is None:
-            if self.y is None:
-                raise ValueError('Please provide y')
-            else:
-                y = self.y
-        if X is None:
-            if self.X is None:
-                raise ValueError('Please provide X')
-            else:
-                X = np.array(self.X).reshape(y.shape[0],-1)
-        self.y = np.array(y).reshape(-1,1)
-        self.X = np.array(X).reshape(y.shape[0],-1)
-        self.n, self.k = X.shape
-        np.random.seed(self.seed)
-        if self.beta is None:
-            self.beta = np.random.normal(0, 0.5, self.k).reshape((self.k,1))
-
-    def _theta(self, theta=None):
-        """ helper function """
-        if theta is None:
-            theta = self.theta()
-        return theta
-
-    def _phi(self,phi=None):
-        """ helper function """
-        if phi is None:
-            phi = self.phi()
-        return phi
-
-    def negative_log_likelihood(self):
-        """ Negative log likelihood i.e. the current cost"""
-        y = self.y
-        theta, phi = self._theta(), self._phi()
-        a, b, c = self.a, self.b, self.c
-        log_likelihood = ( y * theta - b(theta) ) / a(phi) + c(y,phi)
-        L = -1 * np.sum(log_likelihood)
-        return L
-
-    def informant(self, theta=None, phi=None):
-        """ First derivative of the cost function with respect to theta """
-        y, X, a, b, db = self.y, self.X, self.a, self.b, self.db
-        theta, phi = self._theta(theta), self._phi(phi)
-        dJ = (1/a(phi)) * X.T.dot( db( theta ) - y )
-        return dJ
-    
-    def hessian(self, theta=None, phi=None, use_stable=True):
-        """ Second derivative of the cost function with respect to theta """
-        X, y = self.X, self.y
-        a, d2b = self.a, self.d2b
-        theta, phi = self._theta(theta), self._phi(phi)
-        if use_stable:
-            meat = a(phi)**-2 * np.diagflat((self.db(theta)-y)**2) # using residual variance
-        else:
-            meat = a(phi)**-1 * np.diagflat(self.d2b(theta)) # using second differential directly
-        d2L = X.T.dot(meat).dot(X)
-        return d2L
-
-    def update_beta(self, use_stable_hessian=True):
-        """ A single step towards optimizing beta """
-        X, beta = self.X, self.beta.copy()
-        theta, phi = self._theta(), self._phi()
-        learning_rate = np.linalg.inv(self.hessian(theta, use_stable=True))
-        dL = self.informant(theta, phi)
-        beta -= learning_rate.dot(dL)
-        return beta
-
-    def fit(self, y=None, X=None, max_iter=100, epsilon=1e-8, use_stable_hessian=True):
-        """ Fit the model using Newton Raphson Optimization """
-        self._initialize(y,X)
-        for i in range(max_iter):
-            old_beta = self.beta.copy()
-            new_beta = self.update_beta(use_stable_hessian)
-            self.beta = new_beta
-            if (np.abs(new_beta - old_beta)/(0.1 + np.abs(new_beta)) <= epsilon).all():
-                print("Fully converged by iteration " + str(i))
-                break
-            if (i == max_iter):
-                print("Warning - coefficients did not fully converge within " + str(max_iter) + " iterations.")
-
-    def predict(self, X=None):
-        """ Predicted value of y uses the activation function, b'(θ) """
-        if X is None:
-            X = self.X
-        y_hat = self.db( self.theta(X=X) )
-        return y_hat
-      
+#| echo: false
+%run ../src/glm_exponential_dispersion_parent.py
 ```
 
 And now we have our base class, we can utilise it for specific classes of the Poisson, Bernoulli and Gaussian distributions:
@@ -780,50 +698,15 @@ And now we have our base class, we can utilise it for specific classes of the Po
 
 Now we can write our Gaussian class: 
 
+<details>
+<summary>Exponential Regression Gaussian Class (source code):</summary>
+```{.python include='../src/glm_exponential_dispersion_gaussian.py' }
+```
+</details>
+
 ```{python}
-#| code-summary: "Creating the Gaussian child class"
-
-class gaussian(exponential_regression_parent):
-
-  def __init__(self,seed = 0,**kwargs):
-      super().__init__(seed, **kwargs)
-
-  def theta(self, X=None):
-        """ As canonical form, theta == link function. 
-        So we simply equate θ = g(µ) = η(X)= X'β """
-        beta = self.beta
-        if X is None:
-            X = self.X
-        return X.dot(beta)
-
-  def b(self,theta):
-      """ b(θ) = 0.5*θ^2: Integral of the activation function """
-      return 0.5*theta**2
-  
-  def db(self,theta):
-      """ b'(θ) = θ: Activation function is the identity """
-      return theta
-
-  def d2b(self,theta):
-      """ b''(θ) = 1: Differential of the activation function is just one """
-      return np.ones(theta.shape)
-
-  def phi(self):
-      """ φ = σ^2: Dispersion measure is variance
-      It is estimated from the residuals, i.e. s = RSS / DoF
-      """
-      y, n, k = self.y, self.n, self.k
-      y_hat = self.predict(self.X)
-      var = np.sum( (y - y_hat)**2 ) / n # / ( n - k )
-      return var
-      
-  def a(self,phi):
-      """ a(φ) = σ^2: The variance of y """
-      return phi
-
-  def c(self,y,phi):
-      """ Adjustment needed so pdf sums to one """
-      return -0.5 * ( y**2/phi + np.log(2*pi*phi))
+#| echo: false
+%run ../src/glm_exponential_dispersion_gaussian.py
 ```
 
 Now we can test the gaussian regression on some dummy data. We also compare this with OLS derived coefficients (and check against statsmodels) to see if we are correct:
@@ -846,11 +729,7 @@ results = glm_stats_model.fit()
 
 # Compare coefficients
 pd.DataFrame(
-  np.hstack([
-    model_gaus.beta,
-    results.params.reshape(-1,1),
-    ls_beta,
-    ]),
+  np.hstack([model_gaus.beta,results.params.reshape(-1,1),ls_beta]),
   columns=['True coefficients','StatsModel coefficients','OLS coefficients']
 )
 ```
@@ -861,14 +740,8 @@ We similarly find that the log likelihoods are the same:
 ```{python}
 # Compare log likelihoods:
 pd.DataFrame(
-  data = [[
-    -1*model_gaus.negative_log_likelihood(),
-    results.llf,
-    ]],
-  columns=[
-    'Our Log Likelihood',
-    'StatsModel Log Likelihood',
-    ]
+  data = [[-1*model_gaus.negative_log_likelihood(),results.llf]],
+  columns=['Our Log Likelihood','StatsModel Log Likelihood']
 )
 ```
 
@@ -876,59 +749,15 @@ pd.DataFrame(
 
 Now let's try the same for a logistic regression:
 
+<details>
+<summary>Exponential Regression Bernoulli Class (source code):</summary>
+```{.python include='../src/glm_exponential_dispersion_bernoulli.py' }
+```
+</details>
+
 ```{python}
-#| code-summary: "Creating the Bernoulli child class"
-
-class bernoulli(exponential_regression_parent):
-
-  def __init__(self,seed = 0, ols_beta_init = False, **kwargs):
-      """
-      If using a pure Netwon method, this can fail to converge if initialized coefficients are too far from the neighbourhood of the global minima.
-      One option is to initialize coefficients using OLS (i.e. linear probabiity model, lpm) and optimize from there.
-      Otherwise, by default, it uses a more stable calculation for the variance of y.
-      """
-      if ols_beta_init:
-        XtX = X.transpose().dot(X)
-        Xty = X.transpose().dot(y2).flatten()
-        lpm_beta = np.linalg.pinv(XtX).dot(Xty)
-        super().__init__(seed, **kwargs, beta=lpm_beta.reshape(-1,1))
-      else:
-        super().__init__(seed, **kwargs)
-
-  def theta(self, X=None):
-        """ As canonical form, theta == link function. 
-        So we simply equate θ = g(µ) = η(X)= X'β """
-        beta = self.beta
-        if X is None:
-            X = self.X
-        return X.dot(beta)
-
-  def b(self,theta):
-      """ b(θ) = ln[1+exp{θ}]: integral of the activation function """
-      return np.log(1 + np.exp(theta))
-  
-  def db(self,theta):
-      """ b'(θ) = Λ(θ) = 1/(1+exp{-θ}): Activation function is logistic (inverse of the logit-link function)"""
-      return (1+np.exp(-theta))**-1
-      # return np.exp(theta) * (1+np.exp(theta))**-1
-      
-  def d2b(self,theta):
-      """ b''(θ) = Λ(θ)*(1-Λ(θ)): Differential of the activation function is the logistic distribution """
-      _db = self.db(theta)
-      return _db*(1-_db)
-      # return np.exp(theta) * (1 + np.exp(theta))**-2
-
-  def phi(self):
-      """ Not needed - one parameter distribution """
-      return 1
-  
-  def a(self,phi):
-      """ Not needed - one parameter distribution """
-      return 1
-  
-  def c(self,y,phi):
-      """ No adjustment needed (pdf already sums to one) """
-      return 0
+#| echo: false
+%run ../src/glm_exponential_dispersion_bernoulli.py
 ```
 
 ```{python}
@@ -943,10 +772,7 @@ model_bern = bernoulli(X=X,y=y2)
 model_bern.fit()
 
 pd.DataFrame(
-  np.hstack([
-    model_bern.beta,
-    results2.params.reshape(-1,1),
-    ]),
+  np.hstack([model_bern.beta,results2.params.reshape(-1,1)]),
   columns=['Bernoulli coefficients','StatsModel coefficients']
 )
 ```
@@ -956,14 +782,8 @@ Again, we find identical coefficients! We similarly find that the log likelihood
 ```{python}
 # Compare log likelihoods:
 pd.DataFrame(
-  data = [[
-    -1*model_bern.negative_log_likelihood(),
-    results2.llf,
-    ]],
-  columns=[
-    'Our Log Likelihood',
-    'StatsModel Log Likelihood',
-    ]
+  data = [[-1*model_bern.negative_log_likelihood(),results2.llf]],
+  columns=['Our Log Likelihood','StatsModel Log Likelihood']
 )
 ```
 
@@ -973,50 +793,15 @@ For a deep-dive into Logistic regression, and its formulation as a latent-variab
 
 Now let's try the same for a Poisson regression:
 
+<details>
+<summary>Exponential Regression Poisson Class (source code):</summary>
+```{.python include='../src/glm_exponential_dispersion_poisson.py' }
+```
+</details>
+
 ```{python}
-#| code-summary: "Creating the Poisson child class"
- 
-class poisson(exponential_regression_parent):
-
-  def __init__(self,seed = 0, **kwargs):
-      super().__init__(seed, **kwargs)
-
-  def theta(self, X=None):
-        """ As canonical form, theta == link function. 
-        So we simply equate θ = g(µ) = η(X)= X'β """
-        beta = self.beta
-        if X is None:
-            X = self.X
-        return X.dot(beta)
-
-  def b(self,theta):
-      """ b(θ) = exp{θ}: integral of the activation function """
-      return np.exp(theta)
-  
-  def db(self,theta):
-      """ b'(θ) = exp{θ}: Activation function is exponential (inverse of the log-link function)"""
-      return np.exp(theta)
-
-  def d2b(self,theta):
-      """ b''(θ) = exp{θ}: Differential of the activation function """
-      return np.exp(theta)
-  
-  def phi(self):
-      """ Not needed - one parameter distribution """
-      return 1
-  
-  def a(self,phi):
-      """ Not needed - one parameter distribution """
-      return 1
-  
-  def c(self,y,phi):
-      """ Adjustment needed so pdf sums to one. """
-      # # Optionally use Stirling's approximation to deal easily with large factorials
-      # def approx_ln_factorial(n):
-      #     return n * np.log(n) - n
-      y = y.flatten()
-      return -np.log(np.array([factorial(v) for v in y.tolist()]).astype(float)).reshape(-1,1)
-
+#| echo: false
+%run ../src/glm_exponential_dispersion_poisson.py
 ```
 
 ```{python}
@@ -1029,10 +814,7 @@ glm3 = sm.GLM(y3, X, family=sm.families.Poisson())
 results3 = glm3.fit()
 
 pd.DataFrame(
-  np.hstack([
-    model_pois.beta,
-    results3.params.reshape(-1,1),
-    ]),
+  np.hstack([model_pois.beta,results3.params.reshape(-1,1),]),
   columns=['Poisson coefficients','StatsModel coefficients']
 )
 ```
@@ -1042,14 +824,8 @@ Again, we find identical coefficients! We similarly find that the log likelihood
 ```{python}
 # Compare log likelihoods:
 pd.DataFrame(
-  data = [[
-    -1*model_pois.negative_log_likelihood(),
-    results3.llf,
-    ]],
-  columns=[
-    'Our Log Likelihood',
-    'StatsModel Log Likelihood',
-    ]
+  data = [[-1*model_pois.negative_log_likelihood(),results3.llf]],
+  columns=['Our Log Likelihood','StatsModel Log Likelihood']
 )
 ```
 
