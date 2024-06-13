@@ -43,7 +43,7 @@ First - let’s state that:
 * $E(\epsilon|X)=0$
 * $V(\epsilon \epsilon^{\intercal}|X)=\sigma^2\underset{n \times n}{\Omega}$
 
-This means that although the assumption of endogeneity is not violated, the assumption of homoskedasticity is. And more specifically, that the variance of the error term can be decomposed between into the constant variance $\sigma^2$ and a covariance matrix $\Omega$.
+This means that although the assumption of endogeneity is not violated, the assumption of homoskedasticity is. And more specifically, that the variance of the error term can be decomposed between into a constant variance $\sigma^2$ and the error covariance matrix $\Omega$.
 
 Now according to Cholesky decomposition, if $\Omega$ is symmetric positive definite, then there exists a lower triangular matrix $\mathrm{P}$ such that:
 
@@ -190,7 +190,7 @@ First we take the sandwich parent class we defined previously in the [sandwich e
 
 <details>
 <summary>Sandwich class (source code):</summary>
-```{.python include='../src/ols_blue.py' }
+```{.python include='../src/ols_sandwich_estimators.py' }
 ```
 </details>
 
