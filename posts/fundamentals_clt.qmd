@@ -1,0 +1,399 @@
+---
+title: "Deriving the Central Limit Theorem"
+author: "Chris Kelly"
+date: '06-14-24'
+# image: '../images/'
+categories: [Law of Large Numbers, Central Limit Theorem]
+draft: true
+format:
+  html:
+    code-fold: true
+    toc: true
+    # code-links:
+    #   - text: OLS class
+    #     icon: file-code
+    #     href: ../src/ols_blue.py
+    #   - text: Sandwich class
+    #     icon: file-code
+    #     href: ../src/ols_sandwich_estimators.py
+    #   - text: GLS class
+    #     icon: file-code
+    #     href: ../src/gls_fgls_wls.py
+    # other-links:
+    #   - text: Correcting SE for non-spherical errors
+    #     href: ols_sandwich_estimators.html
+---
+
+# (Weak) law of Large Numbers
+
+## Markov's inequality
+
+First we state Markov's inequality. 
+
+:::{.callout-tip title="Markov's inequality"}
+If $X$ is a non-negative random variable, and $a > 0$, then
+$$
+\frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)
+$$
+:::
+
+Let's take an example to understand this, e.g. take a dice role:
+
+```{python}
+import numpy as np
+from plotly.graph_objects import Figure, Bar
+
+x = np.arange(1, 7)
+p = np.repeat(1/6, 6)
+Ex = np.sum(x * p) # 3.5
+px_le_a = [np.sum(p[x >= a]) for a in x]
+ex_div_a = Ex/x
+
+fig = Figure()
+fig.add_trace(Bar(x=x, y=px_le_a, name='P(X >= a)'))
+fig.add_trace(Bar(x=x, y=ex_div_a, name='E[X]/a'))
+
+# Update layout for grouped bar chart
+fig.update_layout(barmode='group', title='Markov\'s inequality for a dice role', xaxis_title='a (Dice roll)', legend=dict(x=0.67,y=0.95))
+
+fig.show()
+```
+
+Why is this always the case? Well let's derive it.
+
+First, let's specify an "indicator function". This indicator function returns $1$ if the random variable $X$ reaches a certain threshold of $a$, and returns $0$ if the threshold $a$ is not reached. So we can write this as:
+
+$$
+\mathbb{I}(X) = 
+\begin{cases} 
+0 & \text{if } X < a \\ 
+1 & \text{if } X \ge a 
+\end{cases}
+$$
+
+Now let's simply multiply this function by $a$:
+
+$$
+a \times \mathbb{I}(X) = 
+\begin{cases} 
+0 & \text{if } X < a \\ 
+a & \text{if } X \ge a 
+\end{cases}
+$$
+
+So in practice:
+
+* if $X < a$, then $a \times \mathbb{I}(X) = 0$
+* if $X = a$, then $a \times \mathbb{I}(X) = a$
+* if $X > a$, then $a \times \mathbb{I}(X) = a$
+
+In other words, regardless of $X$, the indicator function will always return a number less than $X$ - either $a$ or $0$:
+
+$$
+X \ge a \times \mathbb{I}(X)
+$$
+
+We can visualise this, where the $x$-axis is the random variable $X$, and the $y$-axis is the output of the indicator function. 
+
+```{python}
+from plotly.graph_objects import Scatter
+fig = Figure()
+fig.add_trace(Scatter(x=[0,1,1,2], y=[0,0,1,1], name='a if X >= a else 0', mode='lines', line=dict(width=2)))
+fig.add_annotation(x=0.5, y=0.1, text='I(X<a) = 0', showarrow=False)
+fig.add_annotation(x=1.5, y=1.1, text='I(X≥a) = a', showarrow=False)
+fig.update_layout(
+    xaxis = dict(tickmode = 'array',tickvals = [0.5,1,1.5],ticktext = ['X<a', 'X=a', 'X>a']),
+    yaxis = dict(tickmode = 'array',tickvals = [0,1],ticktext = ['0', 'a'], range=[-0.1,1.2]),
+)
+fig.show()
+```
+
+Okay, so now let's take the expectation of both sides. The expectation of the indicator function is just the area under the curve above:
+$$
+\displaylines{
+\begin{align}
+\mathbb{E}[X]
+\ge a \times \mathbb{E}[ \mathbb{I}(X) ] 
+& = \int_{x \in X} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx 
+\\
+& = \int_{x \in X < a} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx +
+    \int_{x \in X \ge a} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx
+\\
+& = \underbrace{0 \times \mathbb{P}(X < a)}_{\text{CDF for } x < a} + 
+    \underbrace{a \times \mathbb{P}(X \ge a)}_{\text{CDF for } x \ge a}
+\\
+& = a \times \mathbb{P}(X \ge a)
+\\
+\implies \frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)
+\end{align}
+}
+$$
+
+This is sometimes referred to as the "fundamental link between the expectation and the probability". The probability is limited by the expectation: if the probability of a large value is high, then the expectation must also be high.
+
+## Chebyshev's inequality
+
+We can extend Markov's inequality to relate the variance of a random variable to the probability of it being far from the mean too:
+
+:::{.callout-tip title="Chebyshev's inequality"}
+$$
+\frac{\mathbb{V}[X]}{a^2} \ge \mathbb{P}(|X-\mu| \ge a)
+$$
+:::
+
+Okay so how do we get this? Well we can take Markov's inequality, which works for any random variable, and apply it to our case in particular:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } Z & = (X-\mu)^2 \\
+\\
+\therefore \frac{\mathbb{E}[Z]}{a} & \ge \mathbb{P}(Z \ge a) \\
+\implies \frac{\mathbb{E}[(X-\mu)^2]}{a} & \ge \mathbb{P}((X-\mu)^2 \ge a) \\
+\equiv \frac{\mathbb{V}[X]}{a^2} & \ge \mathbb{P}((X-\mu)^2 \ge a^2) 
+\end{align}
+}
+$$
+
+So we are almost there! We just need to convince ourselves that $\mathbb{P}((X-\mu)^2 \ge k^2\sigma^2) \equiv \mathbb{P}(|X-\mu| \ge k\sigma)$. Then we are left with:
+
+$$
+\frac{\mathbb{V}[X]}{a^2} \ge \mathbb{P}(|X-\mu| \ge a)
+$$
+
+## Weak law of large numbers
+
+We can now find the law of large numbers, that states that as the sample size collected $n \rightarrow \infty$, the sample mean $\bar{X}_n$ converges to the true mean $\mu$:
+
+:::{.callout-tip title="Chebyshev's inequality"}
+$$
+\lim_{N \rightarrow \infty} \mathbb{P}(|\bar{X}_N - \mu| \ge \varepsilon) = 0
+$$
+::: 
+
+More specifically, this is saying that as $n \rightarrow \infty$, the probability of the sample mean $\bar{X}_N$ being further away from the true mean $\mu$ by some very small number amount $\varepsilon$, tends towards zero.
+
+So let's derive this! First let's use the sample mean $\bar{X_n}$ over $n$ samples collected in Chebyshev's inequality:
+
+$$
+\frac{\mathbb{V}[\bar{X}_n]}{\varepsilon^2} \ge \mathbb{P}(|\bar{X}_n-\mu| \ge \varepsilon)
+$$
+
+Now let's calculate a term for the variance of the sample mean:
+
+$$
+\displaylines{
+\begin{align}
+\bar{X_n} & = \frac{1}{n}\sum_{i=1}^{n}X_i \\
+\therefore \mathbb{V}[\bar{X}_n] 
+& = \mathbb{V}\left[\frac{1}{n} \sum_{i=1}^{n}{X_i} \right] \\
+& = \sum_{i=1}^{n}{\mathbb{V}\left[\frac{1}{n} X_i \right]} 
+& \because \mathbb{V}[A+B] = \mathbb{V}[A] + \mathbb{V}[B] \\
+& = \frac{1}{n^2} \sum_{i=1}^{n}{\mathbb{V}\left[ X_i \right]}
+& \because \mathbb{V}[cA] = c^2\mathbb{V}[A] \\
+& = \frac{1}{n^\cancel{2}} \left( \cancel{n} \sigma^2 \right) \\
+& = \frac{\sigma^2}{n}
+\end{align}
+}
+$$
+
+And let's sub this back into Chebyshev's inequality:
+$$
+\displaylines{
+\begin{align}
+\therefore \frac{\mathbb{V}[X]}{\varepsilon^2} & \ge \mathbb{P}(|X-\mu| \ge \varepsilon) \\
+\implies \frac{\sigma^2}{n\varepsilon^2} & \ge \mathbb{P}(|X-\mu| \ge \varepsilon)
+\\
+\end{align}
+}
+$$
+
+It should be getting quite clear now! As $n \rightarrow \infty$, then $\frac{\sigma^2}{n\varepsilon^2} \rightarrow 0$. So the probability of the sample mean $\bar{X}$ being far from the true mean $\mu$ also goes to zero.
+
+## Taylor Series
+
+```{python}
+def simple_differential(a = 1, n = 1, x = None):
+    if x is None:
+        result = [a*n,n-1]
+    else:
+        result = a*n*x**(n-1)
+    return result
+
+a = [1,4,3,8,-6,-17,20]
+a.reverse()
+a_n = list(zip(a,range(len(a))))
+
+x = np.linspace(-4.5,2.5,100)
+
+y = [simple_differential() for n in range(len(a))]
+
+```
+
+```{python}
+import plotly.graph_objects as go
+from math import factorial
+
+def taylor_series_cos(x,n):
+    if n % 4 == 1:
+        y = -np.sin(0)*x**n
+    elif n % 4 == 2:
+        y = -np.cos(0)*x**n 
+    elif n % 4 == 3:
+        y = np.sin(0)*x**n
+    else:
+        y = np.cos(0)*x**n
+    y /= factorial(n)
+    return y
+
+x = np.linspace(-10,10,100)
+
+ideal_plot = go.Scatter(x=x,y=np.cos(x),mode='lines',name="True function")
+
+fig = go.Figure(data = [
+    go.Scatter(mode='markers',x=[-12,-11],y=[0,0], name="Taylor approximation"),
+    ideal_plot
+])
+
+frames = [
+    go.Frame(data=[go.Scatter(x=[-12,-11],y=[0,0])], name= f'frame{0}'),
+    go.Frame(data=[go.Scatter(x=x,y=np.ones(len(x)))], name= f'frame{1}')
+]
+
+y = np.ones(len(x))
+k = 2
+
+for n in np.arange(2,20,2):
+    y += taylor_series_cos(x,n)
+    frames.append(go.Frame(
+        data=[go.Scatter(x=x,y=y.copy()), ideal_plot], 
+        name= f'frame{k}'
+        ))
+    k += 1
+
+fig.frames = frames
+
+updatemenus = [dict(
+        buttons = [
+            dict(
+                args = [None, {"frame": {"duration": 500, "redraw": False},
+                                "fromcurrent": True, "transition": {"duration": 300}}],
+                label = "Play",
+                method = "animate"
+                ),
+            dict(
+                 args = [[None], {"frame": {"duration": 0, "redraw": False},
+                                  "mode": "immediate",
+                                  "transition": {"duration": 0}}],
+                label = "Pause",
+                method = "animate"
+                )
+        ],
+        direction = "left",
+        pad = {"r": 10, "t": 87},
+        showactive = False,
+        type = "buttons",
+        x = 0.1,
+        xanchor = "right",
+        y = 0,
+        yanchor = "top"
+    )]  
+
+sliders = [dict(steps = [dict(method= 'animate',
+                              args= [[f'frame{k}'],                           
+                              dict(mode= 'immediate',
+                                   frame= dict(duration=400, redraw=False),
+                                   transition=dict(duration= 0))
+                                 ],
+                              label=f'{2*k}'
+                             ) for k in range(len(frames))], 
+                active=0,
+                transition= dict(duration= 0 ),
+                y=0,
+                x=0, # slider starting position  
+                currentvalue=dict(
+                    font=dict(size=12), prefix='polynomial: ', visible=True, xanchor= 'center'
+                ),  
+                len=1.0) #slider length
+           ]
+fig.update_layout(xaxis_range = [-10, 10],
+                  yaxis_range = [-3, 3],
+                  updatemenus=updatemenus,
+                  sliders=sliders)
+
+fig.show()             
+```
+
+
+
+## Moment generating functions
+
+Moment generating functions (or characteristic functions) can describe the key statistics of a distribution.
+
+
+
+
+<!-- 
+
+$$
+\displaylines{
+\begin{align}
+\frac{\mathbb{E}[Z]}{a} & \ge \mathbb{P}(Z \ge a) & \text{(Markov's inequality)} \\
+\text{let} \quad Z & = |X-\mu| & (\text{New random variable } Z) \\
+\implies
+\frac{\mathbb{E}[|X-\mu|]}{a} & \ge \mathbb{P}(|X - \mu| \ge a)
+\end{align}
+}
+$$
+
+Why can we say this? Well because Markov's inequality states that $\frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)$ for *any* random variable $X$. So if we define a new random variable $Z=|X-\mu|$, then the same inequality must apply.
+
+Now let's transform the right-hand side of the inequality:
+
+$$
+\displaylines{
+\begin{align}
+\mathbb{P}(|X - \mu| \ge a) & \equiv \mathbb{P}((X - \mu)^2 \ge a^2) \\ \\
+\implies \frac{\mathbb{E}[|X-\mu|]}{a} & \ge \mathbb{P}((X - \mu)^2 \ge a^2)
+\end{align}
+}
+$$
+
+To do this, we have to convince ourselves that $\mathbb{P}(X - \mu \ge a) \equiv \mathbb{P}((X - \mu)^2 \ge a^2)$. 
+
+So if we take our dice example from before:
+
+--->
+
+```{python}
+# x_subtract_mu = x - Ex
+# pxmu_le_a = [np.sum(p[x_subtract_mu >= a]) - Ex for a in x]
+# abs_x_subtract_mu = np.abs(x_subtract_mu)
+# abs_pxmu_le_a = [np.sum(p[abs_x_subtract_mu >= a]) for a in x]
+
+# fig = Figure()
+# fig.add_trace(Bar(x=x, y=pxmu_le_a, name='P(X-µ >= a)'))
+# fig.add_trace(Bar(x=x, y=x_subtract_mu/x, name='E[X-µ]/a'))
+# fig.add_trace(Bar(x=x, y=abs_pxmu_le_a, name='P(|X-µ| >= a)'))
+# fig.add_trace(Bar(x=x, y=abs_x_subtract_mu/x, name='E[|X-µ|]/a'))
+
+# # Update layout for grouped bar chart
+# fig.update_layout(barmode='group', title='Markov\'s inequality for a dice role', xaxis_title='a (Dice roll)', legend=dict(x=0.37,y=0.95))
+
+# fig.show()
+```
+
+<!-- First let's look at the probability side of things. Remember that $\mu$ is 3.5:
+
+* If the threshold $a$ is $3$, then the probabiity is zero: no dice roll $X$ would be far enough away to ensure the absolute distance from the expected value is greater than $a$.
+    * e.g. $|6-3.5| = 2.5 < 3$
+    * e.g. $|1-3.5| = 2.5 < 3$
+* If the threshold $a$ is $2$, then this only occurs if the dice roll is $1$ or $6$. So $P(X=1) + P(X=6) = 1/6 + 1/6 = 1/3$:
+    * e.g. $|6-3.5| = |1-3.5| = 2.5 > 2$
+    * e.g. $|5-3.5| = |2-3.5| = 1.5 < 2$
+* And finally, if the threshold of $a$ is $1$, and $\mu=3.5$, then only rolling a $1,2,4$ or $6$ will ensure $|X-\mu| \ge a, hence $P(X=1) + P(X=2) + P(X=4) + P(X=6) = 2/3$:
+    * e.g. $|6-3.5| = |1-3.5| = 2.5 > 1$
+    * e.g. $|5-3.5| = |2-3.5| = 1.5 > 1$
+    * e.g. $|4-3.5| = |3-3.5| = 0.5 < 1$
+
+Now let's look at the expectation side. Given $\mu=3.5$, it is expected that the absolute distance increases with larger distance from 3.5 (so rolls of $1$ and $6$). However, it is then scaled by $\frac{1}{a}$: -->

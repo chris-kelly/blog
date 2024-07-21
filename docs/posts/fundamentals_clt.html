@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Chris Kelly">
+<meta name="dcterms.date" content="2024-06-14">
+
+<title>Sciencing the data - Deriving the Central Limit Theorem</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+<script type="text/javascript">
+window.PlotlyConfig = {MathJaxConfig: 'local'};
+if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}
+if (typeof require !== 'undefined') {
+require.undef("plotly");
+requirejs.config({
+    paths: {
+        'plotly': ['https://cdn.plot.ly/plotly-2.27.0.min']
+    }
+});
+require(['plotly'], function(Plotly) {
+    window._Plotly = Plotly;
+});
+}
+</script>
+
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Sciencing the data</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">about</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/chris-kelly"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/ccrkelly/"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Deriving the Central Limit Theorem</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">Law of Large Numbers</div>
+                <div class="quarto-category">Central Limit Theorem</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Chris Kelly </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 14, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#weak-law-of-large-numbers" id="toc-weak-law-of-large-numbers" class="nav-link active" data-scroll-target="#weak-law-of-large-numbers">(Weak) law of Large Numbers</a>
+  <ul class="collapse">
+  <li><a href="#markovs-inequality" id="toc-markovs-inequality" class="nav-link" data-scroll-target="#markovs-inequality">Markov’s inequality</a></li>
+  <li><a href="#chebyshevs-inequality" id="toc-chebyshevs-inequality" class="nav-link" data-scroll-target="#chebyshevs-inequality">Chebyshev’s inequality</a></li>
+  <li><a href="#weak-law-of-large-numbers-1" id="toc-weak-law-of-large-numbers-1" class="nav-link" data-scroll-target="#weak-law-of-large-numbers-1">Weak law of large numbers</a></li>
+  <li><a href="#taylor-series" id="toc-taylor-series" class="nav-link" data-scroll-target="#taylor-series">Taylor Series</a></li>
+  <li><a href="#moment-generating-functions" id="toc-moment-generating-functions" class="nav-link" data-scroll-target="#moment-generating-functions">Moment generating functions</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="weak-law-of-large-numbers" class="level1">
+<h1>(Weak) law of Large Numbers</h1>
+<section id="markovs-inequality" class="level2">
+<h2 class="anchored" data-anchor-id="markovs-inequality">Markov’s inequality</h2>
+<p>First we state Markov’s inequality.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Markov's inequality">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Markov’s inequality
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">\(X\)</span> is a non-negative random variable, and <span class="math inline">\(a &gt; 0\)</span>, then <span class="math display">\[
+\frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)
+\]</span></p>
+</div>
+</div>
+<p>Let’s take an example to understand this, e.g.&nbsp;take a dice role:</p>
+<div id="d798e122" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotly.graph_objects <span class="im">import</span> Figure, Bar</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.arange(<span class="dv">1</span>, <span class="dv">7</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> np.repeat(<span class="dv">1</span><span class="op">/</span><span class="dv">6</span>, <span class="dv">6</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>Ex <span class="op">=</span> np.<span class="bu">sum</span>(x <span class="op">*</span> p) <span class="co"># 3.5</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>px_le_a <span class="op">=</span> [np.<span class="bu">sum</span>(p[x <span class="op">&gt;=</span> a]) <span class="cf">for</span> a <span class="kw">in</span> x]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>ex_div_a <span class="op">=</span> Ex<span class="op">/</span>x</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> Figure()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>fig.add_trace(Bar(x<span class="op">=</span>x, y<span class="op">=</span>px_le_a, name<span class="op">=</span><span class="st">'P(X &gt;= a)'</span>))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>fig.add_trace(Bar(x<span class="op">=</span>x, y<span class="op">=</span>ex_div_a, name<span class="op">=</span><span class="st">'E[X]/a'</span>))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Update layout for grouped bar chart</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>fig.update_layout(barmode<span class="op">=</span><span class="st">'group'</span>, title<span class="op">=</span><span class="st">'Markov</span><span class="ch">\'</span><span class="st">s inequality for a dice role'</span>, xaxis_title<span class="op">=</span><span class="st">'a (Dice roll)'</span>, legend<span class="op">=</span><span class="bu">dict</span>(x<span class="op">=</span><span class="fl">0.67</span>,y<span class="op">=</span><span class="fl">0.95</span>))</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>                            <div id="a0392cce-d085-4a87-b5bf-327386b41be7" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("a0392cce-d085-4a87-b5bf-327386b41be7")) {                    Plotly.newPlot(                        "a0392cce-d085-4a87-b5bf-327386b41be7",                        [{"name":"P(X \u003e= a)","x":[1,2,3,4,5,6],"y":[0.9999999999999999,0.8333333333333333,0.6666666666666666,0.5,0.3333333333333333,0.16666666666666666],"type":"bar"},{"name":"E[X]\u002fa","x":[1,2,3,4,5,6],"y":[3.5,1.75,1.1666666666666667,0.875,0.7,0.5833333333333334],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"legend":{"x":0.67,"y":0.95},"barmode":"group","title":{"text":"Markov's inequality for a dice role"},"xaxis":{"title":{"text":"a (Dice roll)"}}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('a0392cce-d085-4a87-b5bf-327386b41be7');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };                });            </script>        </div>
+</div>
+</div>
+<p>Why is this always the case? Well let’s derive it.</p>
+<p>First, let’s specify an “indicator function”. This indicator function returns <span class="math inline">\(1\)</span> if the random variable <span class="math inline">\(X\)</span> reaches a certain threshold of <span class="math inline">\(a\)</span>, and returns <span class="math inline">\(0\)</span> if the threshold <span class="math inline">\(a\)</span> is not reached. So we can write this as:</p>
+<p><span class="math display">\[
+\mathbb{I}(X) =
+\begin{cases}
+0 &amp; \text{if } X &lt; a \\
+1 &amp; \text{if } X \ge a
+\end{cases}
+\]</span></p>
+<p>Now let’s simply multiply this function by <span class="math inline">\(a\)</span>:</p>
+<p><span class="math display">\[
+a \times \mathbb{I}(X) =
+\begin{cases}
+0 &amp; \text{if } X &lt; a \\
+a &amp; \text{if } X \ge a
+\end{cases}
+\]</span></p>
+<p>So in practice:</p>
+<ul>
+<li>if <span class="math inline">\(X &lt; a\)</span>, then <span class="math inline">\(a \times \mathbb{I}(X) = 0\)</span></li>
+<li>if <span class="math inline">\(X = a\)</span>, then <span class="math inline">\(a \times \mathbb{I}(X) = a\)</span></li>
+<li>if <span class="math inline">\(X &gt; a\)</span>, then <span class="math inline">\(a \times \mathbb{I}(X) = a\)</span></li>
+</ul>
+<p>In other words, regardless of <span class="math inline">\(X\)</span>, the indicator function will always return a number less than <span class="math inline">\(X\)</span> - either <span class="math inline">\(a\)</span> or <span class="math inline">\(0\)</span>:</p>
+<p><span class="math display">\[
+X \ge a \times \mathbb{I}(X)
+\]</span></p>
+<p>We can visualise this, where the <span class="math inline">\(x\)</span>-axis is the random variable <span class="math inline">\(X\)</span>, and the <span class="math inline">\(y\)</span>-axis is the output of the indicator function.</p>
+<div id="e9e4ef86" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotly.graph_objects <span class="im">import</span> Scatter</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> Figure()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>fig.add_trace(Scatter(x<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>], y<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>], name<span class="op">=</span><span class="st">'a if X &gt;= a else 0'</span>, mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">2</span>)))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.5</span>, y<span class="op">=</span><span class="fl">0.1</span>, text<span class="op">=</span><span class="st">'I(X&lt;a) = 0'</span>, showarrow<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">1.5</span>, y<span class="op">=</span><span class="fl">1.1</span>, text<span class="op">=</span><span class="st">'I(X≥a) = a'</span>, showarrow<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    xaxis <span class="op">=</span> <span class="bu">dict</span>(tickmode <span class="op">=</span> <span class="st">'array'</span>,tickvals <span class="op">=</span> [<span class="fl">0.5</span>,<span class="dv">1</span>,<span class="fl">1.5</span>],ticktext <span class="op">=</span> [<span class="st">'X&lt;a'</span>, <span class="st">'X=a'</span>, <span class="st">'X&gt;a'</span>]),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    yaxis <span class="op">=</span> <span class="bu">dict</span>(tickmode <span class="op">=</span> <span class="st">'array'</span>,tickvals <span class="op">=</span> [<span class="dv">0</span>,<span class="dv">1</span>],ticktext <span class="op">=</span> [<span class="st">'0'</span>, <span class="st">'a'</span>], <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.1</span>,<span class="fl">1.2</span>]),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>                            <div id="58bb6802-bfad-44a7-9834-dab4cf27abbb" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("58bb6802-bfad-44a7-9834-dab4cf27abbb")) {                    Plotly.newPlot(                        "58bb6802-bfad-44a7-9834-dab4cf27abbb",                        [{"line":{"width":2},"mode":"lines","name":"a if X \u003e= a else 0","x":[0,1,1,2],"y":[0,0,1,1],"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"annotations":[{"showarrow":false,"text":"I(X\u003ca) = 0","x":0.5,"y":0.1},{"showarrow":false,"text":"I(X\u2265a) = a","x":1.5,"y":1.1}],"xaxis":{"tickmode":"array","tickvals":[0.5,1,1.5],"ticktext":["X\u003ca","X=a","X\u003ea"]},"yaxis":{"tickmode":"array","tickvals":[0,1],"ticktext":["0","a"],"range":[-0.1,1.2]}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('58bb6802-bfad-44a7-9834-dab4cf27abbb');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };                });            </script>        </div>
+</div>
+</div>
+<p>Okay, so now let’s take the expectation of both sides. The expectation of the indicator function is just the area under the curve above: <span class="math display">\[
+\displaylines{
+\begin{align}
+\mathbb{E}[X]
+\ge a \times \mathbb{E}[ \mathbb{I}(X) ]
+&amp; = \int_{x \in X} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx
+\\
+&amp; = \int_{x \in X &lt; a} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx +
+    \int_{x \in X \ge a} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx
+\\
+&amp; = \underbrace{0 \times \mathbb{P}(X &lt; a)}_{\text{CDF for } x &lt; a} +
+    \underbrace{a \times \mathbb{P}(X \ge a)}_{\text{CDF for } x \ge a}
+\\
+&amp; = a \times \mathbb{P}(X \ge a)
+\\
+\implies \frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)
+\end{align}
+}
+\]</span></p>
+<p>This is sometimes referred to as the “fundamental link between the expectation and the probability”. The probability is limited by the expectation: if the probability of a large value is high, then the expectation must also be high.</p>
+</section>
+<section id="chebyshevs-inequality" class="level2">
+<h2 class="anchored" data-anchor-id="chebyshevs-inequality">Chebyshev’s inequality</h2>
+<p>We can extend Markov’s inequality to relate the variance of a random variable to the probability of it being far from the mean too:</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Chebyshev's inequality">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Chebyshev’s inequality
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math display">\[
+\frac{\mathbb{V}[X]}{a^2} \ge \mathbb{P}(|X-\mu| \ge a)
+\]</span></p>
+</div>
+</div>
+<p>Okay so how do we get this? Well we can take Markov’s inequality, which works for any random variable, and apply it to our case in particular:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\text{Let } Z &amp; = (X-\mu)^2 \\
+\\
+\therefore \frac{\mathbb{E}[Z]}{a} &amp; \ge \mathbb{P}(Z \ge a) \\
+\implies \frac{\mathbb{E}[(X-\mu)^2]}{a} &amp; \ge \mathbb{P}((X-\mu)^2 \ge a) \\
+\equiv \frac{\mathbb{V}[X]}{a^2} &amp; \ge \mathbb{P}((X-\mu)^2 \ge a^2)
+\end{align}
+}
+\]</span></p>
+<p>So we are almost there! We just need to convince ourselves that <span class="math inline">\(\mathbb{P}((X-\mu)^2 \ge k^2\sigma^2) \equiv \mathbb{P}(|X-\mu| \ge k\sigma)\)</span>. Then we are left with:</p>
+<p><span class="math display">\[
+\frac{\mathbb{V}[X]}{a^2} \ge \mathbb{P}(|X-\mu| \ge a)
+\]</span></p>
+</section>
+<section id="weak-law-of-large-numbers-1" class="level2">
+<h2 class="anchored" data-anchor-id="weak-law-of-large-numbers-1">Weak law of large numbers</h2>
+<p>We can now find the law of large numbers, that states that as the sample size collected <span class="math inline">\(n \rightarrow \infty\)</span>, the sample mean <span class="math inline">\(\bar{X}_n\)</span> converges to the true mean <span class="math inline">\(\mu\)</span>:</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Chebyshev's inequality">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Chebyshev’s inequality
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math display">\[
+\lim_{N \rightarrow \infty} \mathbb{P}(|\bar{X}_N - \mu| \ge \varepsilon) = 0
+\]</span></p>
+</div>
+</div>
+<p>More specifically, this is saying that as <span class="math inline">\(n \rightarrow \infty\)</span>, the probability of the sample mean <span class="math inline">\(\bar{X}_N\)</span> being further away from the true mean <span class="math inline">\(\mu\)</span> by some very small number amount <span class="math inline">\(\varepsilon\)</span>, tends towards zero.</p>
+<p>So let’s derive this! First let’s use the sample mean <span class="math inline">\(\bar{X_n}\)</span> over <span class="math inline">\(n\)</span> samples collected in Chebyshev’s inequality:</p>
+<p><span class="math display">\[
+\frac{\mathbb{V}[\bar{X}_n]}{\varepsilon^2} \ge \mathbb{P}(|\bar{X}_n-\mu| \ge \varepsilon)
+\]</span></p>
+<p>Now let’s calculate a term for the variance of the sample mean:</p>
+<p><span class="math display">\[
+\displaylines{
+\begin{align}
+\bar{X_n} &amp; = \frac{1}{n}\sum_{i=1}^{n}X_i \\
+\therefore \mathbb{V}[\bar{X}_n]
+&amp; = \mathbb{V}\left[\frac{1}{n} \sum_{i=1}^{n}{X_i} \right] \\
+&amp; = \sum_{i=1}^{n}{\mathbb{V}\left[\frac{1}{n} X_i \right]}
+&amp; \because \mathbb{V}[A+B] = \mathbb{V}[A] + \mathbb{V}[B] \\
+&amp; = \frac{1}{n^2} \sum_{i=1}^{n}{\mathbb{V}\left[ X_i \right]}
+&amp; \because \mathbb{V}[cA] = c^2\mathbb{V}[A] \\
+&amp; = \frac{1}{n^\cancel{2}} \left( \cancel{n} \sigma^2 \right) \\
+&amp; = \frac{\sigma^2}{n}
+\end{align}
+}
+\]</span></p>
+<p>And let’s sub this back into Chebyshev’s inequality: <span class="math display">\[
+\displaylines{
+\begin{align}
+\therefore \frac{\mathbb{V}[X]}{\varepsilon^2} &amp; \ge \mathbb{P}(|X-\mu| \ge \varepsilon) \\
+\implies \frac{\sigma^2}{n\varepsilon^2} &amp; \ge \mathbb{P}(|X-\mu| \ge \varepsilon)
+\\
+\end{align}
+}
+\]</span></p>
+<p>It should be getting quite clear now! As <span class="math inline">\(n \rightarrow \infty\)</span>, then <span class="math inline">\(\frac{\sigma^2}{n\varepsilon^2} \rightarrow 0\)</span>. So the probability of the sample mean <span class="math inline">\(\bar{X}\)</span> being far from the true mean <span class="math inline">\(\mu\)</span> also goes to zero.</p>
+</section>
+<section id="taylor-series" class="level2">
+<h2 class="anchored" data-anchor-id="taylor-series">Taylor Series</h2>
+<div id="ab1f8874" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simple_differential(a <span class="op">=</span> <span class="dv">1</span>, n <span class="op">=</span> <span class="dv">1</span>, x <span class="op">=</span> <span class="va">None</span>):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> x <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> [a<span class="op">*</span>n,n<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> a<span class="op">*</span>n<span class="op">*</span>x<span class="op">**</span>(n<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> [<span class="dv">1</span>,<span class="dv">4</span>,<span class="dv">3</span>,<span class="dv">8</span>,<span class="op">-</span><span class="dv">6</span>,<span class="op">-</span><span class="dv">17</span>,<span class="dv">20</span>]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>a.reverse()</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>a_n <span class="op">=</span> <span class="bu">list</span>(<span class="bu">zip</span>(a,<span class="bu">range</span>(<span class="bu">len</span>(a))))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">4.5</span>,<span class="fl">2.5</span>,<span class="dv">100</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> [simple_differential() <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(a))]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="b6efe1e3" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> math <span class="im">import</span> factorial</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> taylor_series_cos(x,n):</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">%</span> <span class="dv">4</span> <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> <span class="op">-</span>np.sin(<span class="dv">0</span>)<span class="op">*</span>x<span class="op">**</span>n</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> n <span class="op">%</span> <span class="dv">4</span> <span class="op">==</span> <span class="dv">2</span>:</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> <span class="op">-</span>np.cos(<span class="dv">0</span>)<span class="op">*</span>x<span class="op">**</span>n </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> n <span class="op">%</span> <span class="dv">4</span> <span class="op">==</span> <span class="dv">3</span>:</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> np.sin(<span class="dv">0</span>)<span class="op">*</span>x<span class="op">**</span>n</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> np.cos(<span class="dv">0</span>)<span class="op">*</span>x<span class="op">**</span>n</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    y <span class="op">/=</span> factorial(n)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> y</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">100</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>ideal_plot <span class="op">=</span> go.Scatter(x<span class="op">=</span>x,y<span class="op">=</span>np.cos(x),mode<span class="op">=</span><span class="st">'lines'</span>,name<span class="op">=</span><span class="st">"True function"</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure(data <span class="op">=</span> [</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    go.Scatter(mode<span class="op">=</span><span class="st">'markers'</span>,x<span class="op">=</span>[<span class="op">-</span><span class="dv">12</span>,<span class="op">-</span><span class="dv">11</span>],y<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">0</span>], name<span class="op">=</span><span class="st">"Taylor approximation"</span>),</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    ideal_plot</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>frames <span class="op">=</span> [</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    go.Frame(data<span class="op">=</span>[go.Scatter(x<span class="op">=</span>[<span class="op">-</span><span class="dv">12</span>,<span class="op">-</span><span class="dv">11</span>],y<span class="op">=</span>[<span class="dv">0</span>,<span class="dv">0</span>])], name<span class="op">=</span> <span class="ss">f'frame</span><span class="sc">{</span><span class="dv">0</span><span class="sc">}</span><span class="ss">'</span>),</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    go.Frame(data<span class="op">=</span>[go.Scatter(x<span class="op">=</span>x,y<span class="op">=</span>np.ones(<span class="bu">len</span>(x)))], name<span class="op">=</span> <span class="ss">f'frame</span><span class="sc">{</span><span class="dv">1</span><span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.ones(<span class="bu">len</span>(x))</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>k <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> n <span class="kw">in</span> np.arange(<span class="dv">2</span>,<span class="dv">20</span>,<span class="dv">2</span>):</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    y <span class="op">+=</span> taylor_series_cos(x,n)</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    frames.append(go.Frame(</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        data<span class="op">=</span>[go.Scatter(x<span class="op">=</span>x,y<span class="op">=</span>y.copy()), ideal_plot], </span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span> <span class="ss">f'frame</span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>        ))</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    k <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>fig.frames <span class="op">=</span> frames</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>updatemenus <span class="op">=</span> [<span class="bu">dict</span>(</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>        buttons <span class="op">=</span> [</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>            <span class="bu">dict</span>(</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>                args <span class="op">=</span> [<span class="va">None</span>, {<span class="st">"frame"</span>: {<span class="st">"duration"</span>: <span class="dv">500</span>, <span class="st">"redraw"</span>: <span class="va">False</span>},</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>                                <span class="st">"fromcurrent"</span>: <span class="va">True</span>, <span class="st">"transition"</span>: {<span class="st">"duration"</span>: <span class="dv">300</span>}}],</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>                label <span class="op">=</span> <span class="st">"Play"</span>,</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>                method <span class="op">=</span> <span class="st">"animate"</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>                ),</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>            <span class="bu">dict</span>(</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>                 args <span class="op">=</span> [[<span class="va">None</span>], {<span class="st">"frame"</span>: {<span class="st">"duration"</span>: <span class="dv">0</span>, <span class="st">"redraw"</span>: <span class="va">False</span>},</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">"mode"</span>: <span class="st">"immediate"</span>,</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">"transition"</span>: {<span class="st">"duration"</span>: <span class="dv">0</span>}}],</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>                label <span class="op">=</span> <span class="st">"Pause"</span>,</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>                method <span class="op">=</span> <span class="st">"animate"</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        ],</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>        direction <span class="op">=</span> <span class="st">"left"</span>,</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>        pad <span class="op">=</span> {<span class="st">"r"</span>: <span class="dv">10</span>, <span class="st">"t"</span>: <span class="dv">87</span>},</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>        showactive <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>        <span class="bu">type</span> <span class="op">=</span> <span class="st">"buttons"</span>,</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>        xanchor <span class="op">=</span> <span class="st">"right"</span>,</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> <span class="dv">0</span>,</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>        yanchor <span class="op">=</span> <span class="st">"top"</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>    )]  </span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>sliders <span class="op">=</span> [<span class="bu">dict</span>(steps <span class="op">=</span> [<span class="bu">dict</span>(method<span class="op">=</span> <span class="st">'animate'</span>,</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>                              args<span class="op">=</span> [[<span class="ss">f'frame</span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">'</span>],                           </span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>                              <span class="bu">dict</span>(mode<span class="op">=</span> <span class="st">'immediate'</span>,</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>                                   frame<span class="op">=</span> <span class="bu">dict</span>(duration<span class="op">=</span><span class="dv">400</span>, redraw<span class="op">=</span><span class="va">False</span>),</span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>                                   transition<span class="op">=</span><span class="bu">dict</span>(duration<span class="op">=</span> <span class="dv">0</span>))</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>                                 ],</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>                              label<span class="op">=</span><span class="ss">f'</span><span class="sc">{</span><span class="dv">2</span><span class="op">*</span>k<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>                             ) <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(frames))], </span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>                active<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>                transition<span class="op">=</span> <span class="bu">dict</span>(duration<span class="op">=</span> <span class="dv">0</span> ),</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>                y<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span><span class="dv">0</span>, <span class="co"># slider starting position  </span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>                currentvalue<span class="op">=</span><span class="bu">dict</span>(</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>                    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>), prefix<span class="op">=</span><span class="st">'polynomial: '</span>, visible<span class="op">=</span><span class="va">True</span>, xanchor<span class="op">=</span> <span class="st">'center'</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>                ),  </span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>                <span class="bu">len</span><span class="op">=</span><span class="fl">1.0</span>) <span class="co">#slider length</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>           ]</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>fig.update_layout(xaxis_range <span class="op">=</span> [<span class="op">-</span><span class="dv">10</span>, <span class="dv">10</span>],</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>                  yaxis_range <span class="op">=</span> [<span class="op">-</span><span class="dv">3</span>, <span class="dv">3</span>],</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>                  updatemenus<span class="op">=</span>updatemenus,</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>                  sliders<span class="op">=</span>sliders)</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>fig.show()             </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>                            <div id="79e99a92-d49a-4ba7-892f-a91b83f89b36" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("79e99a92-d49a-4ba7-892f-a91b83f89b36")) {                    Plotly.newPlot(                        "79e99a92-d49a-4ba7-892f-a91b83f89b36",                        [{"mode":"markers","name":"Taylor approximation","x":[-12,-11],"y":[0,0],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"xaxis":{"range":[-10,10]},"yaxis":{"range":[-3,3]},"updatemenus":[{"buttons":[{"args":[null,{"frame":{"duration":500,"redraw":false},"fromcurrent":true,"transition":{"duration":300}}],"label":"Play","method":"animate"},{"args":[[null],{"frame":{"duration":0,"redraw":false},"mode":"immediate","transition":{"duration":0}}],"label":"Pause","method":"animate"}],"direction":"left","pad":{"r":10,"t":87},"showactive":false,"type":"buttons","x":0.1,"xanchor":"right","y":0,"yanchor":"top"}],"sliders":[{"active":0,"currentvalue":{"font":{"size":12},"prefix":"polynomial: ","visible":true,"xanchor":"center"},"len":1.0,"steps":[{"args":[["frame0"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"0","method":"animate"},{"args":[["frame1"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"2","method":"animate"},{"args":[["frame2"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"4","method":"animate"},{"args":[["frame3"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"6","method":"animate"},{"args":[["frame4"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"8","method":"animate"},{"args":[["frame5"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"10","method":"animate"},{"args":[["frame6"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"12","method":"animate"},{"args":[["frame7"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"14","method":"animate"},{"args":[["frame8"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"16","method":"animate"},{"args":[["frame9"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"18","method":"animate"},{"args":[["frame10"],{"mode":"immediate","frame":{"duration":400,"redraw":false},"transition":{"duration":0}}],"label":"20","method":"animate"}],"transition":{"duration":0},"x":0,"y":0}]},                        {"responsive": true}                    ).then(function(){
+                            Plotly.addFrames('79e99a92-d49a-4ba7-892f-a91b83f89b36', [{"data":[{"x":[-12,-11],"y":[0,0],"type":"scatter"}],"name":"frame0"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],"type":"scatter"}],"name":"frame1"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-49.0,-47.00020406081012,-45.04122028364452,-43.123048668503216,-41.245689215386186,-39.409141924293436,-37.61340679522497,-35.8584838281808,-34.1443730231609,-32.47107438016529,-30.838587899193953,-29.24691358024691,-27.696051423324153,-26.18600142842567,-24.71676359555147,-23.288337924701562,-21.900724415875935,-20.553923069074585,-19.24793388429752,-17.98275686154474,-16.75839200081624,-15.574839302112032,-14.432098765432098,-13.330170390776454,-12.269054178145087,-11.248750127538008,-10.269258238955208,-9.330578512396697,-8.432710947862462,-7.575655545352516,-6.75941230486685,-5.98398122640547,-5.249362309968371,-4.5555555555555545,-3.9025609631670246,-3.290378532802775,-2.7190082644628104,-2.1884501581471274,-1.6987042138557298,-1.2497704315886131,-0.8416488113457801,-0.4743393531272333,-0.1478420569329666,0.1378430772370166,0.3827160493827165,0.5867768595041314,0.7500255076012647,0.8724619936741148,0.9540863177226815,0.9948984797469647,0.9948984797469647,0.9540863177226815,0.8724619936741148,0.7500255076012647,0.5867768595041329,0.3827160493827165,0.1378430772370166,-0.1478420569329666,-0.4743393531272304,-0.8416488113457801,-1.2497704315886131,-1.6987042138557298,-2.188450158147125,-2.719008264462808,-3.290378532802775,-3.9025609631670246,-4.555555555555557,-5.249362309968368,-5.983981226405468,-6.75941230486685,-7.575655545352516,-8.432710947862459,-9.330578512396691,-10.269258238955208,-11.248750127538008,-12.269054178145081,-13.330170390776448,-14.432098765432098,-15.574839302112032,-16.758392000816237,-17.982756861544747,-19.24793388429752,-20.553923069074575,-21.900724415875935,-23.288337924701555,-24.716763595551484,-26.18600142842567,-27.69605142332414,-29.24691358024692,-30.838587899193953,-32.47107438016528,-34.1443730231609,-35.85848382818079,-37.61340679522499,-39.409141924293436,-41.24568921538617,-43.123048668503216,-45.04122028364452,-47.000204060810134,-49.0],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame2"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[367.6666666666667,337.0030609190919,308.2577739175354,281.35085529868076,256.20402033178,232.74064991865478,210.88579059369602,190.5661545238635,171.71011950868575,154.2477289802609,138.110692003256,123.23238327490728,109.54784312501988,96.9937775159681,85.50855804269543,75.03222193271445,65.50647204610678,56.87467687552301,49.08187054618307,42.074752815875925,35.80168907495947,30.212710346360907,25.25951328557638,20.895460180671236,17.07557895227984,13.75656315360572,10.896771970421431,8.456230221068692,6.396628356458265,4.681322460070046,3.2753342479529985,2.1453510687252066,1.2597259035738322,0.5884773662551428,0.10328970309450547,-0.2224872070136268,-0.41383785260569583,-0.49408108964905373,-0.4848701415419512,-0.406192599113544,-0.2763704206238926,-0.11205993176396184,0.07174817434438407,0.26172883714837275,0.44622262866433,0.6152357534776761,0.7604400487429323,0.8751729841837117,0.9544376620927253,0.99490281733178,0.99490281733178,0.9544376620927253,0.8751729841837117,0.7604400487429323,0.6152357534776774,0.44622262866433,0.26172883714837275,0.07174817434438407,-0.1120599317639604,-0.2763704206238926,-0.406192599113544,-0.4848701415419512,-0.49408108964905395,-0.4138378526056967,-0.2224872070136268,0.10328970309450547,0.5884773662551464,1.2597259035738277,2.145351068725202,3.2753342479529985,4.681322460070046,6.396628356458255,8.456230221068683,10.896771970421431,13.75656315360572,17.075578952279827,20.895460180671225,25.25951328557638,30.212710346360907,35.80168907495945,42.07475281587594,49.08187054618307,56.87467687552294,65.50647204610678,75.03222193271442,85.50855804269553,96.9937775159681,109.54784312501975,123.23238327490736,138.110692003256,154.24772898026075,171.71011950868575,190.5661545238633,210.88579059369619,232.74064991865478,256.20402033177976,281.35085529868076,308.2577739175354,337.00306091909215,367.6666666666667],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame3"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-1021.2222222222222,-891.8126110177507,-776.1633472829028,-673.1010017948724,-581.5271787839845,-500.41532096458604,-428.80758254399154,-365.81177020950406,-310.59835209349484,-262.39753471655786,-220.49640790872238,-184.23615770873695,-153.0093472414173,-126.25726557306174,-103.46734454493256,-84.17064358480339,-67.93940249657265,-54.384662227944276,-43.15395361617365,-33.92905411188053,-26.423812480927772,-20.382041484366766,-15.575478536448802,-11.801814340702968,-8.882789504080133,-6.662359129163418,-5.0049253844447374,-3.793638052667804,-2.928763057237285,-2.3261189666943425,-1.915581477258371,-1.6396558734350832,-1.4521174666908343,-1.3167200121932634,-1.2059721036181874,-1.0999815460228004,-0.9853677067851457,-0.8542418446098726,-0.7032554166002749,-0.5327163633966122,-0.3457733723807206,-0.14766811894689744,0.05494451416093207,0.25460823944575084,0.4436091891877204,0.614451761908157,0.7602664907672353,0.8751499338953942,0.9544365866584735,0.9949028158565615,0.9949028158565615,0.9544365866584735,0.8751499338953942,0.7602664907672353,0.6144517619081583,0.4436091891877204,0.25460823944575084,0.05494451416093207,-0.14766811894689577,-0.3457733723807206,-0.5327163633966122,-0.7032554166002749,-0.8542418446098721,-0.9853677067851455,-1.0999815460228004,-1.2059721036181874,-1.316720012193263,-1.4521174666908347,-1.6396558734350823,-1.915581477258371,-2.3261189666943425,-2.9287630572372834,-3.7936380526677986,-5.0049253844447374,-6.662359129163418,-8.882789504080122,-11.80181434070295,-15.575478536448802,-20.382041484366766,-26.42381248092773,-33.929054111880575,-43.15395361617365,-54.384662227944176,-67.93940249657265,-84.1706435848033,-103.46734454493274,-126.25726557306174,-153.00934724141706,-184.2361577087371,-220.49640790872238,-262.3975347165574,-310.59835209349484,-365.81177020950344,-428.80758254399217,-500.41532096458604,-581.5271787839838,-673.1010017948724,-776.1633472829028,-891.8126110177516,-1021.2222222222222],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame4"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[1458.936507936508,1214.7374963426043,1006.9820713394593,830.9463461437749,682.420388497351,557.6633818948433,453.3617189265501,366.58989911698245,294.77410641427815,235.65834425986355,187.27300894208307,147.90578471186635,116.07474691282522,90.5035621525056,70.09867731585288,53.92839199627845,41.20371169405077,31.260881906063418,23.545506005365283,17.59815258316913,13.041360700388175,9.567954270081437,6.930579566519217,4.93238263091439,3.4187461181946155,2.2700079035243377,1.3950865416158988,0.7259414462019196,0.2127984313723088,-0.17992596918845027,-0.4770652146965162,-0.6955695367971602,-0.8468570470954911,-0.9387046593265163,-0.9767315384697882,-0.9655250147820533,-0.9094561263894101,-0.8132291797486865,-0.6822069429558485,-0.5225503125474217,-0.34120852010904734,-0.14579317067342162,0.05563336944196694,0.2548274920387339,0.443666804696464,0.6144633320316741,0.7602680402339095,0.8751500388878163,0.954436588421943,0.9949028158568303,0.9949028158568303,0.954436588421943,0.8751500388878163,0.7602680402339095,0.6144633320316755,0.443666804696464,0.2548274920387339,0.05563336944196694,-0.14579317067342,-0.34120852010904734,-0.5225503125474217,-0.6822069429558485,-0.813229179748686,-0.90945612638941,-0.9655250147820533,-0.9767315384697882,-0.9387046593265149,-0.8468570470954928,-0.6955695367971612,-0.4770652146965162,-0.17992596918845027,0.21279843137230525,0.7259414462019178,1.3950865416158988,2.2700079035243377,3.41874611819461,4.932382630914383,6.930579566519217,9.567954270081437,13.041360700388175,17.598152583169146,23.545506005365283,31.260881906063332,41.20371169405077,53.928391996278364,70.09867731585304,90.5035621525056,116.07474691282493,147.90578471186654,187.27300894208307,235.65834425986316,294.77410641427815,366.5898991169818,453.36171892655096,557.6633818948433,682.4203884973497,830.9463461437749,1006.9820713394593,1214.7374963426062,1458.936507936508],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame5"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-1296.7954144620812,-1032.2588373822512,-817.4221734730672,-643.7904168080058,-504.16485843399846,-392.471117458912,-303.60632773881616,-233.3037694297492,-178.01334913561453,-134.79644175565653,-101.23371152474871,-75.34462926083,-55.51749759936905,-40.44888611802784,-29.091463848905747,-20.609297854137097,-14.339763416392458,-9.761284082235115,-6.4661884065301045,-4.138034893423935,-2.53281742703202,-1.4635205461167082,-0.7875473549375798,-0.3965927903320994,-0.2085814961686152,-0.16133280382789472,-0.20765539454344384,-0.31161123948901803,-0.4457224896719314,-0.5889262331986314,-0.7251105655514836,-0.8420913423790528,-0.9309124171829307,-0.9853732214088307,-1.0017063350446969,-0.9783443351205072,-0.9157298107196362,-0.8161351094767462,-0.6834692452785028,-0.5230585632275669,-0.34139533910371617,-0.1458545997850808,0.05561579839612889,0.25482329136893667,0.44366601436026726,0.6144632257862791,0.7602680316266396,0.8751500385902491,0.9544365884201438,0.9949028158568303,0.9949028158568303,0.9544365884201438,0.8751500385902491,0.7602680316266396,0.6144632257862804,0.44366601436026726,0.25482329136893667,0.05561579839612889,-0.14585459978507917,-0.34139533910371617,-0.5230585632275669,-0.6834692452785028,-0.8161351094767456,-0.9157298107196361,-0.9783443351205072,-1.0017063350446969,-0.9853732214088295,-0.9309124171829322,-0.8420913423790535,-0.7251105655514836,-0.5889262331986314,-0.44572248967193373,-0.3116112394890178,-0.20765539454344384,-0.16133280382789472,-0.20858149616861388,-0.3965927903320976,-0.7875473549375798,-1.4635205461167082,-2.532817427031997,-4.138034893423956,-6.4661884065301045,-9.761284082235086,-14.339763416392458,-20.609297854137083,-29.091463848905832,-40.44888611802784,-55.51749759936891,-75.34462926083003,-101.23371152474871,-134.79644175565613,-178.01334913561453,-233.30376942974857,-303.6063277388168,-392.471117458912,-504.1648584339973,-643.7904168080058,-817.4221734730672,-1032.2588373822534,-1296.7954144620812],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame6"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[790.8802843247286,601.9272617493436,455.2717314031397,342.1168856912716,255.35198352697216,189.25797089795753,139.2590528199206,101.7139742180957,73.74147962978748,53.07506880818724,37.94275179481801,26.968037075328994,19.0888641031391,13.491620635586713,9.557769656298433,6.820953649097611,4.932748956400339,3.635513036531469,2.7410055966183684,2.1136736211990943,1.657672880199284,1.3068570651526876,1.0171025986391122,0.7604545701939902,0.520679210450589,0.2898927234337569,0.06600692013811216,-0.14920942918177132,-0.35160676995480294,-0.5357831213484866,-0.6959486542243768,-0.8265867129935532,-0.9229534404893718,-0.9814448912672217,-0.9998511765181638,-0.9775110057752765,-0.9153762973276249,-0.8159947244449129,-0.6834176304209679,-0.5230412382676878,-0.3413901261494818,-0.14585322755240282,0.05561610398378642,0.25482334624221764,0.44366602175211345,0.6144632264514769,0.7602680316592395,0.8751500385908241,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908241,0.7602680316592395,0.6144632264514782,0.44366602175211345,0.25482334624221764,0.05561610398378642,-0.14585322755240118,-0.3413901261494818,-0.5230412382676878,-0.6834176304209679,-0.8159947244449124,-0.9153762973276248,-0.9775110057752765,-0.9998511765181638,-0.9814448912672206,-0.9229534404893733,-0.826586712993554,-0.6959486542243768,-0.5357831213484866,-0.35160676995480555,-0.1492094291817715,0.06600692013811216,0.2898927234337569,0.5206792104505887,0.7604545701939898,1.0171025986391122,1.3068570651526876,1.6576728801993,2.1136736211990836,2.7410055966183684,3.635513036531453,4.932748956400339,6.820953649097586,9.557769656298461,13.491620635586713,19.088864103139045,26.96803707532912,37.94275179481801,53.075068808187126,73.74147962978748,101.71397421809553,139.25905281992107,189.25797089795753,255.35198352697148,342.1168856912716,455.2717314031397,601.9272617493448,790.8802843247286],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame7"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-356.19427544824384,-260.0646748622588,-188.64453703704885,-135.91867354838053,-97.24485668549767,-69.06261473833456,-48.65898119147079,-33.98103772034071,-23.486713914314578,-16.026703763202022,-10.75155656670912,-7.039022010763738,-4.437597346556455,-2.622958415553615,-1.3645732140598419,-0.5003124813432409,0.08269956463234962,0.4623972731260291,0.6923610313914361,0.8095564486459297,0.8399105774362687,0.8022574639113775,0.7110637379728708,0.5782492314408362,0.414342948625066,0.2291570230535969,0.03211712569397284,-0.16764574403819293,-0.36136244445745913,-0.5407912204895303,-0.6984352398681679,-0.8277766475050994,-0.9235000177308513,-0.9816847160621917,-0.999951121878303,-0.9775502947679526,-0.9153907447916523,-0.8159996432435608,-0.6834191611158419,-0.5230416665883743,-0.3413902316487232,-0.14585324978467357,0.05561610012921098,0.25482334572233434,0.44366602170197206,0.6144632264484563,0.7602680316591499,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591499,0.6144632264484576,0.44366602170197206,0.25482334572233434,0.05561610012921098,-0.14585324978467193,-0.3413902316487232,-0.5230416665883743,-0.6834191611158419,-0.8159996432435602,-0.9153907447916522,-0.9775502947679526,-0.999951121878303,-0.9816847160621905,-0.9235000177308529,-0.8277766475051002,-0.6984352398681679,-0.5407912204895303,-0.3613624444574617,-0.16764574403819305,0.03211712569397284,0.2291570230535969,0.41434294862506604,0.5782492314408362,0.7110637379728708,0.8022574639113775,0.8399105774362864,0.8095564486459164,0.6923610313914361,0.4623972731260251,0.08269956463234962,-0.5003124813432533,-1.3645732140598508,-2.622958415553615,-4.437597346556434,-7.0390220107636665,-10.75155656670912,-16.026703763201922,-23.486713914314578,-33.98103772034051,-48.65898119147087,-69.06261473833456,-97.24485668549738,-135.91867354838053,-188.64453703704885,-260.06467486225984,-356.19427544824384],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame8"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[121.75345779049468,84.73356560548967,58.41121929192701,39.8512118316722,26.88594773069552,17.924995319528122,11.80898123720236,7.69823230547312,4.988485271368816,3.2475509829499423,2.1680935746153516,1.5327161333645751,1.1883738831878539,1.027799660302879,0.9761543651614986,0.9815324004302557,1.0082799356678946,1.0323397152402682,1.0380345289676058,1.015854275358779,0.9609284402359004,0.8719546080987486,0.7504205873383853,0.6000078443611848,0.4261011287856017,0.2353564932017435,0.0352997327377738,-0.16605859572066353,-0.36059559064341756,-0.540433322713109,-0.6982744528411551,-0.8277073935026886,-0.9234715530707481,-0.9816736130624245,-0.9999470386431275,-0.9775488900625297,-0.915390297039668,-0.8159995125490247,-0.683419126691736,-0.5230416585581807,-0.34139023002961855,-0.1458532495115243,0.055616100166081345,0.2548233457260695,0.44366602170222996,0.6144632264484667,0.7602680316591501,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591501,0.6144632264484681,0.44366602170222996,0.2548233457260695,0.055616100166081345,-0.14585324951152268,-0.34139023002961855,-0.5230416585581807,-0.683419126691736,-0.8159995125490241,-0.9153902970396679,-0.9775488900625297,-0.9999470386431275,-0.9816736130624234,-0.9234715530707497,-0.8277073935026894,-0.6982744528411551,-0.540433322713109,-0.3605955906434201,-0.16605859572066364,0.0352997327377738,0.2353564932017435,0.42610112878560175,0.6000078443611848,0.7504205873383853,0.8719546080987486,0.9609284402359177,1.015854275358766,1.0380345289676058,1.032339715240262,1.0082799356678946,0.9815324004302404,0.976154365161499,1.027799660302879,1.1883738831878539,1.5327161333646604,2.1680935746153516,3.2475509829499742,4.988485271368816,7.698232305473184,11.808981237202481,17.924995319528122,26.88594773069542,39.8512118316722,58.41121929192701,84.73356560548962,121.75345779049468],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame9"},{"data":[{"x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-34.438611895367586,-23.438891272027988,-15.93354214261403,-10.838351613303601,-7.388505768797188,-5.049479716310234,-3.451633346697875,-2.3425173691467496,-1.552318794581935,-0.9689850577736276,-0.520425488465647,-0.16185002923643887,0.13318983276376972,0.3791100245834592,0.5827168632240953,0.7462935165053922,0.8697409748716253,0.952048894644642,0.9922882928599185,0.9902588408126671,0.9468821484274242,0.8644041573489328,0.7464509220671118,0.5979699055989917,0.4250813906837289,0.23486018103986261,0.03506531691653386,-0.1661657601671018,-0.36064286848895427,-0.5404533828964491,-0.6982826071734156,-0.8277105547357128,-0.9234727157241731,-0.9816740162214574,-0.9999471694817509,-0.9775489294528433,-0.9153903079232846,-0.8159995152726391,-0.6834191272989286,-0.5230416586762597,-0.34139023004910757,-0.14585324951415643,0.05561610016580473,0.2548233457260485,0.4436660217022289,0.6144632264484667,0.7602680316591501,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591501,0.6144632264484681,0.4436660217022289,0.2548233457260485,0.05561610016580473,-0.1458532495141548,-0.34139023004910757,-0.5230416586762597,-0.6834191272989286,-0.8159995152726386,-0.9153903079232845,-0.9775489294528433,-0.9999471694817509,-0.9816740162214563,-0.9234727157241747,-0.8277105547357135,-0.6982826071734156,-0.5404533828964491,-0.3606428684889568,-0.1661657601671019,0.03506531691653386,0.23486018103986261,0.42508139068372897,0.5979699055989917,0.7464509220671118,0.8644041573489328,0.9468821484274416,0.9902588408126541,0.9922882928599185,0.9520488946446362,0.8697409748716253,0.7462935165053773,0.582716863224094,0.3791100245834592,0.13318983276377394,-0.16185002923635694,-0.520425488465647,-0.9689850577735788,-1.552318794581935,-2.3425173691466483,-3.4516333466978093,-5.049479716310234,-7.388505768797167,-10.838351613303601,-15.93354214261403,-23.4388912720284,-34.438611895367586],"type":"scatter"},{"mode":"lines","name":"True function","x":[-10.0,-9.797979797979798,-9.595959595959595,-9.393939393939394,-9.191919191919192,-8.98989898989899,-8.787878787878787,-8.585858585858587,-8.383838383838384,-8.181818181818182,-7.979797979797979,-7.777777777777778,-7.575757575757576,-7.373737373737374,-7.171717171717171,-6.96969696969697,-6.767676767676768,-6.565656565656566,-6.363636363636363,-6.161616161616162,-5.959595959595959,-5.757575757575758,-5.555555555555555,-5.353535353535354,-5.151515151515151,-4.94949494949495,-4.747474747474747,-4.545454545454546,-4.343434343434343,-4.141414141414142,-3.9393939393939394,-3.737373737373738,-3.5353535353535355,-3.333333333333333,-3.1313131313131315,-2.929292929292929,-2.7272727272727275,-2.525252525252525,-2.3232323232323235,-2.121212121212121,-1.9191919191919187,-1.717171717171718,-1.5151515151515156,-1.3131313131313131,-1.1111111111111107,-0.9090909090909101,-0.7070707070707076,-0.5050505050505052,-0.30303030303030276,-0.10101010101010033,0.10101010101010033,0.30303030303030276,0.5050505050505052,0.7070707070707076,0.9090909090909083,1.1111111111111107,1.3131313131313131,1.5151515151515156,1.7171717171717162,1.9191919191919187,2.121212121212121,2.3232323232323235,2.525252525252524,2.7272727272727266,2.929292929292929,3.1313131313131315,3.333333333333334,3.5353535353535346,3.737373737373737,3.9393939393939394,4.141414141414142,4.3434343434343425,4.545454545454545,4.747474747474747,4.94949494949495,5.1515151515151505,5.353535353535353,5.555555555555555,5.757575757575758,5.9595959595959584,6.161616161616163,6.363636363636363,6.565656565656564,6.767676767676768,6.969696969696969,7.171717171717173,7.373737373737374,7.575757575757574,7.777777777777779,7.979797979797979,8.18181818181818,8.383838383838384,8.585858585858585,8.787878787878789,8.98989898989899,9.19191919191919,9.393939393939394,9.595959595959595,9.7979797979798,10.0],"y":[-0.8390715290764524,-0.9311647348436916,-0.9853841670717991,-0.9995245290814802,-0.973010682179788,-0.9069210385913591,-0.80394369860703,-0.6682671160076288,-0.5054097387880672,-0.3219955542979381,-0.12548466817409182,0.07613012462407193,0.2746484351440468,0.4619958193539013,0.6305521944291881,0.7734617745574747,0.8849119200716683,0.9603695581285238,0.9967655588645231,0.9926195677967009,0.9481002170917641,0.865018266697566,0.7467529543114478,0.5981145497935533,0.42514870442477243,0.23489055281917826,0.03507856903860484,-0.16616018460355178,-0.3606406140014481,-0.5404525100747896,-0.69828228503756,-0.8277104419618855,-0.9234726784944765,-0.9816740047110791,-0.9999471661761239,-0.9775489285796396,-0.9153903077136359,-0.815999515227557,-0.6834191272904038,-0.5230416586748752,-0.3413902300489202,-0.1458532495141362,0.055616100165806294,0.25482334572604864,0.4436660217022289,0.6144632264484666,0.7602680316591502,0.8751500385908233,0.954436588420145,0.9949028158568303,0.9949028158568303,0.954436588420145,0.8751500385908233,0.7602680316591502,0.614463226448468,0.4436660217022289,0.25482334572604864,0.055616100165806294,-0.14585324951413445,-0.3413902300489202,-0.5230416586748752,-0.6834191272904038,-0.8159995152275564,-0.9153903077136356,-0.9775489285796396,-0.9999471661761239,-0.9816740047110789,-0.9234726784944768,-0.8277104419618859,-0.69828228503756,-0.5404525100747896,-0.36064061400144887,-0.16616018460355267,0.03507856903860484,0.23489055281917826,0.4251487044247716,0.5981145497935526,0.7467529543114478,0.865018266697566,0.9481002170917638,0.992619567796701,0.9967655588645231,0.9603695581285243,0.8849119200716683,0.7734617745574752,0.6305521944291868,0.4619958193539013,0.2746484351440485,0.07613012462407105,-0.12548466817409182,-0.3219955542979364,-0.5054097387880672,-0.6682671160076274,-0.8039436986070311,-0.9069210385913591,-0.9730106821797876,-0.9995245290814802,-0.9853841670717991,-0.9311647348436909,-0.8390715290764524],"type":"scatter"}],"name":"frame10"}]);
+                        }).then(function(){
+                            
+var gd = document.getElementById('79e99a92-d49a-4ba7-892f-a91b83f89b36');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };                });            </script>        </div>
+</div>
+</div>
+</section>
+<section id="moment-generating-functions" class="level2">
+<h2 class="anchored" data-anchor-id="moment-generating-functions">Moment generating functions</h2>
+<p>Moment generating functions (or characteristic functions) can describe the key statistics of a distribution.</p>
+<!-- 
+
+$$
+\displaylines{
+\begin{align}
+\frac{\mathbb{E}[Z]}{a} & \ge \mathbb{P}(Z \ge a) & \text{(Markov's inequality)} \\
+\text{let} \quad Z & = |X-\mu| & (\text{New random variable } Z) \\
+\implies
+\frac{\mathbb{E}[|X-\mu|]}{a} & \ge \mathbb{P}(|X - \mu| \ge a)
+\end{align}
+}
+$$
+
+Why can we say this? Well because Markov's inequality states that $\frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)$ for *any* random variable $X$. So if we define a new random variable $Z=|X-\mu|$, then the same inequality must apply.
+
+Now let's transform the right-hand side of the inequality:
+
+$$
+\displaylines{
+\begin{align}
+\mathbb{P}(|X - \mu| \ge a) & \equiv \mathbb{P}((X - \mu)^2 \ge a^2) \\ \\
+\implies \frac{\mathbb{E}[|X-\mu|]}{a} & \ge \mathbb{P}((X - \mu)^2 \ge a^2)
+\end{align}
+}
+$$
+
+To do this, we have to convince ourselves that $\mathbb{P}(X - \mu \ge a) \equiv \mathbb{P}((X - \mu)^2 \ge a^2)$. 
+
+So if we take our dice example from before:
+
+--->
+<div id="9ac21f3b" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># x_subtract_mu = x - Ex</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># pxmu_le_a = [np.sum(p[x_subtract_mu &gt;= a]) - Ex for a in x]</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># abs_x_subtract_mu = np.abs(x_subtract_mu)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># abs_pxmu_le_a = [np.sum(p[abs_x_subtract_mu &gt;= a]) for a in x]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># fig = Figure()</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.add_trace(Bar(x=x, y=pxmu_le_a, name='P(X-µ &gt;= a)'))</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.add_trace(Bar(x=x, y=x_subtract_mu/x, name='E[X-µ]/a'))</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.add_trace(Bar(x=x, y=abs_pxmu_le_a, name='P(|X-µ| &gt;= a)'))</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.add_trace(Bar(x=x, y=abs_x_subtract_mu/x, name='E[|X-µ|]/a'))</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># # Update layout for grouped bar chart</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.update_layout(barmode='group', title='Markov\'s inequality for a dice role', xaxis_title='a (Dice roll)', legend=dict(x=0.37,y=0.95))</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># fig.show()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<!-- First let's look at the probability side of things. Remember that $\mu$ is 3.5:
+
+* If the threshold $a$ is $3$, then the probabiity is zero: no dice roll $X$ would be far enough away to ensure the absolute distance from the expected value is greater than $a$.
+    * e.g. $|6-3.5| = 2.5 < 3$
+    * e.g. $|1-3.5| = 2.5 < 3$
+* If the threshold $a$ is $2$, then this only occurs if the dice roll is $1$ or $6$. So $P(X=1) + P(X=6) = 1/6 + 1/6 = 1/3$:
+    * e.g. $|6-3.5| = |1-3.5| = 2.5 > 2$
+    * e.g. $|5-3.5| = |2-3.5| = 1.5 < 2$
+* And finally, if the threshold of $a$ is $1$, and $\mu=3.5$, then only rolling a $1,2,4$ or $6$ will ensure $|X-\mu| \ge a, hence $P(X=1) + P(X=2) + P(X=4) + P(X=6) = 2/3$:
+    * e.g. $|6-3.5| = |1-3.5| = 2.5 > 1$
+    * e.g. $|5-3.5| = |2-3.5| = 1.5 > 1$
+    * e.g. $|4-3.5| = |3-3.5| = 0.5 < 1$
+
+Now let's look at the expectation side. Given $\mu=3.5$, it is expected that the absolute distance increases with larger distance from 3.5 (so rolls of $1$ and $6$). However, it is then scaled by $\frac{1}{a}$: -->
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

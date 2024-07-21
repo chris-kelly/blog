@@ -21,8 +21,6 @@ format:
     other-links:
       - text: Correcting SE for non-spherical errors
         href: ols_sandwich_estimators.html
-    
-
 ---
 
 ::: {.callout-tip}
