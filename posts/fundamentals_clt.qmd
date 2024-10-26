@@ -24,7 +24,19 @@ format:
     #     href: ols_sandwich_estimators.html
 ---
 
+# Intro
+
+The central limit theorem states that, under the right conditions, the distribution of the sample mean $\bar{X}_n$ converges to a normal distribution as the sample size $n \rightarrow \infty$. 
+
+This is a fundamental result in statistics, and is the reason why the normal distribution is so widely used in hypothesis testing and confidence intervals.
+
+But why does the sample mean converge to a normal distribution? In this post, we'll derive the classical Central Limit Theorem from first principles.
+
 # (Weak) law of Large Numbers
+
+Firstly, we derive the weak law of large numbers, which states that the sample mean $\bar{X}_n$ converges to the true mean $\mu$ as the sample size $n \rightarrow \infty$. 
+
+This requires first deriving Markov's and Chebyshev's inequalities: definitions that show how expectation and probabilities are fundamentally linked.
 
 ## Markov's inequality
 
@@ -33,8 +45,10 @@ First we state Markov's inequality.
 :::{.callout-tip title="Markov's inequality"}
 If $X$ is a non-negative random variable, and $a > 0$, then
 $$
-\frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)
+\mathbb{P}(X \ge a) \le \frac{\mathbb{E}[X]}{a}
 $$
+
+i.e. observing larger outcomes have a lower probability of occurring.
 :::
 
 Let's take an example to understand this, e.g. take a dice role:
@@ -61,7 +75,7 @@ fig.show()
 
 Why is this always the case? Well let's derive it.
 
-First, let's specify an "indicator function". This indicator function returns $1$ if the random variable $X$ reaches a certain threshold of $a$, and returns $0$ if the threshold $a$ is not reached. So we can write this as:
+First, let's specify an "indicator function". This indicator function returns $1$ if the random variable $X$ is equal to or greater than a certain threshold $a$, and returns $0$ if the threshold $a$ is not reached. So we can write this as:
 
 $$
 \mathbb{I}(X) = 
@@ -108,7 +122,7 @@ fig.update_layout(
 fig.show()
 ```
 
-Okay, so now let's take the expectation of both sides. The expectation of the indicator function is just the area under the curve above:
+Okay, so now let's take the expectation of both sides. The expectation of the indicator function is just the area under the curve above (LOTUS, the law of of the unconsicous statistician):
 $$
 \displaylines{
 \begin{align}
@@ -137,41 +151,45 @@ We can extend Markov's inequality to relate the variance of a random variable to
 
 :::{.callout-tip title="Chebyshev's inequality"}
 $$
-\frac{\mathbb{V}[X]}{a^2} \ge \mathbb{P}(|X-\mu| \ge a)
+\mathbb{P}(|X-\mu| \ge a) \le \frac{\mathbb{V}[X]}{a^2} 
 $$
+
+i.e. larger errors (between an observation and its true mean) have a lower probability of occurring.
 :::
 
-Okay so how do we get this? Well we can take Markov's inequality, which works for any random variable, and apply it to our case in particular:
+Okay so how do we get this? Well actually this is a special case of Markov's inequality, which works for any random variable, and apply it to our case in particular:
 
 $$
 \displaylines{
 \begin{align}
 \text{Let } Z & = (X-\mu)^2 \\
+\text{and } b & = a^2 \\
 \\
-\therefore \frac{\mathbb{E}[Z]}{a} & \ge \mathbb{P}(Z \ge a) \\
-\implies \frac{\mathbb{E}[(X-\mu)^2]}{a} & \ge \mathbb{P}((X-\mu)^2 \ge a) \\
+\therefore \frac{\mathbb{E}[Z]}{b} & \ge \mathbb{P}(Z \ge b) \\
+\implies \frac{\mathbb{E}[(X-\mu)^2]}{a^2} & \ge \mathbb{P}((X-\mu)^2 \ge a^2) \\
 \equiv \frac{\mathbb{V}[X]}{a^2} & \ge \mathbb{P}((X-\mu)^2 \ge a^2) 
+\\
+\equiv \frac{\mathbb{V}[X]}{a^2} & \ge \mathbb{P}(|X-\mu| \ge a)
+& \iff a > 0
 \end{align}
 }
 $$
 
-So we are almost there! We just need to convince ourselves that $\mathbb{P}((X-\mu)^2 \ge k^2\sigma^2) \equiv \mathbb{P}(|X-\mu| \ge k\sigma)$. Then we are left with:
+What does this mean in practice? Let's define the "error" as the difference between the sample mean and the true mean i.e. $X-\mu$. Now look at what happens when we increase $a$: as the size the error grows on the left-hand-side (since $X-\mu \ge a$), the size of the right-hand-side decreases (since $\frac{V[X]}{a^2}$). *Concretely, this means larger errors have a lower probability of occuring.*
 
-$$
-\frac{\mathbb{V}[X]}{a^2} \ge \mathbb{P}(|X-\mu| \ge a)
-$$
+So unlike Markov's inequality, we need to know the variance of the random variable for Chebyshev's. But this inequality can now deal with negative errors (since we square/use absolute terms).
 
 ## Weak law of large numbers
 
 We can now find the law of large numbers, that states that as the sample size collected $n \rightarrow \infty$, the sample mean $\bar{X}_n$ converges to the true mean $\mu$:
 
-:::{.callout-tip title="Chebyshev's inequality"}
+:::{.callout-tip title="Weak law of large numbers"}
 $$
-\lim_{N \rightarrow \infty} \mathbb{P}(|\bar{X}_N - \mu| \ge \varepsilon) = 0
+\lim_{n \rightarrow \infty} \mathbb{P}(|\bar{X}_N - \mu| \ge \varepsilon) = 0
 $$
 ::: 
 
-More specifically, this is saying that as $n \rightarrow \infty$, the probability of the sample mean $\bar{X}_N$ being further away from the true mean $\mu$ by some very small number amount $\varepsilon$, tends towards zero.
+More specifically, this is saying that as $n \rightarrow \infty$, the probability of the sample mean $\bar{X}_n$ being further away from the true mean $\mu$ by some very small number amount $\varepsilon$, tends towards zero.
 
 So let's derive this! First let's use the sample mean $\bar{X_n}$ over $n$ samples collected in Chebyshev's inequality:
 
@@ -210,128 +228,283 @@ $$
 
 It should be getting quite clear now! As $n \rightarrow \infty$, then $\frac{\sigma^2}{n\varepsilon^2} \rightarrow 0$. So the probability of the sample mean $\bar{X}$ being far from the true mean $\mu$ also goes to zero.
 
+This is especially useful to see how large sample sizes achieve consistency, even for biased esimators. For example, we saw in our post on [finite-sample correction](ols_finite_sample_correction.html) that the sample variance needs a *Bessel correction factor* to be unbiased. But even if we used the biased estimator, the law of large numbers tells us that as $n \rightarrow \infty$, the sample mean will still converge to the true mean.
+
+# Central limit theorem
+
+In the central limit theorem, we state that if we sample a large number $n$ of independent observations from the same (read identical) distribution of the random variable $X$, and calculate the mean $\bar{X}_n$ of this sample, then not only would the expected mean tend to the true mean $\lim_{n \rightarrow \infty}\mathbb{E}[X_n] \rightarrow \mu$ as per weak law of large numbers, but the this sample mean will also vary around the true mean following to the normal distribution: $\lim_{n \rightarrow \infty}\mathbb{E}[X_n] \sim N(\mu,\frac{\sigma^2}{\sqrt{n}})$
+
+First, we define a random variable $X_i$, that is independently and identically distributed with mean $\mu$ and variance $\sigma^2$:
+
+$$
+X_i \overset{iid}{\sim}(\mu,\sigma^2)
+$$
+
+Note that we make no assumptions about its distribution at all: for example, it could be bernoulli distributed, with $\mu = p$ and $\sigma^2 = p(1-p)$. But we will always find that its sample mean will follow a normal distribution.
+
+Now let's state some properties of the distribution of the sample mean, if we take a sample of size $n$, estimate the mean from it, and repeat this proceedure $N$ times:
+
+$$
+\displaylines{
+\begin{align}
+\bar{X}_n
+& = \frac{1}{n}\sum_{i=1}^{n}X_i
+\\ \\
+\therefore \mathbb{E}\left[\bar{X}_n\right]
+& = \mathbb{E}\left[\frac{1}{N}\sum_{i=1}^{N} \bar{X}_n \right] \\
+& = \frac{1}{N}\sum_{i=1}^{N} \mathbb{E}\left[\bar{X}_n\right] \\ 
+& = \frac{1}{N}\left(N \times \mu \right) & \because \text{WLLN}  \\
+& = \mu
+\\ \\
+\therefore \mathbb{V}\left[\bar{X}_n\right]
+& = \mathbb{V}\left[\frac{1}{N}\sum_{i=1}^{n} X_i \right] \\
+& = \frac{1}{N^2}\sum_{i=1}^{n} \mathbb{V}\left[X_i\right] \\
+& = \frac{1}{N}\left(N \times \sigma^2 \right) \\ 
+& = \frac{\sigma^2}{N}
+\end{align}
+}
+$$
+
+::: {.column-margin}
+So we see that the sample mean is an unbiased estimator of the true mean, and the variance of the sample mean decreases as the sample size increases. This is the same result we derived in the weak law of large numbers.
+:::
+
+We can easily standardise this, to create a variable with a mean of zero and variance of one (which is easier to work with to prove the central limit theorem - which we will see now we introduce characteristic functions):
+
+$$
+\displaylines{
+\begin{align}
+Z_N & = \frac{\bar{X}_N - \mu}{\sigma/\sqrt{N}} \\
+\mathbb{E}[Z_N] & = \frac{\mathbb{E}[\bar{X}_N] - \mu}{\sigma/\sqrt{N}} = 0 \\
+\mathbb{V}[Z_N] & = \frac{\mathbb{V}[\bar{X}_N]}{\sigma^2/N} = 1
+\end{align}
+}
+$$
+
+## Characteristic functions
+
+Characteristic functions are the Fourier transformation of the probability density functions of random variables. Characteristic functions can be used to fully describe the probability distributions they transform, and can be reverse-transformed perfectly to the original probability distribution too.
+
+So what? Well they can be used as an alternative (read: easier) route to derive analytical results, such as the central limit theorem, rather than through the probability density functions directly. And if we can derive the central limit theorem using characteristic functions of random variables, then we can safely infer that the same applies if perfectly reverse-transformed to the probability distributions of those same random variables.
+
+For any random variable $X$, the characteristic function is a transformation defined as:
+
+$$
+\phi_X(t) = \mathbb{E}[e^{itX}]
+$$
+
+where $i=\sqrt{-1}$ i.e. the imaginary unit, and $t$ is a real number.
+
+Let's derive the characteristic function of the bernoulli distribution as an example:
+
+$$
+\displaylines{
+\begin{align}
+\phi_X(t) 
+& = \mathbb{E}[e^{itX}] \\ \\
+& = \int_{-\infty}^{\infty} e^{itx} \times \mathbb{P}(X=x) \\
+& \equiv \left[ e^{itx} \times \mathbb{P}(X=0) \right]
+ + \left[ e^{itx} \times \mathbb{P}(X=1) \right] \\ \\
+& =  \left( e^{it(0)} \times (1-p) \right) 
++ \left( e^{it(1)} \times p \right) \\
+& =  (1-p) + p e^{it}
+\end{align}
+}
+$$
+
+And here is the characteristic function of the (standard) normal distribution:
+
+$$
+\displaylines{
+\begin{align}
+\phi_X(t)
+& = \mathbb{E}[e^{itX}] \\
+& = \int_{-\infty}^{\infty} e^{itx} \times \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{(x-\mu)^2}{2\sigma^2}} \, dx \\
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \exp{\left\{itx -\frac{(x-\mu)^2}{2\sigma^2} \right\} } \, dx \\
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \exp{\left\{
+    -\frac{1}{2\sigma^2} \left(-2\sigma^2itx + \left( x^2 + \mu^2 - 2x\mu \right) \right)
+\right\} } \, dx \\ \\
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \exp{\left\{
+    -\frac{1}{2\sigma^2} \left( 
+    \underbrace{(x - \mu - \sigma^2 it)^2}_{
+        x^2 + \mu^2 - \sigma^4t^2 - 2\sigma^2itx - 2x\mu + 2\mu i\sigma^2t
+        } 
+        + \sigma^4t^2 + 2\mu i\sigma^2t
+        \right)
+\right\} } \, dx \\ \\
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \exp{\left\{
+    -\frac{1}{2\sigma^2} 
+    \left(x - \mu + i\sigma^2t \right)^2
+        + \frac{1}{2}\sigma^2t^2 - i\mu t
+\right\} } \, dx \\ \\
+
+& = \frac{1}{\sqrt{2\pi}} \exp\left\{ \sigma^2t^2-i\mu t\right\} \underbrace{ \int_{-\infty}^{\infty} \exp{\left\{
+    -\frac{1}{2\sigma^2} 
+    \left(x - \mu + i\sigma^2t \right)^2
+\right\} } \, dx }_{\text{Gaussian integral} \Rightarrow\sqrt{2\pi}} \\ \\
+& = \exp\left\{ \sigma^2t^2-i\mu t\right\}
+\end{align}
+}
+$$
+
+$$
+\displaylines{
+\begin{align}
+\phi_X(t)
+& = \mathbb{E}[e^{itX}] \\
+& = \int_{-\infty}^{\infty} e^{itx} \times \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{(x-\mu)^2}{2\sigma^2}} \, dx \\
+& = \int_{-\infty}^{\infty} e^{itx} \times \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} \, dx 
+& \iff \mu = 0, \sigma = 1
+\\
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \exp{\left\{itx -\frac{x^2}{2} \right\} } \, dx \\
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \exp{\left\{ \frac{(x-it)^2}{2} -\frac{t^2}{2} \right\} } \, dx \\
+& = \exp{\left\{-\frac{t^2}{2} \right\} }\frac{1}{\sqrt{2\pi}} \underbrace{\int_{-\infty}^{\infty} \exp{\left\{\frac{(x-it)^2}{2}\right\}} \, dx}_{\text{Gaussian integral} \Rightarrow\sqrt{2\pi}} \\
+& = \exp\left\{-\frac{t^2}{2}\right\}
+\end{align}
+}
+$$
+
+::: {.column-margin}
+[See this post](fundamentals_gaussian_integral.html) on the gaussian integral for more details for why $\int_{-\infty}^{+\infty}{e^{-x^2}\,dx}=\sqrt{\pi}$
+:::
+
+**So we want to show that the characteristic function of $Z_N$ converges to the characteristic function of the standard normal distribution as $N \rightarrow \infty$.**
+
+Now it can be helpful to remember that the exponential function can be written in various forms, such as the infinite sum:
+
+$$
+e^x = \lim_{n \rightarrow \infty} \left(1 + \frac{x}{n}\right)^n
+$$
+
+And hence this infinite sum can also be written as a Taylor series:
+
 ## Taylor Series
 
-```{python}
-def simple_differential(a = 1, n = 1, x = None):
-    if x is None:
-        result = [a*n,n-1]
-    else:
-        result = a*n*x**(n-1)
-    return result
+As a reminder, the Taylor series is a way to approximate a function as an infinite sum of terms. The $n$th term of the Taylor series is given by:
+$$
+\displaylines{
+\begin{align}
+f(x) & = f(a) + \frac{f^1(a)}{1!}(x-a) + \frac{f^2(a)}{2!}(x-a)^2 +  \ldots + \\
+& = \sum_{n=0}^{\infty}{ \frac{f^n(a)}{n!}(x-a)^n }
+\end{align}
+}
+$$
 
-a = [1,4,3,8,-6,-17,20]
-a.reverse()
-a_n = list(zip(a,range(len(a))))
-
-x = np.linspace(-4.5,2.5,100)
-
-y = [simple_differential() for n in range(len(a))]
-
-```
+Here is a plot of the Taylor series approximation of a function $f(x) = 20 - 17x - 6x^2 + 8x^3 + 3x^4 + 4x^5 + x^6$ around the point $a=-2.5$:
 
 ```{python}
 import plotly.graph_objects as go
 from math import factorial
+import numpy as np
 
-def taylor_series_cos(x,n):
-    if n % 4 == 1:
-        y = -np.sin(0)*x**n
-    elif n % 4 == 2:
-        y = -np.cos(0)*x**n 
-    elif n % 4 == 3:
-        y = np.sin(0)*x**n
-    else:
-        y = np.cos(0)*x**n
-    y /= factorial(n)
-    return y
+x = np.linspace(-4.5,2.5,100)
+c = [20, -17, -6, 8, 3, 4, 1]
+y = [np.sum([c*x**n for n,c in enumerate(c)]) for x in x]
+a = -2.5
 
-x = np.linspace(-10,10,100)
+true_plot = go.Scatter(x=x,y=y,mode='lines',name="True function")
 
-ideal_plot = go.Scatter(x=x,y=np.cos(x),mode='lines',name="True function")
-
-fig = go.Figure(data = [
-    go.Scatter(mode='markers',x=[-12,-11],y=[0,0], name="Taylor approximation"),
-    ideal_plot
-])
-
-frames = [
-    go.Frame(data=[go.Scatter(x=[-12,-11],y=[0,0])], name= f'frame{0}'),
-    go.Frame(data=[go.Scatter(x=x,y=np.ones(len(x)))], name= f'frame{1}')
-]
-
-y = np.ones(len(x))
-k = 2
-
-for n in np.arange(2,20,2):
-    y += taylor_series_cos(x,n)
+dc = c.copy()
+y_hat = np.zeros(len(x))
+for i in range(len(c)):    
+    coef = np.sum([c*a**n for n,c in enumerate(dc)])/factorial(i)
+    y_hat += coef*(x-a)**i
+    if i == 0:
+        fig = go.Figure(data = [
+            go.Scatter(mode='markers',x=x,y=y_hat,name="Taylor approximation"),
+            true_plot
+            ])
+        frames = []
     frames.append(go.Frame(
-        data=[go.Scatter(x=x,y=y.copy()), ideal_plot], 
-        name= f'frame{k}'
-        ))
-    k += 1
+        data=[go.Scatter(x=x,y=y_hat,name="Taylor approximation"), true_plot], name= f'frame{i}'
+    ))
+    dc = [n*c for n,c in enumerate(dc)][1:]
 
 fig.frames = frames
 
 updatemenus = [dict(
-        buttons = [
-            dict(
-                args = [None, {"frame": {"duration": 500, "redraw": False},
-                                "fromcurrent": True, "transition": {"duration": 300}}],
-                label = "Play",
-                method = "animate"
-                ),
-            dict(
-                 args = [[None], {"frame": {"duration": 0, "redraw": False},
-                                  "mode": "immediate",
-                                  "transition": {"duration": 0}}],
-                label = "Pause",
-                method = "animate"
-                )
-        ],
-        direction = "left",
-        pad = {"r": 10, "t": 87},
-        showactive = False,
-        type = "buttons",
-        x = 0.1,
-        xanchor = "right",
-        y = 0,
-        yanchor = "top"
+        buttons = [dict(args = [None, {
+            "frame": {"duration": 800, "redraw": False}, "fromcurrent": True, "transition": {"duration": 300}
+            }],
+            label = "Play", method = "animate"),
+            dict(args = [[None], {
+                "frame": {"duration": 0, "redraw": False},"mode": "immediate","transition": {"duration": 0}}],
+                label = "Pause",method = "animate")
+                ],
+        direction = "left", pad = {"r": 10, "t": 87}, showactive = False, type = "buttons",
+        x = 0.1, xanchor = "right", y = 0, yanchor = "top"
     )]  
 
-sliders = [dict(steps = [dict(method= 'animate',
-                              args= [[f'frame{k}'],                           
-                              dict(mode= 'immediate',
-                                   frame= dict(duration=400, redraw=False),
-                                   transition=dict(duration= 0))
-                                 ],
-                              label=f'{2*k}'
-                             ) for k in range(len(frames))], 
-                active=0,
-                transition= dict(duration= 0 ),
-                y=0,
-                x=0, # slider starting position  
-                currentvalue=dict(
-                    font=dict(size=12), prefix='polynomial: ', visible=True, xanchor= 'center'
-                ),  
-                len=1.0) #slider length
-           ]
-fig.update_layout(xaxis_range = [-10, 10],
-                  yaxis_range = [-3, 3],
-                  updatemenus=updatemenus,
-                  sliders=sliders)
+sliders = [dict(steps = [
+    dict(method= 'animate',args= [
+        [f'frame{i}'],
+        dict(mode= 'immediate',frame= dict(duration=400, redraw=False),transition=dict(duration= 0))
+        ],
+        label=f'{i}') for i in range(len(frames))], 
+        active=0,transition= dict(duration= 0),y=0, x=0,
+        currentvalue=dict(font=dict(size=12), prefix='polynomial: ', visible=True, xanchor= 'center'),len=1.0)
+        ]
 
-fig.show()             
+fig.update_layout(updatemenus=updatemenus,sliders=sliders)
 ```
 
+So how does this relate to the exponential function? Well the exponential function can be written as a Taylor series:
 
+$$ 
+e^{x} = \sum_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots
+$$
 
-## Moment generating functions
+Still not convinced? Well remember that $\frac{d(e^x)}{dx}=e^x$ by definition. So if we take the derivative of the Taylor series of $e^x$, we should get back to the original function:
 
-Moment generating functions (or characteristic functions) can describe the key statistics of a distribution.
+$$
+\displaylines{
+\begin{align}
+\frac{d(e^x)}{dx} & = \frac{d}{dx} \left(1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots \right) \\
+& = 0 + 1 + \frac{2x}{2!} + \frac{3x^2}{3!} + \ldots \\
+& = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots \\
+& = e^x
+\end{align}
+}
+$$
 
+Now let's reformulate our characteristic function as a Taylor series:
 
+$$
+\displaylines{
+\begin{align}
+\phi_X(t) 
+& = \mathbb{E}[e^{itX}] \\
+& = \mathbb{E}\left[1 + itX + \frac{(itX)^2}{2!} + \frac{(itX)^3}{3!} + \ldots \right] \\
+& = \mathbb{E}[1] + it\mathbb{E}[X] - \frac{t^2}{2!}\mathbb{E}[X^2] + \frac{it^3}{3!}\mathbb{E}[X^3] + \ldots \\
+& = 1 + it(\mu) - \frac{t^2}{2!}(\mu^2 + \sigma^2) + \frac{it^3}{3!}(\mu^3 + 3\mu\sigma^2) + \ldots
+\end{align}
+}
+$$
 
+And if we use our standardised variable $Z_N$ instead, with $\mathbb{E}[Z_N]=0$ and $\mathbb{V}[Z_N]=\mathbb{E}[Z_N^2]=1$ we find it is highly simplified:
+
+$$
+\displaylines{
+\begin{align}
+\phi_{Z_N}(t)
+& = \mathbb{E}[e^{itZ_N}] \\
+& = \mathbb{E}\left[1 + itZ_N + \frac{(itZ_N)^2}{2!} + \frac{(itZ_N)^3}{3!} + \ldots \right] \\
+& = \mathbb{E}[1] + it \underbrace{\mathbb{E}[Z_N]}_{=0} - \frac{t^2}{2!} \underbrace{\mathbb{E}[Z_N^2]}_{=1} + \frac{it^3}{3!}\mathbb{E}[Z_N^3] + \ldots \\
+& = 1 - \frac{t^2}{2} + \ldots
+\end{align}
+}
+$$
+
+And now to tie it all together, we can show that the taylor expansion of the normal distribution's characteristic function is the same:
+
+$$
+\displaylines{\begin{align}
+\exp\left\{\frac{-t^2}{2}\right\} & 
+= 1 - \frac{t^2}{2} + \ldots
+\end{align}}
+$$
+
+So the sample mean for a collection for independent $n$ samples taken from the same distribution converges to a normal distribution as $n \rightarrow \infty$.
 
 <!-- 
 
@@ -382,6 +555,9 @@ So if we take our dice example from before:
 
 # fig.show()
 ```
+
+<!-- We can define the sine and cosine functions using a taylor series. Since we know the derivative of sine is cosine, and the derivative of cosine  -->
+
 
 <!-- First let's look at the probability side of things. Remember that $\mu$ is 3.5:
 
