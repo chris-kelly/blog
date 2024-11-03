@@ -1,0 +1,211 @@
+---
+title: "Deriving the Weak Law of Large Numbers"
+author: "Chris Kelly"
+date: '06-14-24'
+image: '../images/fundamentals_wlln.png'
+categories: [Law of Large Numbers]
+format:
+  html:
+    code-fold: true
+    toc: true
+---
+
+# Intro
+
+The weak law of large numbers states that the sample mean $\bar{X}_n$ converges to the population mean $\mu$ as the sample size $n \rightarrow \infty$.
+
+This requires first deriving Markov's and Chebyshev's inequalities: definitions that show how expectation and probabilities are fundamentally linked.
+
+## Markov's inequality
+
+First we state Markov's inequality:
+
+:::{.callout-tip title="Markov's inequality"}
+If $X$ is a non-negative random variable, and $a > 0$, then
+$$
+\mathbb{P}(X \ge a) \le \frac{\mathbb{E}[X]}{a}
+$$
+
+i.e. observing larger outcomes have a lower probability of occurring.
+:::
+
+Let's take an example to understand this, e.g. take a dice role:
+
+```{python}
+import numpy as np
+from plotly.graph_objects import Figure, Bar
+
+x = np.arange(1, 7)
+p = np.repeat(1/6, 6)
+Ex = np.sum(x * p) # 3.5
+px_le_a = [np.sum(p[x >= a]) for a in x]
+ex_div_a = Ex/x
+
+fig = Figure()
+fig.add_trace(Bar(x=x, y=px_le_a, name='P(X >= a)'))
+fig.add_trace(Bar(x=x, y=ex_div_a, name='E[X]/a'))
+
+# Update layout for grouped bar chart
+fig.update_layout(barmode='group', title='Markov\'s inequality for a dice role', xaxis_title='a (Dice roll)', legend=dict(x=0.67,y=0.95))
+
+fig.show()
+```
+
+Why is this always the case? Well let's derive it.
+
+First, let's specify an "indicator function". This indicator function returns $1$ if the random variable $X$ is equal to or greater than a certain threshold $a$, and returns $0$ if the threshold $a$ is not reached. So we can write this as:
+
+$$
+\mathbb{I}(X) = 
+\begin{cases} 
+0 & \text{if } X < a \\ 
+1 & \text{if } X \ge a 
+\end{cases}
+$$
+
+Now let's simply multiply this function by $a$:
+
+$$
+a \times \mathbb{I}(X) = 
+\begin{cases} 
+0 & \text{if } X < a \\ 
+a & \text{if } X \ge a 
+\end{cases}
+$$
+
+So in practice:
+
+* if $X < a$, then $a \times \mathbb{I}(X) = 0$
+* if $X = a$, then $a \times \mathbb{I}(X) = a$
+* if $X > a$, then $a \times \mathbb{I}(X) = a$
+
+In other words, regardless of $X$, the indicator function will always return a number less than $X$ - either $a$ or $0$:
+
+$$
+X \ge a \times \mathbb{I}(X)
+$$
+
+We can visualise this, where the $x$-axis is the random variable $X$, and the $y$-axis is the output of the indicator function. 
+
+```{python}
+from plotly.graph_objects import Scatter
+fig = Figure()
+fig.add_trace(Scatter(x=[0,1,1,2], y=[0,0,1,1], name='a if X >= a else 0', mode='lines', line=dict(width=2)))
+fig.add_annotation(x=0.5, y=0.1, text='I(X<a) = 0', showarrow=False)
+fig.add_annotation(x=1.5, y=1.1, text='I(X≥a) = a', showarrow=False)
+fig.update_layout(
+    xaxis = dict(tickmode = 'array',tickvals = [0.5,1,1.5],ticktext = ['X<a', 'X=a', 'X>a']),
+    yaxis = dict(tickmode = 'array',tickvals = [0,1],ticktext = ['0', 'a'], range=[-0.1,1.2]),
+)
+fig.show()
+```
+
+Okay, so now let's take the expectation of both sides. The expectation of the indicator function is just the area under the curve above (LOTUS, the law of of the unconsicous statistician):
+$$
+\displaylines{
+\begin{align}
+\mathbb{E}[X]
+\ge a \times \mathbb{E}[ \mathbb{I}(X) ] 
+& = \int_{x \in X} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx 
+\\
+& = \int_{x \in X < a} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx +
+    \int_{x \in X \ge a} \mathbb{I}(x) \times \mathbb{P}(X=x) \, dx
+\\
+& = \underbrace{0 \times \mathbb{P}(X < a)}_{\text{CDF for } x < a} + 
+    \underbrace{a \times \mathbb{P}(X \ge a)}_{\text{CDF for } x \ge a}
+\\
+& = a \times \mathbb{P}(X \ge a)
+\\
+\implies \frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)
+\end{align}
+}
+$$
+
+This is sometimes referred to as the "fundamental link between the expectation and the probability". The probability is limited by the expectation: if the probability of a large value is high, then the expectation must also be high.
+
+## Chebyshev's inequality
+
+We can extend Markov's inequality to relate the variance of a random variable to the probability of it being far from the mean too:
+
+:::{.callout-tip title="Chebyshev's inequality"}
+$$
+\mathbb{P}(|X-\mu| \ge a) \le \frac{\mathbb{V}[X]}{a^2} 
+$$
+
+i.e. larger errors (between an observation and its true mean) have a lower probability of occurring.
+:::
+
+Okay so how do we get this? Well actually this is a special case of Markov's inequality, which works for any random variable, and apply it to our case in particular:
+
+$$
+\displaylines{
+\begin{align}
+\text{Let } Z & = (X-\mu)^2 \\
+\text{and } b & = a^2 \\
+\\
+\therefore \frac{\mathbb{E}[Z]}{b} & \ge \mathbb{P}(Z \ge b) \\
+\implies \frac{\mathbb{E}[(X-\mu)^2]}{a^2} & \ge \mathbb{P}((X-\mu)^2 \ge a^2) \\
+\equiv \frac{\mathbb{V}[X]}{a^2} & \ge \mathbb{P}((X-\mu)^2 \ge a^2) 
+\\
+\equiv \frac{\mathbb{V}[X]}{a^2} & \ge \mathbb{P}(|X-\mu| \ge a)
+& \iff a > 0
+\end{align}
+}
+$$
+
+What does this mean in practice? Let's define the "error" as the difference between the sample mean and the true mean i.e. $X-\mu$. Now look at what happens when we increase $a$: as the size the error grows on the left-hand-side (since $X-\mu \ge a$), the size of the right-hand-side decreases (since $\frac{V[X]}{a^2}$). *Concretely, this means larger errors have a lower probability of occuring.*
+
+So unlike Markov's inequality, we need to know the variance of the random variable for Chebyshev's. But this inequality can now deal with negative errors (since we square/use absolute terms).
+
+## Weak law of large numbers
+
+We can now find the law of large numbers, that states that as the sample size collected $n \rightarrow \infty$, the sample mean $\bar{X}_n$ converges to the true mean $\mu$:
+
+:::{.callout-tip title="Weak law of large numbers"}
+$$
+\lim_{n \rightarrow \infty} \mathbb{P}(|\bar{X}_N - \mu| \ge \varepsilon) = 0
+$$
+::: 
+
+More specifically, this is saying that as $n \rightarrow \infty$, the probability of the sample mean $\bar{X}_n$ being further away from the true mean $\mu$ by some very small number amount $\varepsilon$, tends towards zero.
+
+So let's derive this! First let's use the sample mean $\bar{X_n}$ over $n$ samples collected in Chebyshev's inequality:
+
+$$
+\frac{\mathbb{V}[\bar{X}_n]}{\varepsilon^2} \ge \mathbb{P}(|\bar{X}_n-\mu| \ge \varepsilon)
+$$
+
+Now let's calculate a term for the variance of the sample mean:
+
+$$
+\displaylines{
+\begin{align}
+\bar{X_n} & = \frac{1}{n}\sum_{i=1}^{n}X_i \\
+\therefore \mathbb{V}[\bar{X}_n] 
+& = \mathbb{V}\left[\frac{1}{n} \sum_{i=1}^{n}{X_i} \right] \\
+& = \sum_{i=1}^{n}{\mathbb{V}\left[\frac{1}{n} X_i \right]} 
+& \because \mathbb{V}[A+B] = \mathbb{V}[A] + \mathbb{V}[B] \\
+& = \frac{1}{n^2} \sum_{i=1}^{n}{\mathbb{V}\left[ X_i \right]}
+& \because \mathbb{V}[cA] = c^2\mathbb{V}[A] \\
+& = \frac{1}{n^\cancel{2}} \left( \cancel{n} \sigma^2 \right) \\
+& = \frac{\sigma^2}{n}
+\end{align}
+}
+$$
+
+And let's sub this back into Chebyshev's inequality:
+$$
+\displaylines{
+\begin{align}
+\therefore \frac{\mathbb{V}[X]}{\varepsilon^2} & \ge \mathbb{P}(|X-\mu| \ge \varepsilon) \\
+\implies \frac{\sigma^2}{n\varepsilon^2} & \ge \mathbb{P}(|X-\mu| \ge \varepsilon)
+\\
+\end{align}
+}
+$$
+
+It should be getting quite clear now! As $n \rightarrow \infty$, then $\frac{\sigma^2}{n\varepsilon^2} \rightarrow 0$. So the probability of the sample mean $\bar{X}$ being far from the true mean $\mu$ also goes to zero.
+
+This is especially useful to see how large sample sizes achieve consistency, even for biased esimators. For example, we saw in our post on [finite-sample correction](ols_finite_sample_correction.html) that the sample variance needs a *Bessel correction factor* to be unbiased. But even if we used the biased estimator, the law of large numbers tells us that as $n \rightarrow \infty$, the sample mean will still converge to the true mean.
+
+Fin.
