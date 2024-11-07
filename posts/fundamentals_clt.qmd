@@ -2,7 +2,7 @@
 title: "Deriving the Central Limit Theorem"
 author: "Chris Kelly"
 date: '11-07-24'
-image: '../images/fundamentals_clt.png'
+image: '../images/fundamentals_clt.jpeg'
 categories: [Central Limit Theorem, Characteristic functions, Taylor series]
 format:
   html:
@@ -14,6 +14,11 @@ format:
       - text: Deriving the gaussian intergral
         href: fundamentals_gaussian_integral.html
 ---
+
+::: {.callout-tip}
+### What are we exploring?
+Showing why the sample mean of independent and identically distributed random variables converges to a normal distribution as the sample size tends to infinity.
+:::
 
 ## Intro
 
@@ -33,7 +38,7 @@ $$
 X_i \overset{iid}{\sim}(\mu,\sigma^2)
 $$
 
-Note that we make no assumptions about its distribution at all: for example, it could be bernoulli distributed, with $\mu = p$ and $\sigma^2 = p(1-p)$. But according to the CLT, despite this underlying distribution, we will always find that its sample mean will follow a normal distribution.
+Note that we make no assumptions about its distribution at all: for example, it could be bernoulli distributed, with $\mu = p$ and $\sigma^2 = p(1-p)$. But according to the CLT, for any underlying distribution, we will always find that its sample mean will follow a normal distribution.
 
 Now let's define the sample mean of $n$ observations of $X$ as $\bar{X}_n$:
 
@@ -57,7 +62,7 @@ $$
 
 where $i=\sqrt{-1}$ i.e. the imaginary unit, and $t$ is a real number.
 
-Let's derive the characteristic function of the bernoulli distribution as an example:
+As an example, ket's derive the characteristic function of the bernoulli distribution:
 
 $$
 \displaylines{
@@ -74,7 +79,7 @@ $$
 }
 $$
 
-And here is the characteristic function of the normal distribution:
+And more usefully for our case, here is the characteristic function of the normal distribution:
 $$
 \displaylines{
 \begin{align}
@@ -112,7 +117,7 @@ $$
 :::
 
 ::: {.callout-tip}
-So we are looking to show that the characteristic function of $\bar{X}_n$ converges to the characteristic function of the standard normal distribution as $n \rightarrow \infty$.
+So we are looking to show that the characteristic function of $\bar{X}_n$ converges to this same characteristic function for the normal distribution: $\lim_{n \rightarrow \infty}\mathbb{E}[e^{it\bar{X}}] = \exp\left\{i\mu t - \frac{\sigma^2t^2}{2} \right\}$
 :::
 
 ## Characteristic function of the sample means:
@@ -137,7 +142,7 @@ $$
 
 This reveals that the variance of the distribution decreases as the sample size $n$ increases. This is a nice (and intuitive) result: the larger the sample, the closer the sample mean is likely to be to the true population.
 
-Howwever, it does make it more tricky to prove that the sample mean converges to a normal distribution: since as we increase $n$, the variance shinks, so the variance is not constant. Instead, we can scale and center the sample mean by $\sqrt{n}$ to ensure its variance is constant for a given sample size $n$:
+Howwever, it does make it more tricky to prove that the sample mean converges to a normal distribution: since as we increase $n$, the variance shinks, so the variance is not constant. Instead, if we scale and center the sample mean by $\sqrt{n}$, then we ensure its variance is a constant $\sigma^2$ for a given sample size $n$:
 
 $$
 \displaylines{
@@ -181,35 +186,35 @@ $$
 
 So we see that the characteristic function of the scaled centered sample mean is the characteristic function of the random variable $X_i$ minus $\mu$, divided by $\sqrt{n}$, and raised to the $n$th power.
 
-We can formulate our characteristic function of the random variable $X_i/\sqrt{n}$ as a taylor series (if you want a refresher on Taylor series, see the bottom of the page):
+If we just focus on the bit inside the brackets for now, this can be reformulated as a taylor series (if you want a refresher on Taylor series[^1], see the appendix):
 
 $$
 \displaylines{
 \begin{align}
-\mathbb{E}\left[\exp{\left\{\frac{it}{\sqrt{n}}(X_i-\mu)\right\}}\right] 
-& = \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^k}{k!}\right]
+& \mathbb{E}\left[\e^{\left\{\frac{it}{\sqrt{n}}(X_i-\mu)\right\}}\right] \\
+= & \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^k}{k!}\right]
 & \because e^x = \sum_{k=0}^{\infty}{\frac{x^k}{k!}} \\
-& = \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( (it)^k(X_i-\mu)\right)^k}{k! \times n^{k/2}}\right] \\
-& = \mathbb{E}\left[
+= & \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( (it)^k(X_i-\mu)\right)^k}{k! \times n^{k/2}}\right] \\
+= & \mathbb{E}\left[
     \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^0}{0!} + 
     \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^1}{1!} + 
     \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^2}{2!} + 
     \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^3}{3!} + \dots
 \right] \\
-& = \mathbb{E}\left[
+= & \mathbb{E}\left[
     1
     + \frac{it}{n^{1/2}}(X_i-\mu)
     - \frac{t^2}{2n}(X_i-\mu)^2
     + \frac{it^3}{6n^{3/2}}(X_i-\mu)^3
     + \dots
-\right] \\
-& = 
+\right] \\ 
+= & 
     \mathbb{E}[1] 
     + \frac{it}{n^{1/2}}\underbrace{\mathbb{E}[(X_i-\mu)]}_{\mathbb{E}[X_i] = \mu \quad \therefore \mathbb{E}[X_i] - \mu = 0}
     - \frac{t^2}{2n}\underbrace{\mathbb{E}[(X_i-\mu)^2]}_{\mathbb{V}[X_i] = \sigma^2}
     + \frac{it^3}{6n^{3/2}}\mathbb{E}[(X_i-\mu)^2]  
     + \ldots \\
-& = 1 - \frac{1}{n} \left( 
+= & 1 - \frac{1}{n} \left( 
     \frac{t^2\sigma^2}{2} 
     - \frac{it^3}{6n^{1/2}}\mathbb{E}[(X_i-\mu)^3]  
     - \ldots
@@ -218,7 +223,7 @@ $$
 }
 $$
 
-So we can now plug that into the characteristic function for $Z_n$, and take it to the limit as we increase the sample size $n$:
+And we can now plug that into the characteristic function for $Z_n$, and take it to the limit as we increase the sample size $n$ to infinity:
 
 $$
 \displaylines{
@@ -243,7 +248,9 @@ $$
 $$
 
 
-And this is identical to the characteristic function of the normal distribution where $\mu = 0$.
+And we now see this is identical to the characteristic function of the normal distribution where $\mu = 0$.
+
+Fin.
 
 ## Final remarks
 
@@ -251,92 +258,93 @@ This CLT derivation relied on the independence and identical distribution of the
 
 However, there are other versions of the CLT that do not need the same assumptions, which we will explore in another post.
 
-## Taylor Series
+[^1]:
+    ### Taylor Series
 
-As a refresher, the Taylor series is a way to approximate a function as an infinite sum of terms. The $n$th term of the Taylor series is given by:
-$$
-\displaylines{
-\begin{align}
-f(x) & = f(a) + \frac{f^1(a)}{1!}(x-a) + \frac{f^2(a)}{2!}(x-a)^2 +  \ldots + \\
-& = \sum_{n=0}^{\infty}{ \frac{f^n(a)}{n!}(x-a)^n }
-\end{align}
-}
-$$
+    The Taylor series is a way to approximate a function as an infinite sum of terms. The $n$th term of the Taylor series is given by:
+    $$
+    \displaylines{
+    \begin{align}
+    f(x) & = f(a) + \frac{f^1(a)}{1!}(x-a) + \frac{f^2(a)}{2!}(x-a)^2 +  \ldots + \\
+    & = \sum_{n=0}^{\infty}{ \frac{f^n(a)}{n!}(x-a)^n }
+    \end{align}
+    }
+    $$
 
-Here is a plot of the Taylor series approximation of a function $f(x) = 20 - 17x - 6x^2 + 8x^3 + 3x^4 + 4x^5 + x^6$ around the point $a=-2.5$:
+    Here is a plot of the Taylor series approximation of a function $f(x) = 20 - 17x - 6x^2 + 8x^3 + 3x^4 + 4x^5 + x^6$ around the point $a=-2.5$:
 
-```{python}
-import plotly.graph_objects as go
-from math import factorial
-import numpy as np
+    ```{python}
+    import plotly.graph_objects as go
+    from math import factorial
+    import numpy as np
 
-x = np.linspace(-4.5,2.5,100)
-c = [20, -17, -6, 8, 3, 4, 1]
-y = [np.sum([c*x**n for n,c in enumerate(c)]) for x in x]
-a = -2.5
+    x = np.linspace(-4.5,2.5,100)
+    c = [20, -17, -6, 8, 3, 4, 1]
+    y = [np.sum([c*x**n for n,c in enumerate(c)]) for x in x]
+    a = -2.5
 
-true_plot = go.Scatter(x=x,y=y,mode='lines',name="True function")
+    true_plot = go.Scatter(x=x,y=y,mode='lines',name="True function")
 
-dc = c.copy()
-y_hat = np.zeros(len(x))
-for i in range(len(c)):    
-    coef = np.sum([c*a**n for n,c in enumerate(dc)])/factorial(i)
-    y_hat += coef*(x-a)**i
-    if i == 0:
-        fig = go.Figure(data = [
-            go.Scatter(mode='markers',x=x,y=y_hat,name="Taylor approximation"),
-            true_plot
-            ])
-        frames = []
-    frames.append(go.Frame(
-        data=[go.Scatter(x=x,y=y_hat,name="Taylor approximation"), true_plot], name= f'frame{i}'
-    ))
-    dc = [n*c for n,c in enumerate(dc)][1:]
+    dc = c.copy()
+    y_hat = np.zeros(len(x))
+    for i in range(len(c)):    
+        coef = np.sum([c*a**n for n,c in enumerate(dc)])/factorial(i)
+        y_hat += coef*(x-a)**i
+        if i == 0:
+            fig = go.Figure(data = [
+                go.Scatter(mode='markers',x=x,y=y_hat,name="Taylor approximation"),
+                true_plot
+                ])
+            frames = []
+        frames.append(go.Frame(
+            data=[go.Scatter(x=x,y=y_hat,name="Taylor approximation"), true_plot], name= f'frame{i}'
+        ))
+        dc = [n*c for n,c in enumerate(dc)][1:]
 
-fig.frames = frames
+    fig.frames = frames
 
-updatemenus = [dict(
-        buttons = [dict(args = [None, {
-            "frame": {"duration": 800, "redraw": False}, "fromcurrent": True, "transition": {"duration": 300}
-            }],
-            label = "Play", method = "animate"),
-            dict(args = [[None], {
-                "frame": {"duration": 0, "redraw": False},"mode": "immediate","transition": {"duration": 0}}],
-                label = "Pause",method = "animate")
-                ],
-        direction = "left", pad = {"r": 10, "t": 87}, showactive = False, type = "buttons",
-        x = 0.1, xanchor = "right", y = 0, yanchor = "top"
-    )]  
+    updatemenus = [dict(
+            buttons = [dict(args = [None, {
+                "frame": {"duration": 800, "redraw": False}, "fromcurrent": True, "transition": {"duration": 300}
+                }],
+                label = "Play", method = "animate"),
+                dict(args = [[None], {
+                    "frame": {"duration": 0, "redraw": False},"mode": "immediate","transition": {"duration": 0}}],
+                    label = "Pause",method = "animate")
+                    ],
+            direction = "left", pad = {"r": 10, "t": 87}, showactive = False, type = "buttons",
+            x = 0.1, xanchor = "right", y = 0, yanchor = "top"
+        )]  
 
-sliders = [dict(steps = [
-    dict(method= 'animate',args= [
-        [f'frame{i}'],
-        dict(mode= 'immediate',frame= dict(duration=400, redraw=False),transition=dict(duration= 0))
-        ],
-        label=f'{i}') for i in range(len(frames))], 
-        active=0,transition= dict(duration= 0),y=0, x=0,
-        currentvalue=dict(font=dict(size=12), prefix='polynomial: ', visible=True, xanchor= 'center'),len=1.0)
-        ]
+    sliders = [dict(steps = [
+        dict(method= 'animate',args= [
+            [f'frame{i}'],
+            dict(mode= 'immediate',frame= dict(duration=400, redraw=False),transition=dict(duration= 0))
+            ],
+            label=f'{i}') for i in range(len(frames))], 
+            active=0,transition= dict(duration= 0),y=0, x=0,
+            currentvalue=dict(font=dict(size=12), prefix='polynomial: ', visible=True, xanchor= 'center'),len=1.0)
+            ]
 
-fig.update_layout(updatemenus=updatemenus,sliders=sliders)
-```
+    fig.update_layout(updatemenus=updatemenus,sliders=sliders)
+    ```
 
-So how does this relate to the exponential function? Well the exponential function can be written as a Taylor series:
+    So how does this relate to the exponential function? Well the exponential function can be written as a Taylor series:
 
-$$ 
-e^{x} = \sum_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots
-$$
+    $$ 
+    e^{x} = \sum_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots
+    $$
 
-Still not convinced? Well remember that $\frac{d(e^x)}{dx}=e^x$ by definition. So if we take the derivative of the Taylor series of $e^x$, we should get back to the original function:
+    Still not convinced? Well remember that $\frac{d(e^x)}{dx}=e^x$ by definition. So if we take the derivative of the Taylor series of $e^x$, we should get back to the original function:
 
-$$
-\displaylines{
-\begin{align}
-\frac{d(e^x)}{dx} & = \frac{d}{dx} \left(1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots \right) \\
-& = 0 + 1 + \frac{2x}{2!} + \frac{3x^2}{3!} + \ldots \\
-& = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots \\
-& = e^x
-\end{align}
-}
-$$
+    $$
+    \displaylines{
+    \begin{align}
+    \frac{d(e^x)}{dx} & = \frac{d}{dx} \left(1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots \right) \\
+    & = 0 + 1 + \frac{2x}{2!} + \frac{3x^2}{3!} + \ldots \\
+    & = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \ldots \\
+    & = e^x
+    \end{align}
+    }
+    $$
 
