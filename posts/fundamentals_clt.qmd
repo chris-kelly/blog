@@ -2,7 +2,7 @@
 title: "Deriving the Central Limit Theorem"
 author: "Chris Kelly"
 date: '11-07-24'
-# image: '../images/'
+image: '../images/fundamentals_clt.png'
 categories: [Central Limit Theorem, Characteristic functions, Taylor series]
 format:
   html:
