@@ -1,32 +1,19 @@
 ---
 title: "Deriving the Central Limit Theorem"
 author: "Chris Kelly"
-date: '06-14-24'
+date: '11-07-24'
 # image: '../images/'
-categories: [Law of Large Numbers, Central Limit Theorem]
-draft: true
+categories: [Central Limit Theorem, Characteristic functions, Taylor series]
 format:
   html:
     code-fold: true
     toc: true
-    # code-links:
-    #   - text: OLS class
-    #     icon: file-code
-    #     href: ../src/ols_blue.py
-    #   - text: Sandwich class
-    #     icon: file-code
-    #     href: ../src/ols_sandwich_estimators.py
-    #   - text: GLS class
-    #     icon: file-code
-    #     href: ../src/gls_fgls_wls.py
-    # other-links:
-    #   - text: Correcting SE for non-spherical errors
-    #     href: ols_sandwich_estimators.html
+    other-links:
+      - text: Deriving the weak law of large numbers
+        href: fundamentals_wlln.html
+      - text: Deriving the gaussian intergral
+        href: fundamentals_gaussian_integral.html
 ---
-
-$$
-\phi_X(t) = \mathbb{E}[e^{itX}] \approx 1 + it\mu - \frac{\sigma^2 t^2}{2}
-$$
 
 ## Intro
 
@@ -38,9 +25,9 @@ But why does the sample mean converge to a normal distribution? In this post, we
 
 ## Defining terms
 
-For the classical CLT, we state that if we sample a large number $n$ of independent observations from the same (read identical) distribution of the random variable $X$, and calculate the mean $\bar{X}_n$ of this sample, then not only would the expected mean tend to the true mean $\lim_{n \rightarrow \infty}\mathbb{E}[\bar{X}_n] \rightarrow \mu$ as per weak law of large numbers, but the this sample mean will also vary around the true mean following to the normal distribution: $\lim_{n \rightarrow \infty}\bar{X}_n \sim N(\mu,\frac{\sigma^2}{\sqrt{n}})$
+For the classical CLT, we state that if we sample a large number $n$ of independent observations from the same (read identical) distribution of the random variable $X$, and calculate the mean $\bar{X}_n$ of this sample, then not only would the expected mean tend to the true mean $\lim_{n \rightarrow \infty}\mathbb{E}[\bar{X}_n] \rightarrow \mu$ as per weak law of large numbers, but the this sample mean will also vary around the true mean following to the normal distribution: $\lim_{n \rightarrow \infty}\bar{X}_n \sim N(\mu,\frac{\sigma^2}{n})$
 
-First, we define a random variable $X_i$, that is independently and identically distributed with mean $\mu$ and variance $\sigma^2$:
+First, we define a random variable $X$, that is independently and identically distributed with mean $\mu$ and variance $\sigma^2$:
 
 $$
 X_i \overset{iid}{\sim}(\mu,\sigma^2)
@@ -48,48 +35,13 @@ $$
 
 Note that we make no assumptions about its distribution at all: for example, it could be bernoulli distributed, with $\mu = p$ and $\sigma^2 = p(1-p)$. But according to the CLT, despite this underlying distribution, we will always find that its sample mean will follow a normal distribution.
 
-Now let's define the sample mean of $n$ observations of $X_i$ as $\bar{X}_n$:
+Now let's define the sample mean of $n$ observations of $X$ as $\bar{X}_n$:
 
 $$
 \bar{X}_n = \frac{1}{n}\sum_{i=1}^{n}X_i
 $$
 
 So we want to determine if the distribution of $\bar{X}_n$ converges to a normal distribution as $n \rightarrow \infty$.
-
-<!-- And as per the frequentist defintion, let's define a random variable where we collect many of these sample means $N$ times:
-
-$$
-S_n = \sum_{i=1}^{N}\bar{X}_n
-$$
-
-So what we what to determine, is what distribution does $S_n$ follow as $n \rightarrow \infty$.
-
-Well we can derive the expected values and its variance:
-
-$$
-\displaylines{
-\begin{align}
-\mathbb{E}[S_n] 
-& = \mathbb{E}\left[\sum_{i=1}^{N}\bar{X}_n\right] \\
-& = \mathbb{E}[N \times \bar{X}_n] \quad \text{as identical} \\
-& = N\times \mathbb{E}[\bar{X}_n] \\
-& = N\mu \\ \\
-\mathbb{V}[S_n] 
-& = \mathbb{V}\left[\sum_{i=1}^{N}\bar{X}_n\right] \\
-& = \mathbb{V}\left[N \times \bar{X}_n\right] \quad \text{as identical} \\
-& = N^2\mathbb{V}[\bar{X}_n] \\
-& = N^2\frac{\sigma^2}{N} \\
-& = N\sigma^2
-\end{align}
-}
-$$
-
-So it follows a normal distribution, then we would find the following:
-
-$$
-S_n \sim Norm(N\mu, N\sigma^2) \quad \text{as} \quad n \rightarrow \infty
-$$
--->
 
 ## Characteristic functions
 
@@ -159,168 +111,149 @@ $$
 [See this post](fundamentals_gaussian_integral.html) on the gaussian integral for more details for why $\int_{-\infty}^{+\infty}{e^{-z^2}\,dx}=\sqrt{\pi}$
 :::
 
-**So we are looking to show that the characteristic function of ${S}_n$ converges to the characteristic function of the standard normal distribution as $n \rightarrow \infty$.**
+::: {.callout-tip}
+So we are looking to show that the characteristic function of $\bar{X}_n$ converges to the characteristic function of the standard normal distribution as $n \rightarrow \infty$.
+:::
 
 ## Characteristic function of the sample means:
 
-<!-- So let's define the characteristic function for the sum of sample means $S_n$:
+### Motivation to use the scaled, centered sample mean
+
+It might seem easiest to use the sample mean directly. But let's look at its variance:
 
 $$
 \displaylines{
 \begin{align}
-\phi_{S_n}(t) 
-& = \mathbb{E}[e^{itS_n}] \\
-& = \mathbb{E}\left[e^{it\sum_{i=1}^{N}\bar{X}_n}\right] \\
-& = \mathbb{E}\left[\prod_{i=1}^{n}e^{it\bar{X}_n}\right] & \because e^{(a+b)}=e^a\times e^b\\
-& = \prod_{i=1}^{N}\mathbb{E}\left[e^{it\bar{X}_n}\right] & \text{by independence} \\
-& = \left(\mathbb{E}\left[e^{it\bar{X}_n}\right]\right)^N \\
-& = \left(\phi_{\bar{X}_n}(t)\right)^N
-\end{align}
-}
-$$
-
-So we now see that the characteristic function of the sum of sample means is the $N$th power of the characteristic function of the sample mean. -->
-
-And what is the characteristic function of the sample mean? Well in a very similar way, we can derive this by 
-using the definition of the characteristic function:
-
-$$
-\displaylines{
-\begin{align}
-\phi_{\bar{X}_n}(t)
-& = \mathbb{E}[e^{it\bar{X}_n}] \\
-& = \mathbb{E}\left[e^{it\left(\frac{1}{n}\sum_{i=1}^{n}X_i\right)}\right] \\
-& = \mathbb{E}\left[\prod_{i=1}^{n}e^{it\frac{1}{n}X_i}\right] & \because e^{(a+b)}=e^a\times e^b\\
-& = \prod_{i=1}^{n}\mathbb{E}\left[e^{it\frac{1}{n}X_i}\right] & \text{by independence} \\
-& = \left(\mathbb{E}\left[e^{it\frac{1}{n}X_i}\right]\right)^n & \text{as identical} \\
-& = \left(\phi_{X_i}\left(\frac{t}{n}\right)\right)^n
-\end{align}
-}
-$$
-
-So we see that the characteristic function of the sample mean is the characteristic function of the random variable $X_i$ divided by $n$, raised to the $n$th power.
-
-We can formulate our characteristic function of the random variable $X_i$ as a taylor series:
-
-$$
-\displaylines{
-\begin{align}
-\phi_\bar{X}(t)
-& = \mathbb{E}\left[\exp{\left\{\frac{it}{n}X_i\right\}}\right] \\
-& = \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( \frac{it}{n}X_i\right)^k}{k!}\right] 
-& \because e^x = \sum_{k=0}^{\infty}{\frac{x^k}{k!}}
+\mathbb{V}[\bar{X}_n] & = \mathbb{V}\left[\frac{1}{n}\sum_{i=1}^{n}X_i\right] \\
+& = \frac{1}{n^2}\sum_{i=1}^{n}\mathbb{V}[X_i] \\
+& = \frac{1}{n^2}\sum_{i=1}^{n}\sigma^2 \\
+& = \frac{\sigma^2}{n}
 \\
+\\
+\therefore \mathbb{V}[\bar{X}_n] & \rightarrow 0 \quad \text{as} \quad n \rightarrow \infty
+\end{align}
+}
+$$
+
+This reveals that the variance of the distribution decreases as the sample size $n$ increases. This is a nice (and intuitive) result: the larger the sample, the closer the sample mean is likely to be to the true population.
+
+Howwever, it does make it more tricky to prove that the sample mean converges to a normal distribution: since as we increase $n$, the variance shinks, so the variance is not constant. Instead, we can scale and center the sample mean by $\sqrt{n}$ to ensure its variance is constant for a given sample size $n$:
+
+$$
+\displaylines{
+\begin{align}
+Z_n & = \sqrt{n}\left(\bar{X}_n - \mu\right)
+\\
+\therefore \mathbb{E}[Z_n] 
+& = \sqrt{n}\left(\mathbb{E}[\bar{X}_n] - \mu\right) 
+\\ & = \sqrt{n}\left(\mu - \mu\right)
+\\ & = 0
+\\
+\therefore \mathbb{V}[Z_n]
+& = \mathbb{V}\left[\sqrt{n}\left(\bar{X}_n - \mu\right)\right] 
+\\ & = n\mathbb{V}[\bar{X}_n] & \because \mu \text{ is a constant}
+\\ & = n\frac{\sigma^2}{n}
+\\ & = \sigma^2
+\end{align}
+}
+$$
+
+And since this is just a scalar transformation, we know it applies to the underlying distribution too.
+
+### Characteristic function of the scaled, centered sample mean
+
+We derive the characteristic function as follows:
+
+$$
+\displaylines{
+\begin{align}
+\phi_{\bar{Z}_n}(t)
+& = \mathbb{E}[e^{it\bar{Z}_n}] \\
+& = \mathbb{E}\left[e^{it\sqrt{n}\left(\bar{X}_n - \mu\right)}\right] \\
+& = \mathbb{E}\left[e^{it\sqrt{n}\left(\sum_{i=0}^n\frac{1}{n} \left(X_i - \mu \right) \right)}\right] \\
+& = \mathbb{E}\left[e^{it\left(\sum_{i=0}^n\frac{1}{\sqrt{n}} \left(X_i - \mu \right) \right)}\right] \\
+& = \mathbb{E}\left[\prod_{i=1}^{n}e^{it\frac{1}{\sqrt{n}}(X_i-\mu)}\right] & \because e^{(a+b)}=e^a\times e^b \\
+& = \prod_{i=1}^{n}\mathbb{E}\left[e^{it\frac{1}{\sqrt{n}}(X_i-\mu)}\right] & \text{as independent} \\
+& = \left(\mathbb{E}\left[e^{it\frac{1}{\sqrt{n}}(X_i-\mu)}\right]\right)^n & \text{as identically distributed}
+\end{align}
+}
+$$
+
+So we see that the characteristic function of the scaled centered sample mean is the characteristic function of the random variable $X_i$ minus $\mu$, divided by $\sqrt{n}$, and raised to the $n$th power.
+
+We can formulate our characteristic function of the random variable $X_i/\sqrt{n}$ as a taylor series (if you want a refresher on Taylor series, see the bottom of the page):
+
+$$
+\displaylines{
+\begin{align}
+\mathbb{E}\left[\exp{\left\{\frac{it}{\sqrt{n}}(X_i-\mu)\right\}}\right] 
+& = \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^k}{k!}\right]
+& \because e^x = \sum_{k=0}^{\infty}{\frac{x^k}{k!}} \\
+& = \mathbb{E}\left[\sum_{k=0}^{\infty} \frac{ \left( (it)^k(X_i-\mu)\right)^k}{k! \times n^{k/2}}\right] \\
 & = \mathbb{E}\left[
-    \frac{ \left( \frac{it}{n}X_i\right)^0}{0!} + 
-    \frac{ \left( \frac{it}{n}X_i\right)^1}{1!} + 
-    \frac{ \left( \frac{it}{n}X_i\right)^2}{2!} + 
-    \frac{ \left( \frac{it}{n}X_i\right)^3}{3!} + \dots
-\right] 
-& \because f(x) = \sum_{n=0}^{\infty}{ \frac{f^k(a)}{k!}(x-a)^k }
-\\
+    \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^0}{0!} + 
+    \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^1}{1!} + 
+    \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^2}{2!} + 
+    \frac{ \left( \frac{it}{\sqrt{n}}(X_i-\mu)\right)^3}{3!} + \dots
+\right] \\
 & = \mathbb{E}\left[
     1
-    + \frac{it}{n}X_i
-    - \frac{t^2}{2n^2}X_i^2
-    + \frac{it^3}{6n^3}X_i^3
+    + \frac{it}{n^{1/2}}(X_i-\mu)
+    - \frac{t^2}{2n}(X_i-\mu)^2
+    + \frac{it^3}{6n^{3/2}}(X_i-\mu)^3
     + \dots
 \right] \\
-& = \mathbb{E}[1] + it\mathbb{E}[X_i] - \frac{t^2}{2!}\underbrace{\mathbb{E}[X_i^2]}_{\mathbb{V}[X_i]+\mathbb{E}[X_i]^2} + \frac{it^3}{3!}\mathbb{E}[X_i^3] + \ldots \\
-& = 1 + it\mu - \frac{t^2}{2!}\left( \sigma^2+\mu^2 \right) + \frac{it^3}{3!}(\mu^3 + 3\mu\sigma^2) + \ldots
+& = 
+    \mathbb{E}[1] 
+    + \frac{it}{n^{1/2}}\underbrace{\mathbb{E}[(X_i-\mu)]}_{\mathbb{E}[X_i] = \mu \quad \therefore \mathbb{E}[X_i] - \mu = 0}
+    - \frac{t^2}{2n}\underbrace{\mathbb{E}[(X_i-\mu)^2]}_{\mathbb{V}[X_i] = \sigma^2}
+    + \frac{it^3}{6n^{3/2}}\mathbb{E}[(X_i-\mu)^2]  
+    + \ldots \\
+& = 1 - \frac{1}{n} \left( 
+    \frac{t^2\sigma^2}{2} 
+    - \frac{it^3}{6n^{1/2}}\mathbb{E}[(X_i-\mu)^3]  
+    - \ldots
+    \right) 
 \end{align}
 }
 $$
 
-$$
-\displaylines{
-\begin{align}
-\phi_X(t)
-& = \mathbb{E}[e^{itX_i}] \\
-& = \mathbb{E}\left[1 + itX_i + \frac{(itX_i)^2}{2!} + \frac{(itX_i)^3}{3!} + \ldots \right] \\
-& = \mathbb{E}[1] + it\mathbb{E}[X_i] - \frac{t^2}{2!}\underbrace{\mathbb{E}[X_i^2]}_{\mathbb{V}[X_i]+\mathbb{E}[X_i]^2} + \frac{it^3}{3!}\mathbb{E}[X_i^3] + \ldots \\
-& = 1 + it\mu - \frac{t^2}{2!}\left( \sigma^2+\mu^2 \right) + \frac{it^3}{3!}(\mu^3 + 3\mu\sigma^2) + \ldots
-\end{align}
-}
-$$
-
+So we can now plug that into the characteristic function for $Z_n$, and take it to the limit as we increase the sample size $n$:
 
 $$
 \displaylines{
 \begin{align}
-\phi_X(t) 
-& = \mathbb{E}[e^{it\bar{X}_n}] \\
-& = \mathbb{E}\left[1 + it\bar{X}_n + \frac{(it\bar{X}_n)^2}{2!} + \frac{(it\bar{X}_n)^3}{3!} + \ldots \right] \\
-& = \mathbb{E}[1] + it\mathbb{E}[\bar{X}_n] - \frac{t^2}{2!}\underbrace{\mathbb{E}[\bar{X}_n^2]}_{\mathbb{V}[\bar{X}_n]+\mathbb{E}[\bar{X}_n]^2} + \frac{it^3}{3!}\mathbb{E}[\bar{X}_n^3] + \ldots \\
-& = 1 + it\mu - \frac{t^2}{2!}\left( \frac{\sigma^2}{N}+\mu^2 \right) + \frac{it^3}{3!}(\mu^3 + 3\mu\sigma^2) + \ldots
-\end{align}
-}
-$$
-
-
-So let's derive the characteristic function of the sample mean:
-
-
-So we now see that the characteristic function of the sample mean is the $n$th power of the characteristic function of the random variable $X_i$.
-
-
-
-Now it can be helpful to remember that the exponential function can be written in various forms, such as the infinite sum:
-
-$$
-e^x = \lim_{n \rightarrow \infty} \left(1 + \frac{x}{n}\right)^n
-$$
-
-
-Now let's state some properties of the distribution of the sample mean, if we take a sample of size $n$, estimate the mean from it, and repeat this proceedure $N$ times:
-
-$$
-\displaylines{
-\begin{align}
-\bar{X}_n
-& = \frac{1}{n}\sum_{i=1}^{n}X_i
+\phi_{\bar{Z}_n}(t) 
+& = \left(\mathbb{E}\left[e^{it\frac{1}{\sqrt{n}}(X_i-\mu)}\right]\right)^n
 \\ \\
-\therefore \mathbb{E}\left[\bar{X}_n\right]
-& = \mathbb{E}\left[\frac{1}{N}\sum_{i=1}^{N} \bar{X}_n \right] \\
-& = \frac{1}{N}\sum_{i=1}^{N} \mathbb{E}\left[\bar{X}_n\right] \\ 
-& = \frac{1}{N}\left(N \times \mu \right) & \because \text{WLLN}  \\
-& = \mu
+\lim_{n \rightarrow \infty} \phi_{\bar{Z}_n}(t) 
+& = \lim_{n \rightarrow \infty} \left( 
+    1 - \frac{1}{n} \left( 
+    \frac{t^2\sigma^2}{2} 
+    - \underbrace{\frac{it^3}{6n^{1/2}}\mathbb{E}[(X_i-\mu)^3] - \ldots}_{
+        \rightarrow 0 \text{ as } n \rightarrow \infty
+        }
+    \right) 
+\right)^n
 \\ \\
-\therefore \mathbb{V}\left[\bar{X}_n\right]
-& = \mathbb{V}\left[\frac{1}{N}\sum_{i=1}^{n} X_i \right] \\
-& = \frac{1}{N^2}\sum_{i=1}^{n} \mathbb{V}\left[X_i\right] \\
-& = \frac{1}{N^2}\left(N \times \sigma^2 \right) \\ 
-& = \frac{\sigma^2}{N}
+& = \exp{\left\{ \frac{-t^2\sigma^2}{2} \right\}}
+& \because e^x = \lim_{n \rightarrow \infty} \left(1 + \frac{x}{n}\right)^n
 \end{align}
 }
 $$
 
-::: {.column-margin}
-So we see that the sample mean is an unbiased estimator of the true mean, and the variance of the sample mean decreases as the sample size increases. This is the same result we derived in the weak law of large numbers.
-:::
 
-We can easily standardise this, to create a variable with a mean of zero and variance of one (which is easier to work with to prove the central limit theorem - which we will see now we introduce characteristic functions):
+And this is identical to the characteristic function of the normal distribution where $\mu = 0$.
 
-$$
-\displaylines{
-\begin{align}
-Z_N & = \frac{\bar{X}_N - \mu}{\sigma/\sqrt{N}} \\
-\mathbb{E}[Z_N] & = \frac{\mathbb{E}[\bar{X}_N] - \mu}{\sigma/\sqrt{N}} = 0 \\
-\mathbb{V}[Z_N] & = \frac{\mathbb{V}[\bar{X}_N]}{\sigma^2/N} = 1
-\end{align}
-}
-$$
+## Final remarks
 
-Now it can be helpful to remember that the exponential function can be written in various forms, such as the infinite sum:
+This CLT derivation relied on the independence and identical distribution of the samples $X_i$. This is why these are the most common assumptions used for normal approximation, such as confidence intervals in an experiment.
 
-$$
-e^x = \lim_{n \rightarrow \infty} \left(1 + \frac{x}{n}\right)^n
-$$
-
-And hence this infinite sum can also be written as a Taylor series:
+However, there are other versions of the CLT that do not need the same assumptions, which we will explore in another post.
 
 ## Taylor Series
 
-As a reminder, the Taylor series is a way to approximate a function as an infinite sum of terms. The $n$th term of the Taylor series is given by:
+As a refresher, the Taylor series is a way to approximate a function as an infinite sum of terms. The $n$th term of the Taylor series is given by:
 $$
 \displaylines{
 \begin{align}
@@ -407,127 +340,3 @@ $$
 }
 $$
 
-So now let's reformulate our generic characteristic function as a Taylor series:
-
-$$
-\displaylines{
-\begin{align}
-\phi_X(t) 
-& = \mathbb{E}[e^{it\bar{X}_n}] \\
-& = \mathbb{E}\left[1 + it\bar{X}_n + \frac{(it\bar{X}_n)^2}{2!} + \frac{(it\bar{X}_n)^3}{3!} + \ldots \right] \\
-& = \mathbb{E}[1] + it\mathbb{E}[\bar{X}_n] - \frac{t^2}{2!}\underbrace{\mathbb{E}[\bar{X}_n^2]}_{\mathbb{V}[\bar{X}_n]+\mathbb{E}[\bar{X}_n]^2} + \frac{it^3}{3!}\mathbb{E}[\bar{X}_n^3] + \ldots \\
-& = 1 + it\mu - \frac{t^2}{2!}\left( \frac{\sigma^2}{N}+\mu^2 \right) + \frac{it^3}{3!}(\mu^3 + 3\mu\sigma^2) + \ldots
-\end{align}
-}
-$$
-
-$$
-\displaylines{
-\begin{align}
-\exp{\left\{ i\mu t - \frac{\sigma^2t^2}{2} \right\}}
-= & \sum_{n=0}^{\infty} \frac{1}{n!}\left(it\mu - \frac{1}{2}\sigma^2 t^2\right)^n \\
-= & \frac{1}{0!}\left(it\mu - \frac{1}{2}\sigma^2 t^2\right)^0
-+ \frac{1}{1!}\left(it\mu - \frac{1}{2}\sigma^2 t^2\right)^1
-+ \frac{1}{2!}\left(it\mu - \frac{1}{2}\sigma^2 t^2\right)^2
-+ \ldots \\
-\\
-= 1 + & \left(it\mu - \frac{1}{2}\sigma^2 t^2\right) + \frac{1}{2!}\left(it\mu - \frac{1}{2}\sigma^2 t^2\right)^2 + \ldots \\
-+ \ldots \\
-\end{align}
-}
-$$
-
-
-
-And if we use our standardised variable $Z_N$ instead, with $\mathbb{E}[Z_N]=0$ and $\mathbb{V}[Z_N]=\mathbb{E}[Z_N^2]=1$ we find it is highly simplified:
-
-$$
-\displaylines{
-\begin{align}
-\phi_{Z_N}(t)
-& = \mathbb{E}[e^{itZ_N}] \\
-& = \mathbb{E}\left[1 + itZ_N + \frac{(itZ_N)^2}{2!} + \frac{(itZ_N)^3}{3!} + \ldots \right] \\
-& = \mathbb{E}[1] + it \underbrace{\mathbb{E}[Z_N]}_{=0} - \frac{t^2}{2!} \underbrace{\mathbb{E}[Z_N^2]}_{=1} + \frac{it^3}{3!}\mathbb{E}[Z_N^3] + \ldots \\
-& = 1 - \frac{t^2}{2} + \ldots
-\end{align}
-}
-$$
-
-And now to tie it all together, we can show that the taylor expansion of the normal distribution's characteristic function is the same:
-
-$$
-\displaylines{\begin{align}
-\exp\left\{\frac{-t^2}{2}\right\} & 
-= 1 - \frac{t^2}{2} + \ldots
-\end{align}}
-$$
-
-So the sample mean for a collection for independent $n$ samples taken from the same distribution converges to a normal distribution as $n \rightarrow \infty$.
-
-<!-- 
-
-$$
-\displaylines{
-\begin{align}
-\frac{\mathbb{E}[Z]}{a} & \ge \mathbb{P}(Z \ge a) & \text{(Markov's inequality)} \\
-\text{let} \quad Z & = |X-\mu| & (\text{New random variable } Z) \\
-\implies
-\frac{\mathbb{E}[|X-\mu|]}{a} & \ge \mathbb{P}(|X - \mu| \ge a)
-\end{align}
-}
-$$
-
-Why can we say this? Well because Markov's inequality states that $\frac{\mathbb{E}[X]}{a} \ge \mathbb{P}(X \ge a)$ for *any* random variable $X$. So if we define a new random variable $Z=|X-\mu|$, then the same inequality must apply.
-
-Now let's transform the right-hand side of the inequality:
-
-$$
-\displaylines{
-\begin{align}
-\mathbb{P}(|X - \mu| \ge a) & \equiv \mathbb{P}((X - \mu)^2 \ge a^2) \\ \\
-\implies \frac{\mathbb{E}[|X-\mu|]}{a} & \ge \mathbb{P}((X - \mu)^2 \ge a^2)
-\end{align}
-}
-$$
-
-To do this, we have to convince ourselves that $\mathbb{P}(X - \mu \ge a) \equiv \mathbb{P}((X - \mu)^2 \ge a^2)$. 
-
-So if we take our dice example from before:
-
---->
-
-```{python}
-# x_subtract_mu = x - Ex
-# pxmu_le_a = [np.sum(p[x_subtract_mu >= a]) - Ex for a in x]
-# abs_x_subtract_mu = np.abs(x_subtract_mu)
-# abs_pxmu_le_a = [np.sum(p[abs_x_subtract_mu >= a]) for a in x]
-
-# fig = Figure()
-# fig.add_trace(Bar(x=x, y=pxmu_le_a, name='P(X-µ >= a)'))
-# fig.add_trace(Bar(x=x, y=x_subtract_mu/x, name='E[X-µ]/a'))
-# fig.add_trace(Bar(x=x, y=abs_pxmu_le_a, name='P(|X-µ| >= a)'))
-# fig.add_trace(Bar(x=x, y=abs_x_subtract_mu/x, name='E[|X-µ|]/a'))
-
-# # Update layout for grouped bar chart
-# fig.update_layout(barmode='group', title='Markov\'s inequality for a dice role', xaxis_title='a (Dice roll)', legend=dict(x=0.37,y=0.95))
-
-# fig.show()
-```
-
-<!-- We can define the sine and cosine functions using a taylor series. Since we know the derivative of sine is cosine, and the derivative of cosine  -->
-
-
-<!-- First let's look at the probability side of things. Remember that $\mu$ is 3.5:
-
-* If the threshold $a$ is $3$, then the probabiity is zero: no dice roll $X$ would be far enough away to ensure the absolute distance from the expected value is greater than $a$.
-    * e.g. $|6-3.5| = 2.5 < 3$
-    * e.g. $|1-3.5| = 2.5 < 3$
-* If the threshold $a$ is $2$, then this only occurs if the dice roll is $1$ or $6$. So $P(X=1) + P(X=6) = 1/6 + 1/6 = 1/3$:
-    * e.g. $|6-3.5| = |1-3.5| = 2.5 > 2$
-    * e.g. $|5-3.5| = |2-3.5| = 1.5 < 2$
-* And finally, if the threshold of $a$ is $1$, and $\mu=3.5$, then only rolling a $1,2,4$ or $6$ will ensure $|X-\mu| \ge a, hence $P(X=1) + P(X=2) + P(X=4) + P(X=6) = 2/3$:
-    * e.g. $|6-3.5| = |1-3.5| = 2.5 > 1$
-    * e.g. $|5-3.5| = |2-3.5| = 1.5 > 1$
-    * e.g. $|4-3.5| = |3-3.5| = 0.5 < 1$
-
-Now let's look at the expectation side. Given $\mu=3.5$, it is expected that the absolute distance increases with larger distance from 3.5 (so rolls of $1$ and $6$). However, it is then scaled by $\frac{1}{a}$: -->

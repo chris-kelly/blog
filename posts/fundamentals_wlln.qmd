@@ -8,6 +8,11 @@ format:
   html:
     code-fold: true
     toc: true
+    other-links:
+      - text: Deriving the central limit theorem
+        href: fundamentals_clt.html
+      - text: Finite sample variance correction
+        href: ols_finite_sample_correction.html
 ---
 
 # Intro
@@ -206,6 +211,6 @@ $$
 
 It should be getting quite clear now! As $n \rightarrow \infty$, then $\frac{\sigma^2}{n\varepsilon^2} \rightarrow 0$. So the probability of the sample mean $\bar{X}$ being far from the true mean $\mu$ also goes to zero.
 
-This is especially useful to see how large sample sizes achieve consistency, even for biased esimators. For example, we saw in our post on [finite-sample correction](ols_finite_sample_correction.html) that the sample variance needs a *Bessel correction factor* to be unbiased. But even if we used the biased estimator, the law of large numbers tells us that as $n \rightarrow \infty$, the sample mean will still converge to the true mean.
+This is especially useful to see how large sample sizes achieve consistency, even for biased esimators. For example, we saw in our post on [finite-sample correction](ols_finite_sample_correction.html) that the sample variance needs a *Bessel correction factor* to be unbiased. But even if we used the biased estimator, the law of large numbers tells us that as $n \rightarrow \infty$, the sample mean will still converge to the true mean: it is consistent.
 
 Fin.
