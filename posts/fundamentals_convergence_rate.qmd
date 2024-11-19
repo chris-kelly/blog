@@ -11,8 +11,9 @@ format:
     other-links:
       - text: Deriving the weak law of large numbers
         href: fundamentals_wlln.html
-      - text: Deriving the gaussian intergral
-        href: fundamentals_gaussian_integral.html
+      - text: Deriving the central limit theorem
+        href: fundamentals_clt.html
+draft: true        
 ---
 
 ::: {.callout-tip}
@@ -62,7 +63,7 @@ $$
 
 where $i=\sqrt{-1}$ i.e. the imaginary unit, and $t$ is a real number.
 
-As an example, let's derive the characteristic function of the bernoulli distribution:
+As an example, ket's derive the characteristic function of the bernoulli distribution:
 
 $$
 \displaylines{

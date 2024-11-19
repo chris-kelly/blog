@@ -2,6 +2,7 @@
 title: "Mean Squared Error vs Mean Absolute Error"
 author: "Chris Kelly"
 date: '02-08-24'
+image: '../images/mse_mean_mae_median.png'
 format:
   html:
     code-fold: true
